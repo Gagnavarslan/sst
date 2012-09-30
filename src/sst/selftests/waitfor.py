@@ -55,3 +55,16 @@ wait_for(get_condition(wait=0.2))
 assert CALLS <= 3
 
 set_wait_timeout(10, 0.1)
+
+
+# Test the return value when wait_for succeeds.
+def identity(value):
+    return value
+
+assert wait_for(identity, None) == None
+assert wait_for(identity, True) == True
+assert wait_for(identity, 'test') == 'test'
+assert wait_for(identity, 5) == 5
+assert wait_for(identity, [5]) == [5]
+assert wait_for(identity, {'test':5}) == {'test':5}
+assert wait_for(identity, (5)) == (5)

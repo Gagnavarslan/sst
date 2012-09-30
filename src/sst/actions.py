@@ -707,6 +707,7 @@ def _get_name(obj):
 def _wait_for(condition, refresh, timeout, poll, *args, **kwargs):
     global VERBOSE
     _print('Waiting for %r' % _get_name(condition))
+    result = False
     original = VERBOSE
     VERBOSE = False
     try:
@@ -732,6 +733,8 @@ def _wait_for(condition, refresh, timeout, poll, *args, **kwargs):
             time.sleep(poll)
     finally:
         VERBOSE = original
+    return result
+
 
 def wait_for(condition, *args, **kwargs):
     """
@@ -740,15 +743,18 @@ def wait_for(condition, *args, **kwargs):
 
     This action takes a condition function and any arguments it should be
     called with. The condition function can either be an action or a function
-    that returns True for success and False for failure. For example::
+    that returns False or throws an AssertionError for failure, and returns
+    anything different from False (including not returning anything) for
+    success. For example::
 
         wait_for(assert_title, 'Some page title')
 
-    If the specified condition does not become true within 10 seconds then
-    `wait_for` fails.
+    If the specified condition does not succeed within 10 seconds then
+    `wait_for` fails. If it succeeds, wait_for returns the value returned
+    by the condition.
 
     You can set the timeout for `wait_for` by calling `set_wait_timeout`."""
-    _wait_for(condition, False, _TIMEOUT, _POLL, *args, **kwargs)
+    return _wait_for(condition, False, _TIMEOUT, _POLL, *args, **kwargs)
 
 
 def wait_for_and_refresh(condition, *args, **kwargs):
@@ -760,16 +766,20 @@ def wait_for_and_refresh(condition, *args, **kwargs):
 
     This action takes a condition function and any arguments it should be
     called with. The condition function can either be an action or a function
-    that returns True for success and False for failure. For example::
+    that returns False or throws an AssertionError for failure, and returns
+    anything different from False (including not returning anything) for
+    success. For example::
 
         wait_for_and_refresh(assert_title, 'Some page title')
 
-    If the specified condition does not become true within 10 seconds then
-    `wait_for_and_refresh` fails.
+    If the specified condition does not succeed within 10 seconds then
+    `wait_for_and_refresh` fails. If it succeeds, wait_for returns the
+    value returned by the condition.
 
-    You can set the timeout for `wait_for_and_refresh` by calling `set_wait_timeout`.
+    You can set the timeout for `wait_for_and_refresh` by calling
+    `set_wait_timeout`.
     """
-    _wait_for(condition, True, _TIMEOUT, _POLL, *args, **kwargs)
+    return _wait_for(condition, True, _TIMEOUT, _POLL, *args, **kwargs)
 
 
 def fails(action, *args, **kwargs):
