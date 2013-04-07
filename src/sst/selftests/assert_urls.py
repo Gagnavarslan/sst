@@ -22,16 +22,20 @@ fails(assert_url, 'http://wrongurl/begin')
 
 assert_url_contains('http://localhost:8000/begin')
 assert_url_contains('localhost:8000')
+assert_url_contains('http://.*/begin', regex=True)
+assert_url_contains('.*//localhost', regex=True)
 assert_url_contains('lo[C|c]a.*host', regex=True)
 fails(assert_url_contains, 'foobar')
 fails(assert_url_contains, 'foobar', regex=True)
 
 assert_url_domain('localhost')
+fails(assert_url_domain, 'localhost:8000')
 fails(assert_url_domain, '')
 
-# visit url with query strings and fragments
+# visit url with query strings and fragments, then test assertions
 go_to('/begin?query_string#fragment_id')
 
 assert_url('http://localhost:8000/begin?query_string#fragment_id')
 assert_url('/begin?query_string#fragment_id')
 fails(assert_url, '/begin')
+fails(assert_url, 'http://localhost:8000/begin')
