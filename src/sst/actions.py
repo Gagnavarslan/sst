@@ -72,10 +72,10 @@ __all__ = [
     'assert_radio', 'assert_radio_value', 'assert_table_has_rows',
     'assert_table_headers', 'assert_table_row_contains_text',
     'assert_text', 'assert_text_contains', 'assert_textfield',
-    'assert_title', 'assert_title_contains', 'assert_url',
-    'assert_url_contains', 'check_flags', 'clear_cookies',
-    'click_button', 'click_element', 'click_link', 'close_window',
-    'debug', 'dismiss_alert', 'end_test', 'execute_script',
+    'assert_title', 'assert_title_contains', 'assert_url', 
+    'assert_url_contains', 'assert_url_network_location', 'check_flags',
+    'clear_cookies', 'click_button', 'click_element', 'click_link',
+    'close_window', 'debug', 'dismiss_alert', 'end_test', 'execute_script',
     'exists_element', 'fails', 'get_argument', 'get_base_url',
     'get_cookies', 'get_current_url', 'get_element',
     'get_element_by_css', 'get_element_by_xpath', 'get_element_source',
@@ -728,6 +728,18 @@ def assert_url_contains(text, regex=False):
     else:
         if text not in real_url:
             _raise(msg)
+
+
+def assert_url_network_location(netloc):
+    """Assert the current url's network location is as specified.
+    
+    `netloc` is a string containing 'domain:port'.
+    In the case of port 80, `netloc` may contain domain only."""
+    real_netloc = urlparse(browser.current_url).netloc
+    if netloc != real_netloc:
+        msg = 'Url network location is: %r. Should be: %r' % (
+            real_netloc, netloc)
+        _raise(msg)
 
 
 _TIMEOUT = 10
