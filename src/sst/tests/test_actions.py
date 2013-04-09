@@ -20,9 +20,8 @@
 from cStringIO import StringIO
 import logging
 
-
+import mock
 import testtools
-
 
 from sst import actions
 
@@ -64,3 +63,31 @@ class TestRetryOnStale(testtools.TestCase):
     def test_wait_for_retries(self):
         self.assertRaisesOnlyOnce(None, actions.wait_for,
                                   self.raise_stale_element)
+
+
+class TestElementToString(testtools.TestCase):
+
+    def test_element_with_id(self):
+        element = mock.Mock()
+        element.get_attribute.return_value = 'Test id'
+        self.assertEqual('Test id', actions._element_to_string(element))
+
+    def test_element_without_id_with_text(self):
+        element = mock.Mock()
+        element.get_attribute.return_value = None
+        element.text = 'Test text'
+        self.assertEqual('Test text', actions._element_to_string(element))
+
+    def test_element_without_id_without_text(self):
+        element = mock.Mock()
+        def mock_get_attribute(attribute):
+            values = {
+                'id': None,
+                'value': None,
+                'outerHTML': '<p>Test HTML</p>'
+            }
+            return values[attribute]
+        element.get_attribute.side_effect = mock_get_attribute
+        element.text = None
+        self.assertEqual(
+            '<p>Test HTML</p>', actions._element_to_string(element))
