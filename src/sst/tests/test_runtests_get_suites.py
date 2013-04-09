@@ -60,7 +60,6 @@ def _make_test_files(dir):
             pass
 
 
-
 class TestGetSuites(testtools.TestCase):
 
     def setUp(self):
@@ -68,10 +67,9 @@ class TestGetSuites(testtools.TestCase):
         tests.set_cwd_to_tmp(self)
         self.cases_dir = os.path.join(self.test_base_dir, 'cases')
 
-
     def test_runtests_get_suites(self):
         _make_test_files(self.cases_dir)
-        
+
         test_names = ('*', )
         test_dir = self.cases_dir
         shared_dir = '.'
@@ -96,10 +94,10 @@ class TestGetSuites(testtools.TestCase):
                                     screenshots_on, failfast, debug, extended
                                     )
         suite = found[0]._tests
-        
+
         # assert we loaded correct number of cases
         self.assertEquals(len(suite), 6)
-        
+
         expected_scripted_tests = (
             'test_script1',
             'test_script2',

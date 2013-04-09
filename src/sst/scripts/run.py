@@ -28,13 +28,14 @@ import time
 import traceback
 import urllib
 
-import sst
-from sst import runtests
-from sst.command import get_opts_run, clear_old_results
+from sst import (
+    command,
+    runtests,
+)
 
 
 def main():
-    cmd_opts, args = get_opts_run()
+    cmd_opts, args = command.get_opts_run()
 
     print '--------------------------------------------------------------'
     print 'starting SST...'
@@ -82,7 +83,7 @@ def main():
         print ''
 
     try:
-        clear_old_results()
+        command.clear_old_results()
         runtests.runtests(
             args,
             test_dir=cmd_opts.dir_name,

@@ -620,7 +620,8 @@ def click_link(id_or_elem, check=False, wait=True):
     link_url = link.get_attribute('href')
 
     if browsermob_proxy is not None:
-        _logger.debug('Capturing http traffic...')
+        # FIXME: Typo below went unoticed, missing a test -- vila 2013-04-09
+        logger.debug('Capturing http traffic...')
         browsermob_proxy.new_har()
 
     logger.debug('Clicking link %r' % _get_text(link))
@@ -1341,7 +1342,7 @@ def assert_table_headers(id_or_elem, headers):
     if not elem.tag_name == 'table':
         _raise('Element %r is not a table.' % (id_or_elem,))
     header_elems = elem.find_elements_by_tag_name('th')
-    header_text = [_get_text(elem) for elem in header_elems]
+    header_text = [_get_text(e) for e in header_elems]
     if not header_text == headers:
         msg = ('Expected headers:%r. Actual headers%r\n' %
                (headers, header_text))
@@ -1393,7 +1394,7 @@ def assert_table_row_contains_text(id_or_elem, row, contents, regex=False):
         msg = 'Asked to fetch row %s. Highest row is %s' % (row, len(rows) - 1)
         _raise(msg)
     columns = rows[row].find_elements_by_tag_name('td')
-    cells = [_get_text(elem) for elem in columns]
+    cells = [_get_text(e) for e in columns]
     if not regex:
         success = cells == contents
     elif len(contents) != len(cells):

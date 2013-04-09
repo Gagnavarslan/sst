@@ -18,8 +18,6 @@
 #
 
 import ast
-import codecs
-import datetime
 import fnmatch
 import HTMLTestRunner
 import junitxmlrunner
@@ -30,7 +28,6 @@ import traceback
 
 from unittest2 import (
     defaultTestLoader,
-    SkipTest,
     TestSuite,
     TextTestRunner,
 )
@@ -45,10 +42,9 @@ from sst import (
     xvfbdisplay,
 )
 from .actions import (
-    start, stop, reset_base_url, _set_wait_timeout, take_screenshot,
-    get_page_source, EndTest
+    start, stop,
+    EndTest
 )
-from .context import populate_context
 
 
 __all__ = ['runtests']
@@ -211,7 +207,7 @@ def find_cases(test_names, test_dir):
     dir_list = os.listdir(test_dir)
     filtered_dir_list = set()
     if not test_names:
-        test_names = ['*',]
+        test_names = ['*', ]
     for name_pattern in test_names:
         if not name_pattern.endswith('.py'):
             name_pattern += '.py'
@@ -470,9 +466,7 @@ def get_case(test_dir, entry, browser_type, browser_version,
         # load just the individual file's tests
         this_test = defaultTestLoader.discover(test_dir, pattern=entry)
     else:  # this is for script-based test
-        context_provided = True
         if context is None:
-            context_provided = False
             context = {}
         name = entry[:-3]
         test_name = 'test_%s' % name
