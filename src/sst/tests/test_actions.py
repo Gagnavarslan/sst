@@ -69,7 +69,12 @@ class TestElementToString(testtools.TestCase):
 
     def test_element_with_id(self):
         element = mock.Mock()
-        element.get_attribute.return_value = 'Test id'
+        def mock_get_attribute(attribute):
+            if attribute == 'id':
+                return 'Test id'
+            else:
+                return None
+        element.get_attribute.side_effect = mock_get_attribute
         self.assertEqual('Test id', actions._element_to_string(element))
 
     def test_element_without_id_with_text(self):
