@@ -67,7 +67,7 @@ if [ -n "$BOOTSTRAP" ]; then
     echo "installing modules from dependencies branch..."
     DEPS="sst-deps/pythonpackages/"
     cd $DEPS; ls *.tar.gz
-    pip install *.tar.gz --quiet
+    pip install *.tar.gz
     cd ../..
 else
     source ENV/bin/activate
