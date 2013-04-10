@@ -21,7 +21,6 @@
 
 import datetime
 import os
-import socket
 import subprocess
 import sys
 import time
@@ -29,7 +28,7 @@ import traceback
 import urllib
 
 import sst
-from sst import runtests
+from sst import runtests, tests
 from sst.command import get_opts_run, clear_old_results
 
 
@@ -51,19 +50,24 @@ def main():
             browsermob_process.kill()
             browsermob_process.wait()
 
-        cleanups.append(('\nkilling browsermob proxy...', browsermob_cleanup))
+        cleanups.append(('\nkilling browsermob proxy...', browsermob_cleanup, None))
 
     if cmd_opts.run_tests:
         cmd_opts.dir_name = 'selftests'
-        run_django()
-        cleanups.append(('\nkilling django...', kill_django))
+        if not tests.devserver_port_used(tests.DEVSERVER_PORT):
+            run_django(tests.DEVSERVER_PORT)
+            cleanups.append(('\nkilling django...', kill_django, tests.DEVSERVER_PORT))
+        else:
+            print 'Error: port is in use.'
+            print 'can not launch devserver for internal tests.'
+            sys.exit(1)
 
     if cmd_opts.xserver_headless:
         from sst.xvfbdisplay import Xvfb
         print '\nstarting virtual display...'
         display = Xvfb(width=1024, height=768)
         display.start()
-        cleanups.append(('\nstopping virtual display...', display.stop))
+        cleanups.append(('\nstopping virtual display...', display.stop, None))
 
     if not cmd_opts.quiet:
         print ''
@@ -100,19 +104,22 @@ def main():
     finally:
 
         print '--------------------------------------------------------------'
-        for desc, cmd in cleanups:
-            # Run cleanups, displaying but not propagating exceptions
+        for desc, cmd, arg in cleanups:
+            # run cleanups, displaying but not propagating exceptions
             try:
                 print desc
-                cmd()
+                if arg is None:
+                    cmd()
+                else:
+                    cmd(arg)
             except Exception:
                 print traceback.format_exc()
 
 
-def run_django():
+def run_django(port):
     """Start django server for running local self-tests."""
     manage_file = './src/testproject/manage.py'
-    url = 'http://localhost:8000/'
+    url = 'http://localhost:%s/' % port
 
     if not os.path.isfile(manage_file):
         print 'Error: can not find the django testproject.'
@@ -125,7 +132,7 @@ def run_django():
         print 'Error: can not find django module.'
         print 'you must have django installed to run the test project.'
         sys.exit(1)
-    subprocess.Popen([manage_file, 'runserver'],
+    proc = subprocess.Popen([manage_file, 'runserver', port],
                      stderr=open(os.devnull, 'w'),
                      stdout=open(os.devnull, 'w')
                      )
@@ -143,11 +150,12 @@ def run_django():
                 print 'Error: can not get response from %r' % url
                 raise
     print 'django found. continuing...'
+    return proc
 
 
-def kill_django():
+def kill_django(port):
     try:
-        urllib.urlopen('http://localhost:8000/kill_django')
+        urllib.urlopen('http://localhost:%s/kill_django' % port)
     except IOError:
         pass
 

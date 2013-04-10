@@ -96,7 +96,7 @@ browsermob_proxy = None
 _check_flags = True
 _test = None
 
-BASE_URL = 'http://localhost:8000/'
+BASE_URL = 'http://localhost:8120/'
 __DEFAULT_BASE_URL__ = BASE_URL
 
 logger = logging.getLogger('SST')
