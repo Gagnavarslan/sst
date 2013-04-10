@@ -455,7 +455,7 @@ def go_back(wait=True):
         _make_results_dir()
         browsermob_proxy.save_har(_make_useable_har_name())
 
-
+        
 def assert_checkbox(id_or_elem):
     """
     Assert that the element is a checkbox.
@@ -475,23 +475,54 @@ def assert_checkbox_value(id_or_elem, value):
     or isn't a checkbox."""
     checkbox = assert_checkbox(id_or_elem)
     real = checkbox.is_selected()
-    msg = 'Checkbox: %r - Has Value: %r' % (_get_text(checkbox), real)
+    msg = 'Checkbox: %r - Has Value: %r' % (_element_to_string(checkbox), real)
     if real != value:
         _raise(msg)
 
+
+def _element_to_string(element):
+    element_id = element.get_attribute('id')
+    if element_id:
+        return element_id
+    else:
+        element_text = _get_text(element)
+        if element_text:
+            return element_text
+        else:
+            return element.get_attribute('outerHTML')
+
+
+def _get_text(elem):
+    text = None
+    try:
+        text = elem.text
+    except InvalidElementStateException:
+        pass
+    if text:
+        # Note that some elements (like textfields) return empty string
+        # for text and we still need to call value
+        return text
+    try:
+        text = elem.get_attribute('value')
+    except InvalidElementStateException:
+        pass
+    return text
+
+        
 
 def toggle_checkbox(id_or_elem):
     """
     Toggle the checkbox value. Takes an element id or object. Raises a failure
     exception if the element specified doesn't exist or isn't a checkbox."""
     checkbox = assert_checkbox(id_or_elem)
-    logger.debug('Toggling checkbox: %r' % _get_text(checkbox))
+    element_string = _element_to_string(checkbox)
+    logger.debug('Toggling checkbox: %r' % element_string)
     before = checkbox.is_selected()
     checkbox.click()
     after = checkbox.is_selected()
-    msg = 'Checkbox: %r - was not toggled, value remains: %r' \
-        % (_get_text(checkbox), before)
     if before == after:
+        msg = 'Checkbox: %r - was not toggled, value remains: %r' \
+            % (element_string, before)
         _raise(msg)
 
 
@@ -501,7 +532,8 @@ def set_checkbox_value(id_or_elem, new_value):
     exception if the element specified doesn't exist or isn't a checkbox."""
     checkbox = assert_checkbox(id_or_elem)
     logger.debug(
-        'Setting checkbox %r to %r' % (_get_text(checkbox), new_value))
+        'Setting checkbox %r to %r' % (_element_to_string(checkbox),
+                                       new_value))
     # There is no method to 'unset' a checkbox in the browser object
     current_value = checkbox.is_selected()
     if new_value != current_value:
@@ -528,7 +560,7 @@ def simulate_keys(id_or_elem, key_to_press):
     """
     key_element = _get_elem(id_or_elem)
     msg = 'Simulating keypress on %r with %r key' \
-        % (_get_text(key_element), key_to_press)
+        % (_element_to_string(key_element), key_to_press)
     logger.debug(msg)
     key_code = _make_keycode(key_to_press)
     key_element.send_keys(key_code)
@@ -560,7 +592,7 @@ def write_textfield(id_or_elem, new_text, check=True, clear=True):
     off by passing `clear=False`."""
     textfield = assert_textfield(id_or_elem)
     msg = 'Writing to textfield %r with text %r' \
-        % (_get_text(textfield), new_text)
+        % (_element_to_string(textfield), new_text)
     logger.debug(msg)
 
     # clear field like this, don't use clear()
@@ -578,7 +610,7 @@ def write_textfield(id_or_elem, new_text, check=True, clear=True):
     current_text = textfield.get_attribute('value')
     if current_text != new_text:
         msg = 'Textfield: %r - did not write. Text was: %r' \
-            % (_get_text(textfield), current_text)
+            % (_element_to_string(textfield), current_text)
         _raise(msg)
 
 
@@ -591,7 +623,7 @@ def assert_link(id_or_elem):
     link = _get_elem(id_or_elem)
     if link.tag_name != 'a':
         msg = 'The text %r is not part of a Link or a Link ID' \
-            % _get_text(link)
+            % _element_to_string(link)
         _raise(msg)
     return link
 
@@ -625,7 +657,7 @@ def click_link(id_or_elem, check=False, wait=True):
         _logger.debug('Capturing http traffic...')
         browsermob_proxy.new_har()
 
-    logger.debug('Clicking link %r' % _get_text(link))
+    logger.debug('Clicking link %r' % _element_to_string(link))
     link.click()
 
     if wait:
@@ -669,7 +701,7 @@ def click_element(id_or_elem, wait=True):
         logger.debug('Capturing http traffic...')
         browsermob_proxy.new_har()
 
-    logger.debug('Clicking element %r' % _get_text(elem))
+    logger.debug('Clicking element %r' % _element_to_string(elem))
     elem.click()
 
     if wait:
@@ -906,7 +938,8 @@ def set_dropdown_value(id_or_elem, text=None, value=None):
     """Set the select drop-list to a text or value specified."""
     elem = assert_dropdown(id_or_elem)
     logger.debug(
-        'Setting %r option list to %r' % (_get_text(elem), text or value))
+        'Setting %r option list to %r' % (_element_to_string(elem),
+                                          text or value))
     if text and not value:
         for element in elem.find_elements_by_tag_name('option'):
             if element.text == text:
@@ -960,7 +993,7 @@ def assert_radio_value(id_or_elem, value):
     a radio button"""
     elem = assert_radio(id_or_elem)
     selected = elem.is_selected()
-    msg = 'Radio %r should be set to: %s.' % (_get_text(elem), value)
+    msg = 'Radio %r should be set to: %s.' % (_element_to_string(elem), value)
     if value != selected:
         _raise(msg)
 
@@ -968,25 +1001,8 @@ def assert_radio_value(id_or_elem, value):
 def set_radio_value(id_or_elem):
     """Select the specified radio button."""
     elem = assert_radio(id_or_elem)
-    logger.debug('Selecting radio button item %r' % _get_text(elem))
+    logger.debug('Selecting radio button item %r' % _element_to_string(elem))
     elem.click()
-
-
-def _get_text(elem):
-    text = None
-    try:
-        text = elem.text
-    except InvalidElementStateException:
-        pass
-    if text:
-        # Note that some elements (like textfields) return empty string
-        # for text and we still need to call value
-        return text
-    try:
-        text = elem.get_attribute('value')
-    except InvalidElementStateException:
-        pass
-    return text
 
 
 def assert_text(id_or_elem, text):
@@ -998,11 +1014,7 @@ def assert_text(id_or_elem, text):
     elem = _get_elem(id_or_elem)
     real = _get_text(elem)
     if real is None:
-        if isinstance(id_or_elem, str):
-            element_string = id_or_elem
-        else:
-            element_string = elem.get_attribute('outerHTML')
-        msg = 'Element %r has no text attribute' % element_string
+        msg = 'Element %r has no text attribute' % _element_to_string(elem)
         _raise(msg)
     if real != text:
         msg = 'Element text should be %r. It is %r.' % (text, real)
@@ -1017,7 +1029,7 @@ def assert_text_contains(id_or_elem, text, regex=False):
     elem = _get_elem(id_or_elem)
     real = _get_text(elem)
     if real is None:
-        msg = 'Element %r has no text attribute' % _get_text(elem)
+        msg = 'Element %r has no text attribute' % _element_to_string(elem)
         _raise(msg)
     msg = 'Element text is %r. Does not contain %r' % (real, text)
     if regex:
@@ -1175,7 +1187,7 @@ def click_button(id_or_elem, wait=True):
         logger.debug('Capturing http traffic...')
         browsermob_proxy.new_har()
 
-    logger.debug('Clicking button %r' % _get_text(button))
+    logger.debug('Clicking button %r' % _element_to_string(button))
     button.click()
 
     if wait:
@@ -1422,7 +1434,8 @@ def assert_attribute(id_or_elem, attribute, value, regex=False):
     the attribute using a regular expression search.
     """
     elem = _get_elem(id_or_elem)
-    logger.debug('Checking attribute %r of %r' % (attribute, _get_text(elem)))
+    logger.debug(
+        'Checking attribute %r of %r' % (attribute,  _element_to_string(elem)))
     actual = elem.get_attribute(attribute)
     if not regex:
         success = value == actual
@@ -1444,7 +1457,7 @@ def assert_css_property(id_or_elem, property, value, regex=False):
     elem = _get_elem(id_or_elem)
     logger.debug(
         'Checking css property %r: %r of %r' % (
-            property, value, _get_text(elem)))
+            property, value, _element_to_string(elem)))
     actual = elem.value_of_css_property(property)
     # some browsers return string with space padded commas, some don't.
     actual = actual.replace(', ', ',')
