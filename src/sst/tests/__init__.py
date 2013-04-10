@@ -24,8 +24,6 @@ import tempfile
 from sst import runtests
 
 
-DEVSERVER_PORT = '8120'  # django devserver for internal acceptance tests
-
 
 class SSTBrowserLessTestCase(runtests.SSTTestCase):
     """A specialized test class for tests that don't need a browser."""
