@@ -21,7 +21,7 @@
 import testtools
 
 from sst.scripts import run
-from sst.tests import devserver_port_used
+from sst.tests import check_devserver_port_used
 
 
 class TestDjangoDevServer(testtools.TestCase):
@@ -33,11 +33,11 @@ class TestDjangoDevServer(testtools.TestCase):
 
 
     def test_django_devserver_port_used(self):
-        used = devserver_port_used('8120')
+        used = check_devserver_port_used('8120')
         self.assertFalse(used)
         
         self.addCleanup(run.kill_django, '8120')
         run.run_django('8120')
         
-        used = devserver_port_used('8120')
+        used = check_devserver_port_used('8120')
         self.assertTrue(used)

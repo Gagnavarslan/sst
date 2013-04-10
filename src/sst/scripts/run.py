@@ -54,7 +54,7 @@ def main():
 
     if cmd_opts.run_tests:
         cmd_opts.dir_name = 'selftests'
-        if not tests.devserver_port_used(tests.DEVSERVER_PORT):
+        if not tests.check_devserver_port_used(tests.DEVSERVER_PORT):
             run_django(tests.DEVSERVER_PORT)
             cleanups.append(('\nkilling django...', kill_django, tests.DEVSERVER_PORT))
         else:

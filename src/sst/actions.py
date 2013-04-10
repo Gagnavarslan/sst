@@ -63,7 +63,6 @@ from selenium.common.exceptions import (
 from sst import config
 from sst import bmobproxy
 
-
 __all__ = [
     'accept_alert', 'add_cleanup', 'assert_attribute', 'assert_button',
     'assert_checkbox', 'assert_checkbox_value', 'assert_css_property',
@@ -96,7 +95,10 @@ browsermob_proxy = None
 _check_flags = True
 _test = None
 
-BASE_URL = 'http://localhost:8120/'
+# BROKEN!
+# XXX FIXME. need to get port from tests.DEVSERVER_PORT, 
+# but importing tests is causing circular import or something funky.
+BASE_URL = 'http://localhost:8120/'  
 __DEFAULT_BASE_URL__ = BASE_URL
 
 logger = logging.getLogger('SST')

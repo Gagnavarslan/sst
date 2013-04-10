@@ -23,6 +23,7 @@ import tempfile
 
 from sst import runtests
 
+
 DEVSERVER_PORT = '8120'  # django devserver for internal acceptance tests
 
 
@@ -50,7 +51,7 @@ def set_cwd_to_tmp(test):
     os.chdir(test.test_base_dir)
 
 
-def devserver_port_used(port):
+def check_devserver_port_used(port):
     """check if port is ok to use for django devserver"""
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # immediately reuse a local socket in TIME_WAIT state
