@@ -996,7 +996,11 @@ def assert_text(id_or_elem, text):
     elem = _get_elem(id_or_elem)
     real = _get_text(elem)
     if real is None:
-        msg = 'Element %r has no text attribute' % _get_text(elem)
+        if isinstance(id_or_elem, str):
+            element_string = id_or_elem
+        else:
+            element_string = elem.get_attribute('outerHTML')
+        msg = 'Element %r has no text attribute' % element_string
         _raise(msg)
     if real != text:
         msg = 'Element text should be %r. It is %r.' % (text, real)
