@@ -388,7 +388,7 @@ class SSTScriptTestCase(SSTTestCase):
     script_dir = '.'
     script_name = None
 
-    def __init__(self, testMethod, context_row=None):
+    def __init__(self, testMethod, context_row={}):
         super(SSTScriptTestCase, self).__init__('run_test_script')
         self.id = lambda: '%s.%s.%s' % (self.__class__.__module__,
                                         self.__class__.__name__, testMethod)
@@ -425,10 +425,9 @@ class SSTScriptTestCase(SSTTestCase):
         actions.reset_base_url()
         actions._set_wait_timeout(10, 0.1)
         # Possibly inject parametrization from associated .csv file
-        if self.context:
-            context.populate_context(
-                self.context, self.script_path, self.browser_type,
-                self.javascript_disabled)
+        context.populate_context(
+            self.context, self.script_path, self.browser_type,
+            self.javascript_disabled)
 
     def _compile_script(self):
         with open(self.script_path) as f:

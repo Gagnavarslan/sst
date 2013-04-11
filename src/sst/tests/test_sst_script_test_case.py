@@ -49,7 +49,8 @@ class SSTStringTestCase(runtests.SSTScriptTestCase):
 class TestSSTScriptTestCase(testtools.TestCase):
 
     def test_test_case_without_context(self):
-        test = SSTStringTestCase('ignored', context_row=None)
+        # Use the default context value.
+        test = SSTStringTestCase('ignored')
         test.script_code = 'assert True'
         result = testtools.TestResult()
         test.run(result)
