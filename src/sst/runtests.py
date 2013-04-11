@@ -354,6 +354,12 @@ class ChromeFactory(BrowserFactory):
 
 
 # FIXME: Missing tests -- vila 2013-04-11
+class IeFactory(BrowserFactory):
+
+    webdriver_class = webdriver.Ie
+
+
+# FIXME: Missing tests -- vila 2013-04-11
 class PhantomJSFactory(BrowserFactory):
 
     webdriver_class = webdriver.PhantomJS
@@ -402,6 +408,7 @@ class FirefoxFactory(BrowserFactory):
 browser_factories = {
     'Chrome': ChromeFactory,
     'Firefox': FirefoxFactory,
+    'Ie': IeFactory,
     'Opera': OperaFactory,
     'PhantomJS': PhantomJSFactory,
 }
