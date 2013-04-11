@@ -46,7 +46,7 @@ class TestResultsDirectory(testtools.TestCase):
         result = testtools.TestResult()
         test.run(result)
         # FIXME: The following assertion outlines that config.results_directory
-        # is modified as a side-effect, this is violates isolation
+        # is modified as a side-effect, this violates isolation
         # -- vila 2013-01-15
         from sst import config
         self.assertTrue(os.path.exists(config.results_directory))

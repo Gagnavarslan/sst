@@ -35,9 +35,7 @@ def populate_context(
 ):
     """Create the execution context for a test"""
 
-    name = os.path.splitext(
-        os.path.split(path)[1]
-    )[0]
+    name = os.path.splitext(os.path.split(path)[1])[0]
 
     context['__file__'] = path
     context['__name__'] = name

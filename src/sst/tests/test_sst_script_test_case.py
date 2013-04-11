@@ -62,15 +62,17 @@ class TestSSTScriptTestCaseFailureScreenShots(testtools.TestCase):
         test.results_directory = 'results'
         result = testtools.TestResult()
         test.run(result)
+        self.assertEqual(0, len(result.errors))
+        self.assertEqual(1, len(result.failures))
         # We get a screenshot and a pagesource
         files = sorted(os.listdir('results'))
         self.assertEqual(2, len(files))
-        byte_sizes = [
-            os.path.getsize(os.path.join(test.results_directory, f)) 
-            for f in files
-        ]
-        for size in byte_sizes:
-            self.assertGreater(size, 0)
+
+        def byte_size(f):
+            return os.path.getsize(os.path.join(test.results_directory, f))
+
+        self.assertGreater(byte_size(files[0]), 0)
+        self.assertGreater(byte_size(files[1]), 0)
         self.assertThat(files[0], matchers.StartsWith('pagesource-'))
         self.assertThat(files[1], matchers.StartsWith('screenshot-'))
 
@@ -81,6 +83,8 @@ class TestSSTScriptTestCaseFailureScreenShots(testtools.TestCase):
         test.results_directory = 'results'
         result = testtools.TestResult()
         test.run(result)
+        self.assertEqual(0, len(result.errors))
+        self.assertEqual(1, len(result.failures))
         # No screenshot required, no files
         files = os.listdir('results')
         self.assertEqual(0, len(files))
