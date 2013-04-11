@@ -20,9 +20,8 @@
 from cStringIO import StringIO
 import logging
 
-
+import mock
 import testtools
-
 
 from sst import actions
 
@@ -64,3 +63,46 @@ class TestRetryOnStale(testtools.TestCase):
     def test_wait_for_retries(self):
         self.assertRaisesOnlyOnce(None, actions.wait_for,
                                   self.raise_stale_element)
+
+
+class TestElementToString(testtools.TestCase):
+
+    def test_element_with_id(self):
+        element = self._get_element_with_id(element_id='Test id')
+        self.assertEqual('Test id', actions._element_to_string(element))
+
+    def _get_element_with_id(self, element_id):
+        element = mock.Mock()
+        def mock_get_attribute(attribute):
+            if attribute == 'id':
+                return element_id
+        element.get_attribute.side_effect = mock_get_attribute
+        return element
+
+    def test_element_without_id_with_text(self):
+        element = self._get_element_without_id_with_text(text='Test text')
+        self.assertEqual('Test text', actions._element_to_string(element))
+
+    def _get_element_without_id_with_text(self, text):
+        element = mock.Mock()
+        element.get_attribute.return_value = None
+        element.text = text
+        return element
+
+    def test_element_without_id_without_text(self):
+        element = self._get_element_without_id_without_text(tag='p')
+        self.assertEqual(
+            '<p></p>', actions._element_to_string(element))
+
+    def _get_element_without_id_without_text(self, tag):
+        element = mock.Mock()
+        def mock_get_attribute(attribute):
+            values = {
+                'id': None,
+                'value': None,
+                'outerHTML': '<{0}></{0}>'.format(tag)
+            }
+            return values[attribute]
+        element.get_attribute.side_effect = mock_get_attribute
+        element.text = None
+        return element
