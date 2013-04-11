@@ -460,7 +460,7 @@ def _has_classes(test_dir, entry):
 def get_case(test_dir, entry, browser_type, browser_version,
              browser_platform, session_name, javascript_disabled,
              webdriver_remote_url, screenshots_on,
-             context=None, failfast=False, debug=False, extended=False):
+             context={}, failfast=False, debug=False, extended=False):
     # our naming convention for tests requires that script-based tests must
     # not begin with "test_*."  SSTTestCase class-based or other
     # unittest.TestCase based source files must begin with "test_*".
