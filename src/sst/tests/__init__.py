@@ -24,7 +24,6 @@ import tempfile
 from sst import runtests
 
 
-
 class SSTBrowserLessTestCase(runtests.SSTTestCase):
     """A specialized test class for tests that don't need a browser."""
 
