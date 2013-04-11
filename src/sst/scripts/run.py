@@ -51,13 +51,13 @@ def main():
             browsermob_process.kill()
             browsermob_process.wait()
 
-        cleanups.append(('\nkilling browsermob proxy...', browsermob_cleanup, None))
+        cleanups.append(('\nkilling browsermob proxy...', browsermob_cleanup))
 
     if cmd_opts.run_tests:
         cmd_opts.dir_name = 'selftests'
-        if not tests.check_devserver_port_used(tests.DEVSERVER_PORT):
-            run_django(tests.DEVSERVER_PORT)
-            cleanups.append(('\nkilling django...', kill_django, tests.DEVSERVER_PORT))
+        if not tests.check_devserver_port_used(sst.DEVSERVER_PORT):
+            run_django(sst.DEVSERVER_PORT)
+            cleanups.append(('\nkilling django...', kill_django, sst.DEVSERVER_PORT))
         else:
             print 'Error: port is in use.'
             print 'can not launch devserver for internal tests.'
@@ -68,7 +68,7 @@ def main():
         print '\nstarting virtual display...'
         display = Xvfb(width=1024, height=768)
         display.start()
-        cleanups.append(('\nstopping virtual display...', display.stop, None))
+        cleanups.append(('\nstopping virtual display...', display.stop))
 
     if not cmd_opts.quiet:
         print ''
@@ -105,14 +105,14 @@ def main():
     finally:
 
         print '--------------------------------------------------------------'
-        for desc, cmd, arg in cleanups:
+        for cleanup in cleanups:
             # run cleanups, displaying but not propagating exceptions
+            desc = cleanup[0]
+            cmd = cleanup[1]
+            args = cleanup[2:]
+            print desc
             try:
-                print desc
-                if arg is None:
-                    cmd()
-                else:
-                    cmd(arg)
+                cmd(*args)
             except Exception:
                 print traceback.format_exc()
 
