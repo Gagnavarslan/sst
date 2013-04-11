@@ -46,6 +46,16 @@ class SSTStringTestCase(runtests.SSTScriptTestCase):
         super(SSTStringTestCase, self).setUp()
 
 
+class TestSSTScriptTestCase(testtools.TestCase):
+
+    def test_test_case_without_context(self):
+        test = SSTStringTestCase('ignored', context_row=None)
+        test.script_code = 'assert True'
+        result = testtools.TestResult()
+        test.run(result)
+        self.assertTrue(result.wasSuccessful())
+
+
 class TestSSTScriptTestCaseFailureScreenShots(testtools.TestCase):
 
     def setUp(self):
