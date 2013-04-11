@@ -425,8 +425,10 @@ class SSTScriptTestCase(SSTTestCase):
         actions.reset_base_url()
         actions._set_wait_timeout(10, 0.1)
         # Possibly inject parametrization from associated .csv file
-        context.populate_context(self.context, self.script_path,
-                                 self.browser_type, self.javascript_disabled)
+        if self.context:
+            context.populate_context(
+                self.context, self.script_path, self.browser_type,
+                self.javascript_disabled)
 
     def _compile_script(self):
         with open(self.script_path) as f:
