@@ -59,8 +59,10 @@ from selenium.common.exceptions import (
     WebDriverException,
 )
 
-from sst import config
-
+from sst import (
+    config,
+    DEVSERVER_PORT,
+)
 
 __all__ = [
     'accept_alert', 'add_cleanup', 'assert_attribute', 'assert_button',
@@ -70,7 +72,7 @@ __all__ = [
     'assert_radio', 'assert_radio_value', 'assert_table_has_rows',
     'assert_table_headers', 'assert_table_row_contains_text',
     'assert_text', 'assert_text_contains', 'assert_textfield',
-    'assert_title', 'assert_title_contains', 'assert_url', 
+    'assert_title', 'assert_title_contains', 'assert_url',
     'assert_url_contains', 'assert_url_network_location', 'check_flags',
     'clear_cookies', 'click_button', 'click_element', 'click_link',
     'close_window', 'debug', 'dismiss_alert', 'end_test', 'execute_script',
@@ -92,7 +94,7 @@ __all__ = [
 _check_flags = True
 _test = None
 
-BASE_URL = 'http://localhost:8000/'
+BASE_URL = 'http://localhost:%s/' % DEVSERVER_PORT 
 __DEFAULT_BASE_URL__ = BASE_URL
 
 logger = logging.getLogger('SST')

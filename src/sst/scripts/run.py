@@ -32,7 +32,11 @@ import testtools
 
 testtools.try_import('selenium')
 
-from sst import runtests
+import sst
+from sst import (
+    runtests,
+    tests,
+)
 from sst.command import get_opts_run, clear_old_results
 
 
@@ -59,8 +63,13 @@ def main():
 
     if cmd_opts.run_tests:
         cmd_opts.dir_name = 'selftests'
-        run_django()
-        cleanups.append(('\nkilling django...', kill_django))
+        if not tests.check_devserver_port_used(sst.DEVSERVER_PORT):
+            run_django(sst.DEVSERVER_PORT)
+            cleanups.append(('\nkilling django...', kill_django, sst.DEVSERVER_PORT))
+        else:
+            print 'Error: port is in use.'
+            print 'can not launch devserver for internal tests.'
+            sys.exit(1)
 
     if cmd_opts.xserver_headless:
         from sst.xvfbdisplay import Xvfb
@@ -103,19 +112,22 @@ def main():
     finally:
 
         print '--------------------------------------------------------------'
-        for desc, cmd in cleanups:
-            # Run cleanups, displaying but not propagating exceptions
+        for cleanup in cleanups:
+            # run cleanups, displaying but not propagating exceptions
+            desc = cleanup[0]
+            cmd = cleanup[1]
+            args = cleanup[2:]
+            print desc
             try:
-                print desc
-                cmd()
+                cmd(*args)
             except Exception:
                 print traceback.format_exc()
 
 
-def run_django():
+def run_django(port):
     """Start django server for running local self-tests."""
     manage_file = './src/testproject/manage.py'
-    url = 'http://localhost:8000/'
+    url = 'http://localhost:%s/' % port
 
     if not os.path.isfile(manage_file):
         print 'Error: can not find the django testproject.'
@@ -128,7 +140,7 @@ def run_django():
         print 'Error: can not find django module.'
         print 'you must have django installed to run the test project.'
         sys.exit(1)
-    subprocess.Popen([manage_file, 'runserver'],
+    proc = subprocess.Popen([manage_file, 'runserver', port],
                      stderr=open(os.devnull, 'w'),
                      stdout=open(os.devnull, 'w')
                      )
@@ -146,11 +158,12 @@ def run_django():
                 print 'Error: can not get response from %r' % url
                 raise
     print 'django found. continuing...'
+    return proc
 
 
-def kill_django():
+def kill_django(port):
     try:
-        urllib.urlopen('http://localhost:8000/kill_django')
+        urllib.urlopen('http://localhost:%s/kill_django' % port)
     except IOError:
         pass
 
