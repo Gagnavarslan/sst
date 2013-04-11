@@ -653,7 +653,7 @@ def assert_url_network_location(netloc):
     
     `netloc` is a string containing 'domain:port'.
     In the case of port 80, `netloc` may contain domain only."""
-    real_netloc = urlparse(browser.current_url).netloc
+    real_netloc = urlparse(_test.browser.current_url).netloc
     if netloc != real_netloc:
         msg = 'Url network location is: %r. Should be: %r' % (
             real_netloc, netloc)

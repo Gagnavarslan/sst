@@ -46,10 +46,21 @@ class SSTStringTestCase(runtests.SSTScriptTestCase):
         super(SSTStringTestCase, self).setUp()
 
 
-class TestSSTScriptTestCaseFailureScreenShots(testtools.TestCase):
+class TestContext(testtools.TestCase):
+
+    def test_test_case_without_context(self):
+        # Use the default context value.
+        test = SSTStringTestCase('ignored')
+        test.script_code = 'assert True'
+        result = testtools.TestResult()
+        test.run(result)
+        self.assertTrue(result.wasSuccessful())
+
+
+class TestScreenShotsAndPageDump(testtools.TestCase):
 
     def setUp(self):
-        super(TestSSTScriptTestCaseFailureScreenShots, self).setUp()
+        super(TestScreenShotsAndPageDump, self).setUp()
         tests.set_cwd_to_tmp(self)
         # capture test output so we don't pollute the test runs
         self.out = StringIO()
