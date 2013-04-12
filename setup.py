@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   Copyright (c) 2011-2013 Canonical Ltd.
+#   Copyright (c) 2011,2012,2013 Canonical Ltd.
 #
 #   This file is part of: SST (selenium-simple-test)
 #   https://launchpad.net/selenium-simple-test
@@ -31,7 +31,7 @@ from sst import __version__
 
 
 NAME = 'sst'
-PACKAGES = ['sst', 'sst.scripts']
+PACKAGES = ['sst', 'sst.scripts', 'sst.tests']
 DESCRIPTION = 'SST - Web Test Framework'
 URL = 'http://testutils.org/sst'
 LICENSE = 'Apache'
@@ -60,7 +60,7 @@ CLASSIFIERS = [
 ]
 
 AUTHOR = 'Canonical Online Services Team'
-AUTHOR_EMAIL = 'corey@goldb.org'
+AUTHOR_EMAIL = 'cgoldberg _at_ gmail.com'
 KEYWORDS = ('selenium webdriver test testing web automation').split(' ')
 
 params = dict(
