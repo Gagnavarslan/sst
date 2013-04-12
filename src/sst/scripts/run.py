@@ -28,8 +28,15 @@ import time
 import traceback
 import urllib
 
+import testtools
+
+testtools.try_import('selenium')
+
 import sst
-from sst import runtests, tests
+from sst import (
+    runtests,
+    tests,
+)
 from sst.command import get_opts_run, clear_old_results
 
 
@@ -44,6 +51,7 @@ def main():
     if cmd_opts.browsermob and cmd_opts.run_tests:
         print 'Warning: can not record local traffic from django testproject'
 
+    browsermob_process = None
     if cmd_opts.browsermob:
         browsermob_process = run_browsermob_server(cmd_opts.browsermob)
 
@@ -77,7 +85,6 @@ def main():
         print '  test directory: %r' % cmd_opts.dir_name
         print '  report format: %r' % cmd_opts.report_format
         print '  browser type: %r' % cmd_opts.browser_type
-        print '  javascript disabled: %r' % cmd_opts.javascript_disabled
         print '  browswermob proxy launcher: %r' % cmd_opts.browsermob
         print '  shared directory: %r' % cmd_opts.shared_modules
         print '  screenshots on error: %r' % cmd_opts.screenshots_on
@@ -88,14 +95,14 @@ def main():
 
     try:
         clear_old_results()
+        factory = runtests.browser_factories.get(cmd_opts.browser_type)
         runtests.runtests(
             args,
             test_dir=cmd_opts.dir_name,
             collect_only=cmd_opts.collect_only,
             report_format=cmd_opts.report_format,
-            browser_type=cmd_opts.browser_type,
-            javascript_disabled=cmd_opts.javascript_disabled,
-            browsermob_enabled=bool(cmd_opts.browsermob),
+            browser_factory=factory(cmd_opts.javascript_disabled,
+                                    browsermob_process),
             shared_directory=cmd_opts.shared_modules,
             screenshots_on=cmd_opts.screenshots_on,
             failfast=cmd_opts.failfast,

@@ -1,4 +1,3 @@
-from sst.actions import *
 from sst import runtests
 
 
