@@ -18,7 +18,7 @@
 #
 
 import ast
-import codecs
+import logging
 import datetime
 import fnmatch
 import HTMLTestRunner
@@ -30,36 +30,36 @@ import traceback
 
 from unittest2 import (
     defaultTestLoader,
-    SkipTest,
     TestSuite,
     TextTestRunner,
 )
 
+from selenium import webdriver
 import testtools
 import testtools.content
 
 from sst import (
     actions,
+    bmobproxy,
     config,
     context,
     xvfbdisplay,
 )
 from .actions import (
-    start, stop, reset_base_url, _set_wait_timeout, take_screenshot,
-    get_page_source, EndTest
+    EndTest
 )
-from .context import populate_context
 
 
 __all__ = ['runtests']
 
+logger = logging.getLogger('SST')
+
 
 def runtests(test_names, test_dir='.', collect_only=False,
-             report_format='console', browser_type='Firefox',
-             javascript_disabled=False, browsermob_enabled=False,
+             browser_factory=None,
+             report_format='console',
              shared_directory=None, screenshots_on=False, failfast=False,
-             debug=False, webdriver_remote_url=None, browser_version='',
-             browser_platform='ANY', session_name=None,
+             debug=False,
              extended=False):
 
     if test_dir == 'selftests':
@@ -74,19 +74,24 @@ def runtests(test_names, test_dir='.', collect_only=False,
         print msg
         sys.exit(1)
 
+    if browser_factory is None:
+        # TODO: We could raise an error instead as providing a default value
+        # makes little sense here -- vila 2013-04-11
+        browser_factory = FirefoxFactory(False, None)
+
     shared_directory = find_shared_directory(test_dir, shared_directory)
     config.shared_directory = shared_directory
     sys.path.append(shared_directory)
 
     config.results_directory = _get_full_path('results')
 
-    config.browsermob_enabled = browsermob_enabled
+    config.browsermob_enabled = browser_factory.browsermob_process is not None
 
     test_names = set(test_names)
 
-    suites = get_suites(test_names, test_dir, shared_directory, collect_only, browser_type, browser_version,
-                        browser_platform, session_name, javascript_disabled,
-                        webdriver_remote_url, screenshots_on, failfast, debug,
+    suites = get_suites(test_names, test_dir, shared_directory, collect_only,
+                        browser_factory,
+                        screenshots_on, failfast, debug,
                         extended=extended,
                         )
 
@@ -187,16 +192,16 @@ def find_shared_directory(test_dir, shared_directory):
     return _get_full_path(shared_directory)
 
 
-def get_suites(test_names, test_dir, shared_dir, collect_only, browser_type, browser_version,
-               browser_platform, session_name, javascript_disabled,
-               webdriver_remote_url, screenshots_on, failfast, debug,
+def get_suites(test_names, test_dir, shared_dir, collect_only,
+               browser_factory,
+               screenshots_on, failfast, debug,
                extended=False
                ):
     return [
         get_suite(
-            test_names, root, collect_only, browser_type, browser_version,
-            browser_platform, session_name, javascript_disabled,
-            webdriver_remote_url, screenshots_on, failfast, debug,
+            test_names, root, collect_only,
+            browser_factory,
+            screenshots_on, failfast, debug,
             extended=extended,
         )
         for root, _, _ in os.walk(test_dir, followlinks=True)
@@ -231,9 +236,9 @@ def find_cases(test_names, test_dir):
     return found
 
 
-def get_suite(test_names, test_dir, collect_only, browser_type, browser_version,
-              browser_platform, session_name, javascript_disabled,
-              webdriver_remote_url, screenshots_on, failfast, debug,
+def get_suite(test_names, test_dir, collect_only,
+              browser_factory,
+              screenshots_on, failfast, debug,
               extended=False):
 
     suite = TestSuite()
@@ -246,18 +251,14 @@ def get_suite(test_names, test_dir, collect_only, browser_type, browser_version,
                 # row is a dictionary of variables
                 suite.addTest(
                     get_case(
-                        test_dir, case, browser_type, browser_version,
-                        browser_platform, session_name, javascript_disabled,
-                        webdriver_remote_url, screenshots_on, row,
+                        test_dir, case, browser_factory, screenshots_on, row,
                         failfast=failfast, debug=debug, extended=extended
                     )
                 )
         else:
             suite.addTest(
                 get_case(
-                    test_dir, case, browser_type, browser_version,
-                    browser_platform, session_name, javascript_disabled,
-                    webdriver_remote_url, screenshots_on,
+                    test_dir, case, browser_factory, screenshots_on,
                     failfast=failfast, debug=debug, extended=extended
                 )
             )
@@ -280,19 +281,149 @@ def use_xvfb_server(test, xvfb=None):
     return xvfb
 
 
+def _make_useable_har_name(stem=''):
+    now = datetime.now()
+    timestamped_base = 'har-%s' % now.strftime('%Y-%m-%d_%H-%M-%S-%f')
+    if stem:
+        slug_name = ''.join(x for x in stem if x.isalnum())
+        out_name = '%s-%s.har' % (timestamped_base, slug_name)
+    else:
+        out_name = '%s.har' % timestamped_base
+        file_name = os.path.join(config.results_directory, out_name)
+    return file_name
+
+
+class BrowserFactory(object):
+    """Handle browser creation for tests.
+
+    One instance is used for a given test run 
+    """
+
+    webdriver_class = None
+    browsermob_proxy = None
+
+    def __init__(self, javascript_disabled, browsermob_process):
+        super(BrowserFactory, self).__init__()
+        self.javascript_disabled = javascript_disabled
+        self.browsermob_process = browsermob_process
+
+    def setup_for_test(self, test):
+        """Setup the browser for the given test.
+
+        Some browsers accept more options that are test (and browser) specific.
+
+        Daughter classes should redefines this method to capture them.
+        """
+        pass
+
+    def browser(self):
+        """Create a browser based on previously collected options.
+
+        Daughter classes should override this method if they need to provide
+        more context.
+        """
+        return self.webdriver_class()
+
+    def start_http_capture(self, captured_url=''):
+        if self.browsermob_proxy is not None:
+            self.captured_url = captured_url
+            logger.debug('Capturing http traffic...')
+            self.browsermob_proxy.new_har()
+
+    def stop_http_capture(self):
+        if self.browsermob_proxy is not None:
+            logger.debug('Saving HAR output')
+            actions._make_results_dir()
+            self.browsermob_proxy.save_har(
+                _make_useable_har_name(self.captured_url))
+
+
+# FIXME: Missing tests -- vila 2013-04-11
+class RemoteBrowserFactory(BrowserFactory):
+
+    webdriver_class = webdriver.Remote
+
+    def __init__(self, capabilities, remote_url):
+        super(RemoteBrowserFactory, self).__init__()
+        self.capabilities = capabilities
+        self.remote_url = remote_url
+
+    def browser(self):
+        return self.webdriver_class(self.capabilities, self.remote_url)
+
+
+# FIXME: Missing tests -- vila 2013-04-11
+class ChromeFactory(BrowserFactory):
+
+    webdriver_class = webdriver.Chrome
+
+
+# FIXME: Missing tests -- vila 2013-04-11
+class IeFactory(BrowserFactory):
+
+    webdriver_class = webdriver.Ie
+
+
+# FIXME: Missing tests -- vila 2013-04-11
+class PhantomJSFactory(BrowserFactory):
+
+    webdriver_class = webdriver.PhantomJS
+
+
+# FIXME: Missing tests -- vila 2013-04-11
+class OperaFactory(BrowserFactory):
+
+    webdriver_class = webdriver.Opera
+
+
+class FirefoxFactory(BrowserFactory):
+
+    webdriver_class = webdriver.Firefox
+
+    def setup_for_test(self, test):
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference('intl.accept_languages', 'en')
+        if self.browsermob_process is not None:
+            # FIXME: The proxy url shouldn't be hardcoded -- vila 2013-04-10
+            self.browsermob_proxy = bmobproxy.BrowserMobProxy('localhost', 8080)
+            selenium_proxy = webdriver.Proxy(
+                {'httpProxy': self.browsermob_proxy.url})
+            profile.set_proxy(selenium_proxy)
+        if test.assume_trusted_cert_issuer:
+            profile.set_preference('webdriver_assume_untrusted_issuer', False)
+            profile.set_preference(
+                'capability.policy.default.Window.QueryInterface', 'allAccess')
+            profile.set_preference(
+                'capability.policy.default.Window.frameElement.get',
+                'allAccess')
+        if test.javascript_disabled or self.javascript_disabled:
+            profile.set_preference('javascript.enabled', False)
+        self.profile = profile
+
+    def browser(self):
+        return self.webdriver_class(self.profile)
+
+
+# FIXME: Missing tests -- vila 2013-04-11
+browser_factories = {
+    'Chrome': ChromeFactory,
+    'Firefox': FirefoxFactory,
+    'Ie': IeFactory,
+    'Opera': OperaFactory,
+    'PhantomJS': PhantomJSFactory,
+}
+
+
 class SSTTestCase(testtools.TestCase):
     """A test case that can use the sst framework."""
 
     xvfb = None
     xserver_headless = False
 
-    browser_type = 'Firefox'
-    browser_version = ''
-    browser_platform = 'ANY'
-    session_name = None
+    browser_factory = FirefoxFactory(False, None)
+
     javascript_disabled = False
     assume_trusted_cert_issuer = False
-    webdriver_remote_url = None
 
     wait_timeout = 10
     wait_poll = 0.1
@@ -331,17 +462,16 @@ class SSTTestCase(testtools.TestCase):
             self.addOnException(self.report_extensively)
 
     def start_browser(self):
-        self.browser, self.browsermob_proxy = start(
-            self.browser_type, self.browser_version, self.browser_platform,
-            self.session_name, self.javascript_disabled,
-            self.assume_trusted_cert_issuer, self.webdriver_remote_url)
+        logger.debug('\nStarting browser')
+        self.browser_factory.setup_for_test(self)
+        self.browser = self.browser_factory.browser()
+        logger.debug('Browser started: %s' % (self.browser.name))
 
     def stop_browser(self):
-        stop()
+        logger.debug('Stopping browser')
+        self.browser.quit()
 
     def take_screenshot_and_page_dump(self, exc_info):
-        # FIXME: Urgh, config.results_directory is a global set in
-        # runtests() -- vila 2012-10-29
         try:
             filename = 'screenshot-{0}.png'.format(self.id())
             actions.take_screenshot(filename)
@@ -392,6 +522,8 @@ class SSTScriptTestCase(SSTTestCase):
         super(SSTScriptTestCase, self).__init__('run_test_script')
         self.id = lambda: '%s.%s.%s' % (self.__class__.__module__,
                                         self.__class__.__name__, testMethod)
+        if context_row is None:
+            context_row = {}
         self.context = context_row
 
     def __str__(self):
@@ -426,7 +558,7 @@ class SSTScriptTestCase(SSTTestCase):
         actions._set_wait_timeout(10, 0.1)
         # Possibly inject parametrization from associated .csv file
         context.populate_context(self.context, self.script_path,
-                                 self.browser_type, self.javascript_disabled)
+                                 self.browser.name, self.javascript_disabled)
 
     def _compile_script(self):
         with open(self.script_path) as f:
@@ -456,9 +588,7 @@ def _has_classes(test_dir, entry):
     return bool(found_classes)
 
 
-def get_case(test_dir, entry, browser_type, browser_version,
-             browser_platform, session_name, javascript_disabled,
-             webdriver_remote_url, screenshots_on,
+def get_case(test_dir, entry, browser_factory, screenshots_on,
              context=None, failfast=False, debug=False, extended=False):
     # our naming convention for tests requires that script-based tests must
     # not begin with "test_*."  SSTTestCase class-based or other
@@ -470,22 +600,12 @@ def get_case(test_dir, entry, browser_type, browser_version,
         # load just the individual file's tests
         this_test = defaultTestLoader.discover(test_dir, pattern=entry)
     else:  # this is for script-based test
-        context_provided = True
-        if context is None:
-            context_provided = False
-            context = {}
         name = entry[:-3]
         test_name = 'test_%s' % name
         this_test = SSTScriptTestCase(test_name, context)
         this_test.script_dir = test_dir
         this_test.script_name = entry
-        this_test.browser_type = browser_type
-        this_test.browser_version = browser_version
-        this_test.browser_platform = browser_platform
-        this_test.webdriver_remote_url = webdriver_remote_url
-
-        this_test.session_name = session_name
-        this_test.javascript_disabled = javascript_disabled
+        this_test.browser_factory = browser_factory
 
         this_test.screenshots_on = screenshots_on
         this_test.debug_post_mortem = debug
