@@ -302,6 +302,11 @@ class BrowserFactory(object):
     webdriver_class = None
     browsermob_proxy = None
 
+    def __init__(self, javascript_disabled, browsermob_process):
+        super(BrowserFactory, self).__init__()
+        self.javascript_disabled = javascript_disabled
+        self.browsermob_process = browsermob_process
+
     def setup_for_test(self, test):
         """Setup the browser for the given test.
 
@@ -374,11 +379,6 @@ class OperaFactory(BrowserFactory):
 class FirefoxFactory(BrowserFactory):
 
     webdriver_class = webdriver.Firefox
-
-    def __init__(self, javascript_disabled, browsermob_process):
-        super(FirefoxFactory, self).__init__()
-        self.javascript_disabled = javascript_disabled
-        self.browsermob_process = browsermob_process
 
     def setup_for_test(self, test):
         profile = webdriver.FirefoxProfile()
