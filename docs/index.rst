@@ -134,24 +134,6 @@ Options::
   --test                    run selftests
 
 
------------------
-  Interactive use
------------------
-
-After installing sst, you can experiment with it from the python interactive
-interpreter by calling `start()` to launch the browser (Firefox by default).
-After that, you can call any of the actions as you would use them in a test::
-
-    >>> from sst.actions import *
-    >>> start()
-
-        Starting Firefox
-    >>> go_to('http://google.com')
-        Going to... http://google.com
-        Waiting for get_element
-    >>>
-
-
 --------------------
     Organizing tests
 --------------------
@@ -192,6 +174,52 @@ SST will find all of the tests in subdirectories (including symlinks) and
 execute them. SST won't look in directories starting with an underscore. This
 allows you to put Python packages/modules directly in your test directories
 if you want. A better option is to use the shared directory.
+
+
+------------------------
+    Running the examples
+------------------------
+
+SST source code repository and package download contain some trivial example
+scripts.
+
+You can run them from your local sst directory like this::
+
+    $ ./sst-run -d examples
+
+
+---------------------------------
+Using sst in unittest test suites
+---------------------------------
+
+sst uses unittest test cases internally to wrap the execution of the script
+and taking care of starting and stopping the browser. If you prefer to
+integrate some sst tests into an existing unittest test suite you can use
+SSTTestCase from runtests.py::
+
+  from sst.actions import *
+  from sst import runtests
+
+  class TestUbuntu(runtests.SSTTestCase):
+
+      def test_ubuntu_home_page(self):
+          go_to('http://www.ubuntu.com/')
+          assert_title_contains('Ubuntu')
+
+So, with the above in a file name test_ubuntu.py you can run the test with
+(for example)::
+
+  python -m unittest test_ubuntu.py
+
+`sst-run` provides an headless xserver via the `-x` option. `SSTTestCase`
+provides the same feature (sharing the same implementation) via two class
+attributes.
+
+`xserver_headless` when set to `True` will start an headless server for each
+test (and stop it after the test). If you want to share the same server
+across several tests, set `xvfb`. You're then responsible for starting and
+stopping this server (see `src/sst/xvfbdisplay.py` for details or
+`src/sst/tests/test_xvfb.py` for examples.
 
 
 --------------------
@@ -282,18 +310,6 @@ putting the following at the start of the test::
     * django (optional - needed for internal self-tests only)
 
 
-------------------------
-    Running the examples
-------------------------
-
-SST source code repository and package download contain some trivial example
-scripts.
-
-You can run them from your local sst directory like this::
-
-    $ ./sst-run -d examples
-
-
 --------------------------
     Running the self-tests
 --------------------------
@@ -305,40 +321,6 @@ You can run the suite of self-tests (and the test Django server) from your
 local branch like this::
 
     $ ./sst-run --test
-
-
----------------------------------
-Using sst in unittest test suites
----------------------------------
-
-sst uses unittest test cases internally to wrap the execution of the script
-and taking care of starting and stopping the browser. If you prefer to
-integrate some sst tests into an existing unittest test suite you can use
-SSTTestCase from runtests.py::
-
-  from sst.actions import *
-  from sst import runtests
-
-  class TestUbuntu(runtests.SSTTestCase):
-
-      def test_ubuntu_home_page(self):
-          go_to('http://www.ubuntu.com/')
-          assert_title_contains('Ubuntu')
-
-So, with the above in a file name test_ubuntu.py you can run the test with
-(for example)::
-
-  python -m unittest test_ubuntu.py
-
-`sst-run` provides an headless xserver via the `-x` option. `SSTTestCase`
-provides the same feature (sharing the same implementation) via two class
-attributes.
-
-`xserver_headless` when set to `True` will start an headless server for each
-test (and stop it after the test). If you want to share the same server
-across several tests, set `xvfb`. You're then responsible for starting and
-stopping this server (see `src/sst/xvfbdisplay.py` for details or
-`src/sst/tests/test_xvfb.py` for examples.
 
 
 -----------------
