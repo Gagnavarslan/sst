@@ -59,6 +59,13 @@ like this::
     $ sudo apt-get install python-pip xvfb
     $ sudo pip install -U sst
 
+or with a `virtualenv`::
+
+    $ sudo apt-get install python-virtualenv xvfb
+    $ virtualenv ENV
+    $ source ENV/bin/activate
+    (ENV)$ pip install sst
+
 * note: `xvfb` is only needed if you want to run SST in headless mode
 
 
@@ -176,18 +183,6 @@ allows you to put Python packages/modules directly in your test directories
 if you want. A better option is to use the shared directory.
 
 
-------------------------
-    Running the examples
-------------------------
-
-SST source code repository and package download contain some trivial example
-scripts.
-
-You can run them from your local sst directory like this::
-
-    $ ./sst-run -d examples
-
-
 ---------------------------------
 Using sst in unittest test suites
 ---------------------------------
@@ -287,15 +282,27 @@ putting the following at the start of the test::
   work fine on other platforms, but any issues (or even better - patches)
   should be reported on the Launchpad project.
 
-* Get a copy of SST Trunk, install requirements, and run self-tests/examples
-  from the branch::
+* Get a copy of SST Trunk, create and activate a virtualenv, install requirements, 
+  and run examples/self-tests from the dev branch::
 
-    $ sudo apt-get install bzr python-pip xvfb
+    $ sudo apt-get install bzr python-virtualenv xvfb
     $ bzr branch lp:selenium-simple-test
     $ cd selenium-simple-test
-    $ sudo pip install -U -r requirements.txt
-    $ ./sst-run --test -x
-    $ ./sst-run -d examples
+    $ virtualenv ENV
+    $ source ENV/bin/activate
+    (ENV)$ pip install -r requirements.txt
+    (ENV)$ ./sst-run -d examples
+    
+* (optional) Install `nose` and run SST's internal unit tests::
+
+    (ENV)$ pip install nose
+    (ENV)$ nosetests --match ^test_.* --exclude="ENV|testproject|selftests"
+
+* (optional) Install `django` and run SST's internal test application with
+  acceptance tests
+
+    (ENV)$ pip install django
+    (ENV)$ ./sst-run --test x
 
 * `Launchpad Project <https://launchpad.net/selenium-simple-test>`_
 
@@ -306,8 +313,19 @@ putting the following at the start of the test::
 
     * selenium
     * unittest2
-    * junitxml
+    * testtools
     * django (optional - needed for internal self-tests only)
+
+------------------------
+    Running the examples
+------------------------
+
+SST source code repository and package download contain some trivial example
+scripts.
+
+You can run them from your local sst directory like this::
+
+    $ ./sst-run -d examples
 
 
 --------------------------
