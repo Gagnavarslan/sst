@@ -40,7 +40,6 @@ import testtools.content
 
 from sst import (
     actions,
-    bmobproxy,
     config,
     context,
     xvfbdisplay,
@@ -77,15 +76,13 @@ def runtests(test_names, test_dir='.', collect_only=False,
     if browser_factory is None:
         # TODO: We could raise an error instead as providing a default value
         # makes little sense here -- vila 2013-04-11
-        browser_factory = FirefoxFactory(False, None)
+        browser_factory = FirefoxFactory(False)
 
     shared_directory = find_shared_directory(test_dir, shared_directory)
     config.shared_directory = shared_directory
     sys.path.append(shared_directory)
 
     config.results_directory = _get_full_path('results')
-
-    config.browsermob_enabled = browser_factory.browsermob_process is not None
 
     test_names = set(test_names)
 
@@ -281,18 +278,6 @@ def use_xvfb_server(test, xvfb=None):
     return xvfb
 
 
-def _make_useable_har_name(stem=''):
-    now = datetime.now()
-    timestamped_base = 'har-%s' % now.strftime('%Y-%m-%d_%H-%M-%S-%f')
-    if stem:
-        slug_name = ''.join(x for x in stem if x.isalnum())
-        out_name = '%s-%s.har' % (timestamped_base, slug_name)
-    else:
-        out_name = '%s.har' % timestamped_base
-        file_name = os.path.join(config.results_directory, out_name)
-    return file_name
-
-
 class BrowserFactory(object):
     """Handle browser creation for tests.
 
@@ -300,12 +285,10 @@ class BrowserFactory(object):
     """
 
     webdriver_class = None
-    browsermob_proxy = None
 
-    def __init__(self, javascript_disabled, browsermob_process):
+    def __init__(self, javascript_disabled):
         super(BrowserFactory, self).__init__()
         self.javascript_disabled = javascript_disabled
-        self.browsermob_process = browsermob_process
 
     def setup_for_test(self, test):
         """Setup the browser for the given test.
@@ -323,19 +306,6 @@ class BrowserFactory(object):
         more context.
         """
         return self.webdriver_class()
-
-    def start_http_capture(self, captured_url=''):
-        if self.browsermob_proxy is not None:
-            self.captured_url = captured_url
-            logger.debug('Capturing http traffic...')
-            self.browsermob_proxy.new_har()
-
-    def stop_http_capture(self):
-        if self.browsermob_proxy is not None:
-            logger.debug('Saving HAR output')
-            actions._make_results_dir()
-            self.browsermob_proxy.save_har(
-                _make_useable_har_name(self.captured_url))
 
 
 # FIXME: Missing tests -- vila 2013-04-11
@@ -383,12 +353,6 @@ class FirefoxFactory(BrowserFactory):
     def setup_for_test(self, test):
         profile = webdriver.FirefoxProfile()
         profile.set_preference('intl.accept_languages', 'en')
-        if self.browsermob_process is not None:
-            # FIXME: The proxy url shouldn't be hardcoded -- vila 2013-04-10
-            self.browsermob_proxy = bmobproxy.BrowserMobProxy('localhost', 8080)
-            selenium_proxy = webdriver.Proxy(
-                {'httpProxy': self.browsermob_proxy.url})
-            profile.set_proxy(selenium_proxy)
         if test.assume_trusted_cert_issuer:
             profile.set_preference('webdriver_assume_untrusted_issuer', False)
             profile.set_preference(
@@ -420,7 +384,7 @@ class SSTTestCase(testtools.TestCase):
     xvfb = None
     xserver_headless = False
 
-    browser_factory = FirefoxFactory(False, None)
+    browser_factory = FirefoxFactory(False)
 
     javascript_disabled = False
     assume_trusted_cert_issuer = False

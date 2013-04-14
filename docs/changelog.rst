@@ -29,6 +29,7 @@ version **0.2.3** (?? ?? ??)
 * added ``testtools`` dependency
 * command-line test names may use glob patterns for discovery
 * added `--collect-only` option to `sst-run` command line
+* removed Browsermob proxy integration
 
 
 version **0.2.2** (2012 Nov 4)

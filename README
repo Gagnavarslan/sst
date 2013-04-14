@@ -120,7 +120,6 @@ Options::
   --with-flags=FLAGS        comma separated list of flags to run tests with
   --disable-flag-skips      run all tests, disable skipping tests due to flags
   --extended-tracebacks     Add extra information (page source) to failure reports
-  --browsermob=BROWSERMOB   enable browsermob proxy (launcher location)
   --test                    run selftests
 
 
@@ -223,9 +222,6 @@ environment. The `sst.config` module has the following information::
 
     # full path to the results directory
     config.results_directory
-    
-    # is browsermob proxy enabled?
-    config.browsermob_enabled
 
     # flags for the current test run
     config.flags

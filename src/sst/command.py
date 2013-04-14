@@ -100,8 +100,6 @@ def get_common_options():
 
 def get_run_options():
     parser = get_common_options()
-    parser.add_option('--browsermob', dest='browsermob',
-                      help='enable browsermob proxy (launcher location)')
     parser.add_option('--test',
                       dest='run_tests', action='store_true',
                       default=False,
