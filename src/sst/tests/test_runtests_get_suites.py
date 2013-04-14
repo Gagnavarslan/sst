@@ -83,7 +83,7 @@ class TestGetSuites(testtools.TestCase):
 
         found = runtests.get_suites(
             test_names, test_dir, shared_dir, collect_only,
-            runtests.FirefoxFactory(False),
+            runtests.FirefoxFactory(),
             screenshots_on, failfast, debug, extended
         )
         suite = found[0]._tests

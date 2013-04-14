@@ -76,7 +76,7 @@ def runtests(test_names, test_dir='.', collect_only=False,
     if browser_factory is None:
         # TODO: We could raise an error instead as providing a default value
         # makes little sense here -- vila 2013-04-11
-        browser_factory = FirefoxFactory(False)
+        browser_factory = FirefoxFactory()
 
     shared_directory = find_shared_directory(test_dir, shared_directory)
     config.shared_directory = shared_directory
@@ -286,7 +286,7 @@ class BrowserFactory(object):
 
     webdriver_class = None
 
-    def __init__(self, javascript_disabled):
+    def __init__(self, javascript_disabled=False):
         super(BrowserFactory, self).__init__()
         self.javascript_disabled = javascript_disabled
 
@@ -295,7 +295,7 @@ class BrowserFactory(object):
 
         Some browsers accept more options that are test (and browser) specific.
 
-        Daughter classes should redefines this method to capture them.
+        Daughter classes should redefine this method to capture them.
         """
         pass
 
@@ -384,7 +384,7 @@ class SSTTestCase(testtools.TestCase):
     xvfb = None
     xserver_headless = False
 
-    browser_factory = FirefoxFactory(False)
+    browser_factory = FirefoxFactory()
 
     javascript_disabled = False
     assume_trusted_cert_issuer = False
