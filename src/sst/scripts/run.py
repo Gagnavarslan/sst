@@ -48,19 +48,6 @@ def main():
 
     cleanups = []
 
-    if cmd_opts.browsermob and cmd_opts.run_tests:
-        print 'Warning: can not record local traffic from django testproject'
-
-    browsermob_process = None
-    if cmd_opts.browsermob:
-        browsermob_process = run_browsermob_server(cmd_opts.browsermob)
-
-        def browsermob_cleanup():
-            browsermob_process.kill()
-            browsermob_process.wait()
-
-        cleanups.append(('\nkilling browsermob proxy...', browsermob_cleanup))
-
     if cmd_opts.run_tests:
         cmd_opts.dir_name = 'selftests'
         if not tests.check_devserver_port_used(sst.DEVSERVER_PORT):
@@ -85,7 +72,6 @@ def main():
         print '  test directory: %r' % cmd_opts.dir_name
         print '  report format: %r' % cmd_opts.report_format
         print '  browser type: %r' % cmd_opts.browser_type
-        print '  browswermob proxy launcher: %r' % cmd_opts.browsermob
         print '  shared directory: %r' % cmd_opts.shared_modules
         print '  screenshots on error: %r' % cmd_opts.screenshots_on
         print '  failfast: %r' % cmd_opts.failfast
@@ -101,8 +87,7 @@ def main():
             test_dir=cmd_opts.dir_name,
             collect_only=cmd_opts.collect_only,
             report_format=cmd_opts.report_format,
-            browser_factory=factory(cmd_opts.javascript_disabled,
-                                    browsermob_process),
+            browser_factory=factory(cmd_opts.javascript_disabled),
             shared_directory=cmd_opts.shared_modules,
             screenshots_on=cmd_opts.screenshots_on,
             failfast=cmd_opts.failfast,
@@ -166,35 +151,6 @@ def kill_django(port):
         urllib.urlopen('http://localhost:%s/kill_django' % port)
     except IOError:
         pass
-
-
-def run_browsermob_server(path_to_bmob_server):
-    try:
-        process = subprocess.Popen([path_to_bmob_server, ],
-                                   stderr=open(os.devnull, 'w'),
-                                   stdout=open(os.devnull, 'w')
-                                   )
-    except Exception as e:
-        print 'Error: proxy not started'
-        print e
-        sys.exit(1)
-    print '--------------------------------------------------------------'
-    print 'waiting for browsermob proxy to come up...'
-    attempts = 30
-    for count in xrange(attempts):
-        try:
-            socket_ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            socket_.settimeout(1)
-            socket_.connect(('localhost', 8080))
-            socket_.close()
-            break
-        except socket.error:
-            time.sleep(0.2)
-            if count >= attempts - 1:  # timeout
-                print 'Error: browsermob proxy not started'
-                sys.exit(1)
-    print 'browsermob proxy found. continuing...'
-    return process
 
 
 if __name__ == '__main__':

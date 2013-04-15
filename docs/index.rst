@@ -59,6 +59,13 @@ like this::
     $ sudo apt-get install python-pip xvfb
     $ sudo pip install -U sst
 
+or with a `virtualenv`::
+
+    $ sudo apt-get install python-virtualenv xvfb
+    $ virtualenv ENV
+    $ source ENV/bin/activate
+    (ENV)$ pip install sst
+
 * note: `xvfb` is only needed if you want to run SST in headless mode
 
 
@@ -131,26 +138,7 @@ Options::
   --with-flags=FLAGS        comma separated list of flags to run tests with
   --disable-flag-skips      run all tests, disable skipping tests due to flags
   --extended-tracebacks     Add extra information (page source) to failure reports
-  --browsermob=BROWSERMOB   enable browsermob proxy (launcher location)
   --test                    run selftests
-
-
------------------
-  Interactive use
------------------
-
-After installing sst, you can experiment with it from the python interactive
-interpreter by calling `start()` to launch the browser (Firefox by default).
-After that, you can call any of the actions as you would use them in a test::
-
-    >>> from sst.actions import *
-    >>> start()
-
-        Starting Firefox
-    >>> go_to('http://google.com')
-        Going to... http://google.com
-        Waiting for get_element
-    >>>
 
 
 --------------------
@@ -195,6 +183,40 @@ allows you to put Python packages/modules directly in your test directories
 if you want. A better option is to use the shared directory.
 
 
+---------------------------------
+Using sst in unittest test suites
+---------------------------------
+
+sst uses unittest test cases internally to wrap the execution of the script
+and taking care of starting and stopping the browser. If you prefer to
+integrate some sst tests into an existing unittest test suite you can use
+SSTTestCase from runtests.py::
+
+  from sst.actions import *
+  from sst import runtests
+
+  class TestUbuntu(runtests.SSTTestCase):
+
+      def test_ubuntu_home_page(self):
+          go_to('http://www.ubuntu.com/')
+          assert_title_contains('Ubuntu')
+
+So, with the above in a file name test_ubuntu.py you can run the test with
+(for example)::
+
+  python -m unittest test_ubuntu.py
+
+`sst-run` provides an headless xserver via the `-x` option. `SSTTestCase`
+provides the same feature (sharing the same implementation) via two class
+attributes.
+
+`xserver_headless` when set to `True` will start an headless server for each
+test (and stop it after the test). If you want to share the same server
+across several tests, set `xvfb`. You're then responsible for starting and
+stopping this server (see `src/sst/xvfbdisplay.py` for details or
+`src/sst/tests/test_xvfb.py` for examples.
+
+
 --------------------
     Shared directory
 --------------------
@@ -236,9 +258,6 @@ information::
     # full path to the results directory
     config.results_directory
 
-    # is browsermob proxy enabled?
-    config.browsermob_enabled
-
     # flags for the current test run
     config.flags
 
@@ -263,15 +282,27 @@ putting the following at the start of the test::
   work fine on other platforms, but any issues (or even better - patches)
   should be reported on the Launchpad project.
 
-* Get a copy of SST Trunk, install requirements, and run self-tests/examples
-  from the branch::
+* Get a copy of SST Trunk, create and activate a virtualenv, install requirements, 
+  and run examples/self-tests from the dev branch::
 
-    $ sudo apt-get install bzr python-pip xvfb
+    $ sudo apt-get install bzr python-virtualenv xvfb
     $ bzr branch lp:selenium-simple-test
     $ cd selenium-simple-test
-    $ sudo pip install -U -r requirements.txt
-    $ ./sst-run --test -x
-    $ ./sst-run -d examples
+    $ virtualenv ENV
+    $ source ENV/bin/activate
+    (ENV)$ pip install -r requirements.txt
+    (ENV)$ ./sst-run -d examples
+    
+* (optional) Install `nose` and run SST's internal unit tests::
+
+    (ENV)$ pip install nose
+    (ENV)$ nosetests --match ^test_.* --exclude="ENV|testproject|selftests"
+
+* (optional) Install `django` and run SST's internal test application with
+  acceptance tests
+
+    (ENV)$ pip install django
+    (ENV)$ ./sst-run --test x
 
 * `Launchpad Project <https://launchpad.net/selenium-simple-test>`_
 
@@ -282,9 +313,8 @@ putting the following at the start of the test::
 
     * selenium
     * unittest2
-    * junitxml
+    * testtools
     * django (optional - needed for internal self-tests only)
-
 
 ------------------------
     Running the examples
@@ -310,90 +340,6 @@ local branch like this::
 
     $ ./sst-run --test
 
----------------------------------
-Using sst in unittest test suites
----------------------------------
-
-sst uses unittest test cases internally to wrap the execution of the script
-and taking care of starting and stopping the browser. If you prefer to
-integrate some sst tests into an existing unittest test suite you can use
-SSTTestCase from runtests.py::
-
-  from sst.actions import *
-  from sst import runtests
-
-  class TestUbuntu(runtests.SSTTestCase):
-
-      def test_ubuntu_home_page(self):
-          go_to('http://www.ubuntu.com/')
-          assert_title_contains('Ubuntu')
-
-So, with the above in a file name test_ubuntu.py you can run the test with
-(for example)::
-
-  python -m unittest test_ubuntu.py
-
-`sst-run` provides an headless xserver via the `-x` option. `SSTTestCase`
-provides the same feature (sharing the same implementation) via two class
-attributes.
-
-`xserver_headless` when set to `True` will start an headless server for each
-test (and stop it after the test). If you want to share the same server
-across several tests, set `xvfb`. You're then responsible for starting and
-stopping this server (see `src/sst/xvfbdisplay.py` for details or
-`src/sst/tests/test_xvfb.py` for examples.
-
-
----------------------------------------------------
-    Performance tracing with Browsermob Proxy (HAR)
----------------------------------------------------
-
-SST can generate `HAR (HTTP Archive format)
-<http://www.softwareishard.com/blog/har-12-spec/>`_ output for performance
-profiling and tracing.
-
-HAR format is based on JSON, and is used by tools that consume/produce data
-collected by monitoring HTTP communication. These files contain a log of HTTP
-client/server conversation and can be used for additional analysis of page
-load performance.
-
-This is achieved by routing browser requests through `BrowserMob Proxy
-<https://github.com/webmetrics/browsermob-proxy>`_, which records web page
-loads while your tests run.  SST will launch the proxy and save output to
-.har files if you enable the ``--browsermob`` command line option.  HAR files
-are saved in the `results` directory for each page load.
-
-* Setup Browsermob Proxy
-
- * install a Java runtime::
-
-    $ sudo apt-get install default-jre
-
- * download latest `browsermob-proxy-*.zip`:
-
-  * `GitHub browsermob-proxy/downloads <https://github.com/webmetrics/browsermob-proxy/downloads>`_
-
- * unzip archive, and give execute permissions to the launcher script::
-
-    $ chmod +x bin/browsermob-proxy
-
-* Invoke SST using the ``--browsermob`` option, providing location of the launcher.
-
- * Example::
-
-    $ sst-run mytest --browsermob=/home/foo/browsermob-proxy/bin/browsermob-proxy
-
-* HAR analysis tools:
-
- * `harviewer <http://code.google.com/p/harviewer/>`_
- * `HTTP Archive Viewer <http://www.softwareishard.com/har/viewer/>`_
- * `PCAP Web Performance Analyzer <http://pcapperf.appspot.com/>`_
-
-* Browsermob integration notes:
-
- * not yet working for SSL sites
- * does not record local requests.  test against remote servers only.
-
 
 -----------------
     Related links
@@ -404,4 +350,3 @@ are saved in the `results` directory for each page load.
   <http://www.aosabook.org/en/selenium.html>`_
 * `Python Unittest <http://docs.python.org/library/unittest.html>`_
 * `unittest2 <http://pypi.python.org/pypi/unittest2/>`_
-

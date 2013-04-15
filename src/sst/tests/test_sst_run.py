@@ -77,6 +77,5 @@ class TestSSTTestCase(testtools.TestCase):
         self.assertEqual(config.cache, {})
         self.assertEqual(config.flags, [])
         self.assertFalse(config.javascript_disabled)
-        self.assertFalse(config.browsermob_enabled)
         self.assertEqual(os.path.split(config.results_directory)[-1],
                          'results')

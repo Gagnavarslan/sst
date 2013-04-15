@@ -182,15 +182,11 @@ def refresh(wait=True):
     available after the click. You can switch off this behaviour by passing
     `wait=False`.
     """
-    _test.browser_factory.start_http_capture()
-
     logger.debug('Refreshing current page')
     _test.browser.refresh()
 
     if wait:
         _waitforbody()
-
-    _test.browser_factory.stop_http_capture()
 
 
 def take_screenshot(filename='screenshot.png', add_timestamp=True):
@@ -323,15 +319,11 @@ def go_to(url='', wait=True):
     """
     url = _fix_url(url)
 
-    _test.browser_factory.start_http_capture(url)
-
     logger.debug('Going to... %s' % url)
     _test.browser.get(url)
 
     if wait:
         _waitforbody()
-
-    _test.browser_factory.stop_http_capture()
 
 
 def go_back(wait=True):
@@ -341,15 +333,11 @@ def go_back(wait=True):
     By default this action will wait until a page with a body element is
     available after the click. You can switch off this behaviour by passing
     `wait=False`."""
-    _test.browser_factory.start_http_capture()
-
     logger.debug('Going back one step in browser history')
     _test.browser.back()
 
     if wait:
         _waitforbody()
-
-    _test.browser_factory.stop_http_capture()
 
         
 def assert_checkbox(id_or_elem):
@@ -549,15 +537,11 @@ def click_link(id_or_elem, check=False, wait=True):
     link = assert_link(id_or_elem)
     link_url = link.get_attribute('href')
 
-    _test.browser_factory.start_http_capture()
-
     logger.debug('Clicking link %r' % _element_to_string(link))
     link.click()
 
     if wait:
         _waitforbody()
-
-    _test.browser_factory.stop_http_capture()
 
     # some links do redirects - so we
     # don't check by default
@@ -588,15 +572,11 @@ def click_element(id_or_elem, wait=True):
     `wait=False`."""
     elem = _get_elem(id_or_elem)
 
-    _test.browser_factory.start_http_capture()
-
     logger.debug('Clicking element %r' % _element_to_string(elem))
     elem.click()
 
     if wait:
         _waitforbody()
-
-    _test.browser_factory.stop_http_capture()
 
 
 def assert_title(title):
@@ -1070,15 +1050,11 @@ def click_button(id_or_elem, wait=True):
     `wait=False`."""
     button = assert_button(id_or_elem)
 
-    _test.browser_factory.start_http_capture()
-
     logger.debug('Clicking button %r' % _element_to_string(button))
     button.click()
 
     if wait:
         _waitforbody()
-
-    _test.browser_factory.stop_http_capture()
 
 
 def get_elements_by_css(selector):
