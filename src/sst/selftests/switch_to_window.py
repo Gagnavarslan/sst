@@ -1,6 +1,7 @@
 from sst.actions import *
 from sst import config
 
+# PhantomJS can not do multiple windows by design
 if config.browser_type == 'phantomjs':
     skip()
 

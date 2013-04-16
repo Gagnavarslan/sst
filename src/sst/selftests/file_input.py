@@ -4,9 +4,8 @@ import os
 from sst.actions import *
 from sst import config
 
-if config.browser_type == 'phantomjs':
-    skip()
-if config.browser_type == 'chrome':
+# file input is currently only implemented for Firefox in sst
+if config.browser_type != 'firefox':
     skip()
 
 go_to('/')
