@@ -58,7 +58,7 @@ CALLS = 0
 wait_for(get_condition(wait=0.2))
 assert CALLS <= 3
 
-set_wait_timeout(10, 0.1)
+set_wait_timeout(5, 0.1)
 
 wait_for_and_refresh(get_condition(True))
 fails(wait_for_and_refresh, get_condition(False))

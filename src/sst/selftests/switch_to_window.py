@@ -1,5 +1,8 @@
 from sst.actions import *
+from sst import config
 
+if config.browser_type == 'phantomjs':
+    skip()
 
 go_to('/')
 click_link('popup_link')

@@ -1,8 +1,13 @@
+# Test actions related to file input elements.
+
 import os
 from sst.actions import *
+from sst import config
 
-"""Test actions related to file input elements."""
-
+if config.browser_type == 'phantomjs':
+    skip()
+if config.browser_type == 'chrome':
+    skip()
 
 go_to('/')
 

@@ -1,5 +1,8 @@
 from sst.actions import *
+from sst import config
 
+if config.browser_type == 'chrome':
+    skip()
 
 go_to('/')
 
