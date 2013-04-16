@@ -1,8 +1,12 @@
+# Test actions related to file input elements.
+
 import os
 from sst.actions import *
+from sst import config
 
-"""Test actions related to file input elements."""
-
+# file input is currently only implemented for Firefox in sst
+if config.browser_type != 'firefox':
+    skip()
 
 go_to('/')
 
