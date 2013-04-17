@@ -21,7 +21,7 @@
 import os
 
 import testtools
-import unittest2
+import unittest
 
 from sst import tests
 from sst import runtests
@@ -107,8 +107,8 @@ class TestGetSuites(testtools.TestCase):
                 self.assertIsInstance(test, runtests.SSTTestCase)
                 name = test.id().split('.')[-1]
                 self.assertIn(name, expected_scripted_tests)
-            elif issubclass(test.__class__, unittest2.suite.TestSuite):
-                self.assertIsInstance(test, unittest2.suite.TestSuite)
+            elif issubclass(test.__class__, unittest.suite.TestSuite):
+                self.assertIsInstance(test, unittest.suite.TestSuite)
                 for test_class in test._tests:
                     for case in test_class._tests:
                         for t in case._tests:
