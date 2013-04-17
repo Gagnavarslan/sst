@@ -14,7 +14,7 @@
 :Project Home: https://launchpad.net/selenium-simple-test
 :PyPI: http://pypi.python.org/pypi/sst
 :License: Apache License, Version 2.0
-:Author: Copyright (c) 2011-2012 Canonical Ltd.
+:Author: Copyright (c) 2011-2013 Canonical Ltd.
 
 
 ---------------------------------
@@ -312,7 +312,6 @@ putting the following at the start of the test::
 * To manually setup dependencies, SST uses the following non-stdlib packages:
 
     * selenium
-    * unittest2
     * testtools
     * django (optional - needed for internal self-tests only)
 
@@ -349,4 +348,3 @@ local branch like this::
 * `Selenium WebDriver (from 'Architecture of Open Source Applications')
   <http://www.aosabook.org/en/selenium.html>`_
 * `Python Unittest <http://docs.python.org/library/unittest.html>`_
-* `unittest2 <http://pypi.python.org/pypi/unittest2/>`_

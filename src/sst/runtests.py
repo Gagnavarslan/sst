@@ -28,7 +28,7 @@ import pdb
 import sys
 import traceback
 
-from unittest2 import (
+from unittest import (
     defaultTestLoader,
     TestSuite,
     TextTestRunner,
