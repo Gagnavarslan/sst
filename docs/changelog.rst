@@ -9,7 +9,7 @@
 Official Releases:
 ------------------
 
-version **0.2.3** (?? ?? ??)
+version **0.2.3** (2013 Apr 17)
 *******************************
 
 * added the ``save_page_source`` action.

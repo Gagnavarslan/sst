@@ -4,7 +4,7 @@
    actions
    remote
    changelog
-
+   releasing
 
 ============================
     SST - Web Test Framework
