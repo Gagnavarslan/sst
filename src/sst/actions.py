@@ -385,20 +385,13 @@ def get_text(id_or_elem):
 
 def _get_text(elem):
     text = None
-    try:
-        text = elem.text
-    except InvalidElementStateException:
-        pass
+    text = elem.text
     if text:
         # Note that some elements (like textfields) return empty string
         # for text and we still need to call value
         return text
-    try:
-        text = elem.get_attribute('value')
-    except InvalidElementStateException:
-        pass
+    text = elem.get_attribute('value')
     return text
-
         
 
 def toggle_checkbox(id_or_elem):
