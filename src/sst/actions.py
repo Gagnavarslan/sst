@@ -883,28 +883,54 @@ def assert_text(id_or_elem, text):
     Assert the specified element text is as specified.
 
     Raises a failure exception if the element specified doesn't exist or isn't
-    as specified"""
-    elem = _get_elem(id_or_elem)
-    real = _get_text(elem)
-    if real is None:
-        msg = 'Element %r has no text attribute' % _element_to_string(elem)
-        _raise(msg)
+    as specified.
+
+    For text fields, it checks the value attribute instead of the text of the
+    element."""
+    real = _get_text_for_assertion(id_or_elem)
     if real != text:
         msg = 'Element text should be %r. It is %r.' % (text, real)
         _raise(msg)
+
+
+def _get_text_for_assertion(id_or_elem):
+    elem = _get_elem(id_or_elem)
+    if _is_text_field(elem):
+        value = elem.get_attribute('value')
+        if not value:
+            # The text field is empty.
+            return ''
+        else:
+            return value
+    else:
+        text = get_text(elem)
+        if not text:
+            msg = 'Element %r has no text.' % _element_to_string(elem)
+            _raise(msg)
+        else:
+            return text
+
+
+def _is_text_field(element):
+    # XXX refactor assert_textfield. It should be the other way around,
+    # assert_textfield should call is_text_field.
+    try:
+        assert_textfield(element)
+        return True
+    except AssertionError:
+        return False
 
 
 def assert_text_contains(id_or_elem, text, regex=False):
     """
     Assert the specified element contains the specified text.
 
-    set `regex=True` to use a regex pattern."""
-    elem = _get_elem(id_or_elem)
-    real = _get_text(elem)
-    if real is None:
-        msg = 'Element %r has no text attribute' % _element_to_string(elem)
-        _raise(msg)
-    msg = 'Element text is %r. Does not contain %r' % (real, text)
+    set `regex=True` to use a regex pattern.
+
+    For text fields, it checks the value attribute instead of the text of the
+    element."""
+    real = _get_text_for_assertion(id_or_elem)
+    msg = 'Element text is %r. Does not contain %r.' % (real, text)
     if regex:
         if not re.search(text, real):
             _raise(msg)
@@ -914,11 +940,11 @@ def assert_text_contains(id_or_elem, text, regex=False):
 
 
 def _check_text(elem, text):
-    return _get_text(elem) == text
+    return get_text(elem) == text
 
 
 def _match_text(elem, regex):
-    text = _get_text(elem) or ''
+    text = get_text(elem) or ''
     return bool(re.search(regex, text))
 
 
@@ -1224,7 +1250,7 @@ def assert_table_headers(id_or_elem, headers):
     if not elem.tag_name == 'table':
         _raise('Element %r is not a table.' % (id_or_elem,))
     header_elems = elem.find_elements_by_tag_name('th')
-    header_text = [_get_text(elem) for elem in header_elems]
+    header_text = [get_text(elem) for elem in header_elems]
     if not header_text == headers:
         msg = ('Expected headers:%r. Actual headers%r\n' %
                (headers, header_text))
@@ -1276,7 +1302,7 @@ def assert_table_row_contains_text(id_or_elem, row, contents, regex=False):
         msg = 'Asked to fetch row %s. Highest row is %s' % (row, len(rows) - 1)
         _raise(msg)
     columns = rows[row].find_elements_by_tag_name('td')
-    cells = [_get_text(elem) for elem in columns]
+    cells = [get_text(elem) for elem in columns]
     if not regex:
         success = cells == contents
     elif len(contents) != len(cells):
