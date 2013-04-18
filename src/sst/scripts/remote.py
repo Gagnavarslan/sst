@@ -28,6 +28,7 @@ from sst import (
     runtests,
 )
 
+
 def main():
     cmd_opts, args = command.get_opts_remote()
 

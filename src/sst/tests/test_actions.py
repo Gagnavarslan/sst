@@ -73,6 +73,7 @@ class TestElementToString(testtools.TestCase):
 
     def _get_element_with_id(self, element_id):
         element = mock.Mock()
+
         def mock_get_attribute(attribute):
             if attribute == 'id':
                 return element_id
@@ -96,6 +97,7 @@ class TestElementToString(testtools.TestCase):
 
     def _get_element_without_id_without_text(self, tag):
         element = mock.Mock()
+
         def mock_get_attribute(attribute):
             values = {
                 'id': None,

@@ -392,7 +392,6 @@ def _get_text(elem):
         pass
     return text
 
-        
 
 def toggle_checkbox(id_or_elem):
     """
@@ -949,7 +948,8 @@ def get_elements(tag=None, css_class=None, id=None, text=None,
             if not selector_string:
                 msg = 'Could not identify element: no arguments provided'
                 _raise(msg)
-            elems = _test.browser.find_elements_by_css_selector(selector_string)
+            elems = _test.browser.find_elements_by_css_selector(
+                selector_string)
     except (WebDriverException, NoSuchElementException) as e:
         msg = 'Element not found: %s' % e
         _raise(msg)

@@ -52,7 +52,8 @@ def main():
         cmd_opts.dir_name = 'selftests'
         if not tests.check_devserver_port_used(sst.DEVSERVER_PORT):
             run_django(sst.DEVSERVER_PORT)
-            cleanups.append(('\nkilling django...', kill_django, sst.DEVSERVER_PORT))
+            cleanups.append(('\nkilling django...', kill_django,
+                             sst.DEVSERVER_PORT))
         else:
             print 'Error: port is in use.'
             print 'can not launch devserver for internal tests.'
@@ -126,9 +127,9 @@ def run_django(port):
         print 'you must have django installed to run the test project.'
         sys.exit(1)
     proc = subprocess.Popen([manage_file, 'runserver', port],
-                     stderr=open(os.devnull, 'w'),
-                     stdout=open(os.devnull, 'w')
-                     )
+                            stderr=open(os.devnull, 'w'),
+                            stdout=open(os.devnull, 'w')
+                            )
     print '--------------------------------------------------------------'
     print 'waiting for django to come up...'
     attempts = 30
