@@ -1,16 +1,9 @@
-import os
-import shutil
-
 from sst.actions import *
 
+import helpers
 
-# get copy of testproj.db for test
-# remove database before/after test 
-test_db = 'src/testproject/testproj.db'
-if os.path.isfile(test_db):
-    os.remove(test_db)
-shutil.copyfile(test_db + '.original', test_db)
-add_cleanup(os.remove, test_db)
+
+helpers.setup_cleanup_test_db()
 
 go_to('/admin/')
 assert_title('Log in | Django site admin')
