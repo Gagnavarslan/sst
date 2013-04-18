@@ -32,6 +32,9 @@ version **0.2.3** (2013 Apr 17)
 * removed `Browsermob` proxy integration
 * removed ``start`` and ``stop`` actions
 * added hookable browser
+* added ``get_text`` action
+* made it clearer that ``assert_text`` and ``assert_text_contains`` will check
+  the value instead of the text for text field elements.
 
 
 version **0.2.2** (2012 Nov 4)
