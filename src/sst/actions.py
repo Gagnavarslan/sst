@@ -80,11 +80,11 @@ __all__ = [
     'get_cookies', 'get_current_url', 'get_element',
     'get_element_by_css', 'get_element_by_xpath', 'get_element_source',
     'get_elements', 'get_elements_by_css', 'get_elements_by_xpath',
-    'get_link_url', 'get_page_source', 'get_wait_timeout', 'get_window_size',
-    'go_back', 'go_to', 'refresh', 'reset_base_url', 'retry_on_stale_element',
-    'run_test', 'save_page_source', 'set_base_url', 'set_checkbox_value',
-    'set_dropdown_value', 'set_radio_value', 'set_wait_timeout',
-    'set_window_size', 'simulate_keys', 'skip', 'sleep',
+    'get_link_url', 'get_page_source', 'get_text', 'get_wait_timeout',
+    'get_window_size', 'go_back', 'go_to', 'refresh', 'reset_base_url',
+    'retry_on_stale_element', 'run_test', 'save_page_source', 'set_base_url',
+    'set_checkbox_value', 'set_dropdown_value', 'set_radio_value',
+    'set_wait_timeout', 'set_window_size', 'simulate_keys', 'skip', 'sleep',
     'switch_to_frame', 'switch_to_window',
     'take_screenshot', 'toggle_checkbox', 'wait_for',
     'wait_for_and_refresh', 'write_textfield'
@@ -374,6 +374,13 @@ def _element_to_string(element):
             return element_text
         else:
             return element.get_attribute('outerHTML')
+
+
+def get_text(id_or_elem):
+    """
+    Return the text of an element. Takes an element id or object."""
+    element = _get_elem(id_or_elem)
+    return element.text
 
 
 def _get_text(elem):
