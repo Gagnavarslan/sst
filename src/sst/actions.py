@@ -364,7 +364,12 @@ def assert_checkbox_value(id_or_elem, value):
 
 
 def _element_to_string(element):
-    """Try to get a string that can be used to recognize the element."""
+    """
+    Get a string that can be used to recognize the element.
+
+    If the element has an id, use it as it will uniquely identify the element.
+    Otherwise, fall back to the text. If it has no text, to the value.
+    Fallback to outerHTML as a last resort."""
     element_id = element.get_attribute('id')
     if element_id:
         return element_id
