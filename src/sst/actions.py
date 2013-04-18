@@ -369,11 +369,15 @@ def _element_to_string(element):
     if element_id:
         return element_id
     else:
-        element_text = _get_text(element)
+        element_text = get_text(element)
         if element_text:
             return element_text
         else:
-            return element.get_attribute('outerHTML')
+            element_value = element.get_attribute('value')
+            if element_value:
+                return element_value
+            else:
+                return element.get_attribute('outerHTML')
 
 
 def get_text(id_or_elem):
@@ -382,17 +386,6 @@ def get_text(id_or_elem):
     element = _get_elem(id_or_elem)
     return element.text
 
-
-def _get_text(elem):
-    text = None
-    text = elem.text
-    if text:
-        # Note that some elements (like textfields) return empty string
-        # for text and we still need to call value
-        return text
-    text = elem.get_attribute('value')
-    return text
-        
 
 def toggle_checkbox(id_or_elem):
     """
