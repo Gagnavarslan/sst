@@ -50,7 +50,6 @@ from urlparse import urljoin, urlparse
 from selenium.webdriver.common import keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import (
-    InvalidElementStateException,
     NoSuchAttributeException,
     NoSuchElementException,
     NoSuchFrameException,
@@ -365,6 +364,7 @@ def assert_checkbox_value(id_or_elem, value):
 
 
 def _element_to_string(element):
+    """Try to get a string that can be used to recognize the element."""
     element_id = element.get_attribute('id')
     if element_id:
         return element_id
