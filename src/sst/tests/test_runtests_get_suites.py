@@ -21,7 +21,7 @@
 import os
 
 import testtools
-import unittest2
+import unittest
 
 from sst import tests
 from sst import runtests
@@ -73,26 +73,17 @@ class TestGetSuites(testtools.TestCase):
         test_names = ('*', )
         test_dir = self.cases_dir
         shared_dir = '.'
-        count_only = False
-        browser_type = 'Firefox'
-        browser_version = ''
-        browser_platform = 'ANY'
-        session_name = None
-        javascript_disabled = False
-        browsermob_enabled = False
-        shared_directory = None
+        collect_only = False
         screenshots_on = False
         failfast = False,
         debug = False
-        webdriver_remote_url = None
         extended = False
 
-        found = runtests.get_suites(test_names, test_dir, shared_dir,
-                                    count_only, browser_type, browser_version,
-                                    browser_platform, session_name,
-                                    javascript_disabled, webdriver_remote_url,
-                                    screenshots_on, failfast, debug, extended
-                                    )
+        found = runtests.get_suites(
+            test_names, test_dir, shared_dir, collect_only,
+            runtests.FirefoxFactory(),
+            screenshots_on, failfast, debug, extended
+        )
         suite = found[0]._tests
 
         # assert we loaded correct number of cases
@@ -108,14 +99,14 @@ class TestGetSuites(testtools.TestCase):
             'test_test_a_real_test1',
             'test_test_a_real_test2',
         )
-        
+
         for test in suite:
             if issubclass(test.__class__, runtests.SSTTestCase):
                 self.assertIsInstance(test, runtests.SSTTestCase)
                 name = test.id().split('.')[-1]
                 self.assertIn(name, expected_scripted_tests)
-            elif issubclass(test.__class__, unittest2.suite.TestSuite):
-                self.assertIsInstance(test, unittest2.suite.TestSuite)
+            elif issubclass(test.__class__, unittest.suite.TestSuite):
+                self.assertIsInstance(test, unittest.suite.TestSuite)
                 for test_class in test._tests:
                     for case in test_class._tests:
                         for t in case._tests:

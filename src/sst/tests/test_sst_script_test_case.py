@@ -46,10 +46,21 @@ class SSTStringTestCase(runtests.SSTScriptTestCase):
         super(SSTStringTestCase, self).setUp()
 
 
-class TestSSTScriptTestCaseFailureScreenShots(testtools.TestCase):
+class TestContext(testtools.TestCase):
+
+    def test_test_case_without_context(self):
+        # Use the default context value.
+        test = SSTStringTestCase('ignored')
+        test.script_code = 'assert True'
+        result = testtools.TestResult()
+        test.run(result)
+        self.assertTrue(result.wasSuccessful())
+
+
+class TestScreenShotsAndPageDump(testtools.TestCase):
 
     def setUp(self):
-        super(TestSSTScriptTestCaseFailureScreenShots, self).setUp()
+        super(TestScreenShotsAndPageDump, self).setUp()
         tests.set_cwd_to_tmp(self)
         # capture test output so we don't pollute the test runs
         self.out = StringIO()
@@ -62,15 +73,17 @@ class TestSSTScriptTestCaseFailureScreenShots(testtools.TestCase):
         test.results_directory = 'results'
         result = testtools.TestResult()
         test.run(result)
+        self.assertEqual(0, len(result.errors))
+        self.assertEqual(1, len(result.failures))
         # We get a screenshot and a pagesource
         files = sorted(os.listdir('results'))
         self.assertEqual(2, len(files))
-        byte_sizes = [
-            os.path.getsize(os.path.join(test.results_directory, f)) 
-            for f in files
-        ]
-        for size in byte_sizes:
-            self.assertGreater(size, 0)
+
+        def byte_size(f):
+            return os.path.getsize(os.path.join(test.results_directory, f))
+
+        self.assertGreater(byte_size(files[0]), 0)
+        self.assertGreater(byte_size(files[1]), 0)
         self.assertThat(files[0], matchers.StartsWith('pagesource-'))
         self.assertThat(files[1], matchers.StartsWith('screenshot-'))
 
@@ -81,6 +94,8 @@ class TestSSTScriptTestCaseFailureScreenShots(testtools.TestCase):
         test.results_directory = 'results'
         result = testtools.TestResult()
         test.run(result)
+        self.assertEqual(0, len(result.errors))
+        self.assertEqual(1, len(result.failures))
         # No screenshot required, no files
         files = os.listdir('results')
         self.assertEqual(0, len(files))

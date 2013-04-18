@@ -1,7 +1,7 @@
 from sst.actions import *
 from sst import config
 
-from unittest2 import SkipTest
+from unittest import SkipTest
 
 
 try:

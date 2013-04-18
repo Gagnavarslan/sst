@@ -18,6 +18,7 @@
 
 import os
 import shutil
+import socket
 import tempfile
 
 from sst import runtests
@@ -45,3 +46,18 @@ def set_cwd_to_tmp(test):
     current_dir = os.getcwdu()
     test.addCleanup(os.chdir, current_dir)
     os.chdir(test.test_base_dir)
+
+
+def check_devserver_port_used(port):
+    """check if port is ok to use for django devserver"""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # immediately reuse a local socket in TIME_WAIT state
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    try:
+        sock.bind(('127.0.0.1', int(port)))
+        used = False
+    except socket.error as e:
+        used = True
+    finally:
+        sock.close()
+    return used

@@ -64,11 +64,7 @@ class TestSSTTestCase(testtools.TestCase):
     def test_attributes(self):
         test = self.test
         self.assertEqual(test._testMethodName, 'run')
-        # why is base_url "None" ???  --cmg
         self.assertIsNone(test.base_url)
-        self.assertEqual(test.browser_platform, 'ANY')
-        self.assertEqual(test.browser_type, 'Firefox')
-        self.assertFalse(test.javascript_disabled)
         self.assertFalse(test.screenshots_on)
         self.assertEqual(test.wait_poll, 0.1)
         self.assertEqual(test.wait_timeout, 10)
@@ -81,6 +77,5 @@ class TestSSTTestCase(testtools.TestCase):
         self.assertEqual(config.cache, {})
         self.assertEqual(config.flags, [])
         self.assertFalse(config.javascript_disabled)
-        self.assertFalse(config.browsermob_enabled)
         self.assertEqual(os.path.split(config.results_directory)[-1],
                          'results')

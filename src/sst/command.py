@@ -25,16 +25,12 @@ import shutil
 import optparse
 
 
-try:
-    import selenium
-except ImportError as e:
-    print e
-    print 'Error: can not import Selenium WebDriver.'
-    print 'Selenium 2.x python bindings are required.'
-    sys.exit(1)
-
 import sst
-from sst import config, actions
+from sst import (
+    actions,
+    config,
+    runtests,
+)
 
 
 usage = """Usage: %prog [testname] [options]
@@ -63,7 +59,7 @@ def get_common_options():
     parser.add_option('-b', dest='browser_type',
                       default='Firefox',
                       help=('select webdriver (Firefox, Chrome, '
-                            'Ie, etc)'))
+                            'Opera, PhantomJS, etc)'))
     parser.add_option('-j', dest='javascript_disabled',
                       default=False, action='store_true',
                       help='disable javascript in browser')
@@ -104,8 +100,6 @@ def get_common_options():
 
 def get_run_options():
     parser = get_common_options()
-    parser.add_option('--browsermob', dest='browsermob',
-                      help='enable browsermob proxy (launcher location)')
     parser.add_option('--test',
                       dest='run_tests', action='store_true',
                       default=False,
@@ -162,12 +156,19 @@ def get_opts(get_options):
         print 'run "%s -h" or "%s --help" to see run options.' % (prog, prog)
         sys.exit(1)
 
+    if cmd_opts.browser_type not in runtests.browser_factories:
+        print ("Error: %s should be one of %s"
+               % (cmd_opts.browser_type, runtests.browser_factories.keys))
+        sys.exit(1)
+
     logging.basicConfig(format='    %(levelname)s:%(name)s:%(message)s')
     logger = logging.getLogger('SST')
     if cmd_opts.quiet:
         logger.setLevel(logging.WARNING)
     else:
         logger.setLevel(logging.DEBUG)
+    # FIXME: We shouldn't be modifying anything in the 'actions' module, this
+    # violates isolation and will make it hard to test. -- vila 2013-04-10
     if cmd_opts.disable_flags:
         actions._check_flags = False
 

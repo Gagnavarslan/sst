@@ -18,14 +18,27 @@
 #
 
 
-import testtools.run
-import unittest
+import testtools
+
+from sst.scripts import run
+from sst.tests import check_devserver_port_used
+from sst import DEVSERVER_PORT
 
 
-class TestProgram(testtools.run.TestProgram):
+class TestDjangoDevServer(testtools.TestCase):
 
-    def __init__(self, module, argv, stdout=None, testRunner=None, exit=True):
-        if testRunner is None:
-            testRunner = unittest.TextTestRunner
-        super(TestProgram, self).__init__(module, argv=argv, stdout=stdout,
-                                          testRunner=testRunner, exit=exit)
+    def test_django_start(self):
+        self.addCleanup(run.kill_django, DEVSERVER_PORT)
+        proc = run.run_django(DEVSERVER_PORT)
+        self.assertIsNotNone(proc)
+
+
+    def test_django_devserver_port_used(self):
+        used = check_devserver_port_used(DEVSERVER_PORT)
+        self.assertFalse(used)
+        
+        self.addCleanup(run.kill_django, DEVSERVER_PORT)
+        run.run_django(DEVSERVER_PORT)
+        
+        used = check_devserver_port_used(DEVSERVER_PORT)
+        self.assertTrue(used)

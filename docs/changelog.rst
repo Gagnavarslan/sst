@@ -9,7 +9,7 @@
 Official Releases:
 ------------------
 
-version **0.2.3** (?? ?? ??)
+version **0.2.3** (2013 Apr 17)
 *******************************
 
 * added the ``save_page_source`` action.
@@ -28,7 +28,10 @@ version **0.2.3** (?? ?? ??)
 * added ``set_window_size`` action
 * added ``testtools`` dependency
 * command-line test names may use glob patterns for discovery
-* added `--collect-only` option to `sst-run` command line
+* added ``--collect-only`` option to ``sst-run`` command line
+* removed `Browsermob` proxy integration
+* removed ``start`` and ``stop`` actions
+* added hookable browser
 
 
 version **0.2.2** (2012 Nov 4)

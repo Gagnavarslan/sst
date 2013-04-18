@@ -15,7 +15,7 @@ import textwrap
 
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
-sys.path.append(os.path.join(this_dir, '../src'))
+sys.path.insert(0,os.path.join(this_dir, '../src'))
 
 from sst import actions
 
