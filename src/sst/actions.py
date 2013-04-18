@@ -904,7 +904,7 @@ def _get_text_for_assertion(id_or_elem):
 
 def _is_text_field(element):
     # XXX refactor assert_textfield. It should be the other way around,
-    # assert_textfield should call is_text_field.
+    # assert_textfield should call is_text_field. -- elopio 2013-04-18
     try:
         assert_textfield(element)
         return True
