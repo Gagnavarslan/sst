@@ -1,35 +1,36 @@
-from sst.actions import *
+import sst.actions
 
-go_to('/')
 
-assert_link('the_band_link')
-assert_link(get_element(id='the_band_link'))
+sst.actions.go_to('/')
+
+sst.actions.assert_link('the_band_link')
+sst.actions.assert_link(sst.actions.get_element(id='the_band_link'))
 
 # fails for non existent element.
-fails(assert_link, 'foobar')
+sst.actions.fails(sst.actions.assert_link, 'foobar')
 
 # fails for element that exists but isn't a link.
-fails(assert_link, 'radio_with_id_1')
+sst.actions.fails(sst.actions.assert_link, 'radio_with_id_1')
 
 
-click_link('the_band_link', wait=False)
-assert_url('/begin')
+sst.actions.click_link('the_band_link', wait=False)
+sst.actions.assert_url('/begin')
 
-click_link('the_band_link')
-assert_url('/')
+sst.actions.click_link('the_band_link')
+sst.actions.assert_url('/')
 
-click_link('longscroll_link')
-assert_url('/longscroll')
+sst.actions.click_link('longscroll_link')
+sst.actions.assert_url('/longscroll')
 
-click_link('homepage_link_top')
-assert_url('/')
+sst.actions.click_link('homepage_link_top')
+sst.actions.assert_url('/')
 
-click_link('longscroll_link')
-assert_url('/longscroll')
+sst.actions.click_link('longscroll_link')
+sst.actions.assert_url('/longscroll')
 
 # link is initially scrolled out of view.
-click_link('homepage_link_bottom')
-assert_url('/')
+sst.actions.click_link('homepage_link_bottom')
+sst.actions.assert_url('/')
 
 # assert a link without an href.
-assert_link('no_href_link')
+sst.actions.assert_link('no_href_link')

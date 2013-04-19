@@ -1,4 +1,4 @@
-from sst.actions import *
+import sst.actions
 
-end_test()
+sst.actions.end_test()
 raise AssertionError('should never get this far')
