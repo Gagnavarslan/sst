@@ -19,6 +19,9 @@ try:
     sst.actions.assert_text('element_without_text', '')
 except AssertionError as error:
     sst.actions.assert_equal(
-        "Element u'element_without_text' has no text attribute", error.message)
+        "Element u'element_without_text' has no text.", error.message)
 else:
     raise AssertionError('assert_text did not fail.')
+
+# Test text field with no value.
+sst.actions.assert_text('text_1', '')

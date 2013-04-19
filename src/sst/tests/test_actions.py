@@ -23,6 +23,7 @@ import logging
 import mock
 import testtools
 
+from selenium.webdriver.remote import webelement
 from sst import actions
 
 
@@ -67,44 +68,35 @@ class TestRetryOnStale(testtools.TestCase):
 
 class TestElementToString(testtools.TestCase):
 
-    def test_element_with_id(self):
-        element = self._get_element_with_id(element_id='Test id')
-        self.assertEqual('Test id', actions._element_to_string(element))
-
-    def _get_element_with_id(self, element_id):
-        element = mock.Mock()
-
-        def mock_get_attribute(attribute):
-            if attribute == 'id':
-                return element_id
-        element.get_attribute.side_effect = mock_get_attribute
-        return element
-
-    def test_element_without_id_with_text(self):
-        element = self._get_element_without_id_with_text(text='Test text')
-        self.assertEqual('Test text', actions._element_to_string(element))
-
-    def _get_element_without_id_with_text(self, text):
-        element = mock.Mock()
-        element.get_attribute.return_value = None
-        element.text = text
-        return element
-
-    def test_element_without_id_without_text(self):
-        element = self._get_element_without_id_without_text(tag='p')
-        self.assertEqual(
-            '<p></p>', actions._element_to_string(element))
-
-    def _get_element_without_id_without_text(self, tag):
-        element = mock.Mock()
-
+    def _get_mock_element(self, identifier=None, text=None, value=None,
+                          outer_html=None):
         def mock_get_attribute(attribute):
             values = {
-                'id': None,
-                'value': None,
-                'outerHTML': '<{0}></{0}>'.format(tag)
+                'id': identifier,
+                'value': value,
+                'outerHTML': outer_html
             }
             return values[attribute]
+        element = mock.Mock(spec=webelement.WebElement, parent=None, id_=None)
         element.get_attribute.side_effect = mock_get_attribute
-        element.text = None
+        type(element).text = mock.PropertyMock(return_value=text)
         return element
+
+    def test_element_with_id(self):
+        element = self._get_mock_element(identifier='Test id')
+        self.assertEqual(actions._element_to_string(element), 'Test id')
+
+    def test_element_without_id_with_text(self):
+        element = self._get_mock_element(identifier=None, text='Test text')
+        self.assertEqual(actions._element_to_string(element), 'Test text')
+
+    def test_element_without_id_without_text_with_value(self):
+        element = self._get_mock_element(
+            identifier=None, text=None, value='Test value')
+        self.assertEqual(actions._element_to_string(element), 'Test value')
+
+    def test_element_without_id_without_text_without_value(self):
+        element = self._get_mock_element(
+            identifier=None, text=None, value=None, outer_html='<p></p>')
+        self.assertEqual(
+            actions._element_to_string(element), '<p></p>')

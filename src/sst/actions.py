@@ -50,7 +50,6 @@ from urlparse import urljoin, urlparse
 from selenium.webdriver.common import keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.common.exceptions import (
-    InvalidElementStateException,
     NoSuchAttributeException,
     NoSuchElementException,
     NoSuchFrameException,
@@ -80,11 +79,11 @@ __all__ = [
     'get_cookies', 'get_current_url', 'get_element',
     'get_element_by_css', 'get_element_by_xpath', 'get_element_source',
     'get_elements', 'get_elements_by_css', 'get_elements_by_xpath',
-    'get_link_url', 'get_page_source', 'get_wait_timeout', 'get_window_size',
-    'go_back', 'go_to', 'refresh', 'reset_base_url', 'retry_on_stale_element',
-    'run_test', 'save_page_source', 'set_base_url', 'set_checkbox_value',
-    'set_dropdown_value', 'set_radio_value', 'set_wait_timeout',
-    'set_window_size', 'simulate_keys', 'skip', 'sleep',
+    'get_link_url', 'get_page_source', 'get_text', 'get_wait_timeout',
+    'get_window_size', 'go_back', 'go_to', 'refresh', 'reset_base_url',
+    'retry_on_stale_element', 'run_test', 'save_page_source', 'set_base_url',
+    'set_checkbox_value', 'set_dropdown_value', 'set_radio_value',
+    'set_wait_timeout', 'set_window_size', 'simulate_keys', 'skip', 'sleep',
     'switch_to_frame', 'switch_to_window',
     'take_screenshot', 'toggle_checkbox', 'wait_for',
     'wait_for_and_refresh', 'write_textfield'
@@ -365,32 +364,32 @@ def assert_checkbox_value(id_or_elem, value):
 
 
 def _element_to_string(element):
+    """
+    Get a string that can be used to recognize the element.
+
+    If the element has an id, use it as it will uniquely identify the element.
+    Otherwise, fall back to the text. If it has no text, to the value.
+    Fallback to outerHTML as a last resort."""
     element_id = element.get_attribute('id')
     if element_id:
         return element_id
     else:
-        element_text = _get_text(element)
+        element_text = get_text(element)
         if element_text:
             return element_text
         else:
-            return element.get_attribute('outerHTML')
+            element_value = element.get_attribute('value')
+            if element_value:
+                return element_value
+            else:
+                return element.get_attribute('outerHTML')
 
 
-def _get_text(elem):
-    text = None
-    try:
-        text = elem.text
-    except InvalidElementStateException:
-        pass
-    if text:
-        # Note that some elements (like textfields) return empty string
-        # for text and we still need to call value
-        return text
-    try:
-        text = elem.get_attribute('value')
-    except InvalidElementStateException:
-        pass
-    return text
+def get_text(id_or_elem):
+    """
+    Return the text of an element. Takes an element id or object."""
+    element = _get_elem(id_or_elem)
+    return element.text
 
 
 def toggle_checkbox(id_or_elem):
@@ -875,28 +874,54 @@ def assert_text(id_or_elem, text):
     Assert the specified element text is as specified.
 
     Raises a failure exception if the element specified doesn't exist or isn't
-    as specified"""
-    elem = _get_elem(id_or_elem)
-    real = _get_text(elem)
-    if real is None:
-        msg = 'Element %r has no text attribute' % _element_to_string(elem)
-        _raise(msg)
+    as specified.
+
+    For text fields, it checks the value attribute instead of the text of the
+    element."""
+    real = _get_text_for_assertion(id_or_elem)
     if real != text:
         msg = 'Element text should be %r. It is %r.' % (text, real)
         _raise(msg)
+
+
+def _get_text_for_assertion(id_or_elem):
+    elem = _get_elem(id_or_elem)
+    if _is_text_field(elem):
+        value = elem.get_attribute('value')
+        if not value:
+            # The text field is empty.
+            return ''
+        else:
+            return value
+    else:
+        text = get_text(elem)
+        if not text:
+            msg = 'Element %r has no text.' % _element_to_string(elem)
+            _raise(msg)
+        else:
+            return text
+
+
+def _is_text_field(element):
+    # XXX refactor assert_textfield. It should be the other way around,
+    # assert_textfield should call is_text_field. -- elopio 2013-04-18
+    try:
+        assert_textfield(element)
+        return True
+    except AssertionError:
+        return False
 
 
 def assert_text_contains(id_or_elem, text, regex=False):
     """
     Assert the specified element contains the specified text.
 
-    set `regex=True` to use a regex pattern."""
-    elem = _get_elem(id_or_elem)
-    real = _get_text(elem)
-    if real is None:
-        msg = 'Element %r has no text attribute' % _element_to_string(elem)
-        _raise(msg)
-    msg = 'Element text is %r. Does not contain %r' % (real, text)
+    set `regex=True` to use a regex pattern.
+
+    For text fields, it checks the value attribute instead of the text of the
+    element."""
+    real = _get_text_for_assertion(id_or_elem)
+    msg = 'Element text is %r. Does not contain %r.' % (real, text)
     if regex:
         if not re.search(text, real):
             _raise(msg)
@@ -906,11 +931,11 @@ def assert_text_contains(id_or_elem, text, regex=False):
 
 
 def _check_text(elem, text):
-    return _get_text(elem) == text
+    return get_text(elem) == text
 
 
 def _match_text(elem, regex):
-    text = _get_text(elem) or ''
+    text = get_text(elem) or ''
     return bool(re.search(regex, text))
 
 
@@ -1217,7 +1242,7 @@ def assert_table_headers(id_or_elem, headers):
     if not elem.tag_name == 'table':
         _raise('Element %r is not a table.' % (id_or_elem,))
     header_elems = elem.find_elements_by_tag_name('th')
-    header_text = [_get_text(e) for e in header_elems]
+    header_text = [get_text(e) for e in header_elems]
     if not header_text == headers:
         msg = ('Expected headers:%r. Actual headers%r\n' %
                (headers, header_text))
@@ -1269,7 +1294,7 @@ def assert_table_row_contains_text(id_or_elem, row, contents, regex=False):
         msg = 'Asked to fetch row %s. Highest row is %s' % (row, len(rows) - 1)
         _raise(msg)
     columns = rows[row].find_elements_by_tag_name('td')
-    cells = [_get_text(e) for e in columns]
+    cells = [get_text(e) for e in columns]
     if not regex:
         success = cells == contents
     elif len(contents) != len(cells):
