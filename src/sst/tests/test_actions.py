@@ -84,13 +84,19 @@ class TestElementToString(testtools.TestCase):
 
     def test_element_with_id(self):
         element = self._get_mock_element(identifier='Test id')
-        self.assertEqual('Test id', actions._element_to_string(element))
+        self.assertEqual(actions._element_to_string(element), 'Test id')
 
     def test_element_without_id_with_text(self):
-        element = self._get_mock_element(text='Test text')
-        self.assertEqual('Test text', actions._element_to_string(element))
+        element = self._get_mock_element(identifier=None, text='Test text')
+        self.assertEqual(actions._element_to_string(element), 'Test text')
 
-    def test_element_without_id_without_text(self):
-        element = self._get_mock_element(outer_html='<p></p>')
+    def test_element_without_id_without_text_with_value(self):
+        element = self._get_mock_element(
+            identifier=None, text=None, value='Test value')
+        self.assertEqual(actions._element_to_string(element), 'Test value')
+
+    def test_element_without_id_without_text_without_value(self):
+        element = self._get_mock_element(
+            identifier=None, text=None, value=None, outer_html='<p></p>')
         self.assertEqual(
-            '<p></p>', actions._element_to_string(element))
+            actions._element_to_string(element), '<p></p>')
