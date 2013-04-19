@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from sst.actions import *
+import sst.actions
 
 
 def skip_as_jenkins():
@@ -11,7 +11,7 @@ def skip_as_jenkins():
     except KeyError:
         user = 'notjenkins'
     if user.lower() == 'jenkins':
-        skip()
+        sst.actions.skip()
 
 
 def setup_cleanup_test_db():
@@ -23,4 +23,4 @@ def setup_cleanup_test_db():
     if os.path.isfile(test_db):
         os.remove(test_db)
     shutil.copyfile(test_db + '.original', test_db)
-    add_cleanup(os.remove, test_db)
+    sst.actions.add_cleanup(os.remove, test_db)

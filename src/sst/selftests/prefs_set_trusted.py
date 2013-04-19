@@ -1,6 +1,6 @@
-from sst.actions import *
+import sst.actions
 
 
-ASSUME_TRUSTED_CERT_ISSUER = True
+sst.actions.ASSUME_TRUSTED_CERT_ISSUER = True
 
-assert ASSUME_TRUSTED_CERT_ISSUER
+assert sst.actions.ASSUME_TRUSTED_CERT_ISSUER

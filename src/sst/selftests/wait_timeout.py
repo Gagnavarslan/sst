@@ -1,8 +1,8 @@
-from sst.actions import *
+import sst.actions
 
 
-set_wait_timeout(10)
-assert get_wait_timeout() == 10
+sst.actions.set_wait_timeout(10)
+assert sst.actions.get_wait_timeout() == 10
 
-set_wait_timeout(20)
-assert get_wait_timeout() == 20
+sst.actions.set_wait_timeout(20)
+assert sst.actions.get_wait_timeout() == 20

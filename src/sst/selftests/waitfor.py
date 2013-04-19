@@ -1,4 +1,4 @@
-from sst.actions import *
+import sst.actions
 from time import time
 
 
@@ -27,38 +27,38 @@ def get_condition(result=True, wait=0, raises=False,
         return False
     return condition
 
-go_to('/')
-set_wait_timeout(0.1)
+sst.actions.go_to('/')
+sst.actions.set_wait_timeout(0.1)
 
-wait_for(get_condition(True))
-fails(wait_for, get_condition(False))
+sst.actions.wait_for(get_condition(True))
+sst.actions.fails(sst.actions.wait_for, get_condition(False))
 
-wait_for(get_condition(raises=True))
-fails(wait_for, get_condition(False, raises=True))
+sst.actions.wait_for(get_condition(raises=True))
+sst.actions.fails(sst.actions.wait_for, get_condition(False, raises=True))
 
-wait_for(assert_url, '/')
-fails(wait_for, assert_url, '/thing')
+sst.actions.wait_for(sst.actions.assert_url, '/')
+sst.actions.fails(sst.actions.wait_for, sst.actions.assert_url, '/thing')
 
-wait_for(assert_url, url='/')
-fails(wait_for, assert_url, url='/thing')
+sst.actions.wait_for(sst.actions.assert_url, url='/')
+sst.actions.fails(sst.actions.wait_for, sst.actions.assert_url, url='/thing')
 
 CALLS = 0
-set_wait_timeout(0.1, 0.01)
-fails(wait_for, get_condition(wait=0.2))
+sst.actions.set_wait_timeout(0.1, 0.01)
+sst.actions.fails(sst.actions.wait_for, get_condition(wait=0.2))
 assert CALLS > 6
 
-fails(wait_for, get_condition(wait=0.2, raises=True))
+sst.actions.fails(sst.actions.wait_for, get_condition(wait=0.2, raises=True))
 
-set_wait_timeout(0.5)
-wait_for(get_condition(wait=0.2))
-wait_for(get_condition(wait=0.2, raises=True))
+sst.actions.set_wait_timeout(0.5)
+sst.actions.wait_for(get_condition(wait=0.2))
+sst.actions.wait_for(get_condition(wait=0.2, raises=True))
 
-set_wait_timeout(0.3, 0.1)
+sst.actions.set_wait_timeout(0.3, 0.1)
 CALLS = 0
-wait_for(get_condition(wait=0.2))
+sst.actions.wait_for(get_condition(wait=0.2))
 assert CALLS <= 3
 
-set_wait_timeout(5, 0.1)
+sst.actions.set_wait_timeout(5, 0.1)
 
-wait_for_and_refresh(get_condition(True))
-fails(wait_for_and_refresh, get_condition(False))
+sst.actions.wait_for_and_refresh(get_condition(True))
+sst.actions.fails(sst.actions.wait_for_and_refresh, get_condition(False))

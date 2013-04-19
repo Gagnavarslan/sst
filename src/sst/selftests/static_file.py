@@ -3,19 +3,19 @@
 
 import os
 
-from sst.actions import *
+import sst.actions
 
 
 static_file = os.path.join(''.join(os.path.split(__file__)[:-1]),
                            'static.html')
 
 # using full path
-go_to('file:////%s' % static_file)
-assert_title('The Static Page')
-assert_element(tag='h1', text='Hello World')
+sst.actions.go_to('file:////%s' % static_file)
+sst.actions.assert_title('The Static Page')
+sst.actions.assert_element(tag='h1', text='Hello World')
 
 # using base_url
-set_base_url('file:////')
-go_to(static_file)
-assert_title('The Static Page')
-assert_element(tag='h1', text='Hello World')
+sst.actions.set_base_url('file:////')
+sst.actions.go_to(static_file)
+sst.actions.assert_title('The Static Page')
+sst.actions.assert_element(tag='h1', text='Hello World')
