@@ -60,14 +60,12 @@ def _make_test_files(dir):
             pass
 
 
-
 class TestGetSuites(testtools.TestCase):
 
     def setUp(self):
         super(TestGetSuites, self).setUp()
         tests.set_cwd_to_tmp(self)
         self.cases_dir = os.path.join(self.test_base_dir, 'cases')
-
 
     def test_runtests_get_suites(self):
         _make_test_files(self.cases_dir)

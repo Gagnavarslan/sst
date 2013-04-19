@@ -23,13 +23,16 @@ import testtools
 
 testtools.try_import('selenium')
 
-from sst import runtests
-from sst.command import clear_old_results, get_opts_remote
+from sst import (
+    command,
+    runtests,
+)
+
 
 def main():
-    cmd_opts, args = get_opts_remote()
+    cmd_opts, args = command.get_opts_remote()
 
-    clear_old_results()
+    command.clear_old_results()
 
     print '--------------------------------------------------------------'
 

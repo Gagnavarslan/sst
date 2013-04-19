@@ -32,13 +32,12 @@ class TestDjangoDevServer(testtools.TestCase):
         proc = run.run_django(DEVSERVER_PORT)
         self.assertIsNotNone(proc)
 
-
     def test_django_devserver_port_used(self):
         used = check_devserver_port_used(DEVSERVER_PORT)
         self.assertFalse(used)
-        
+
         self.addCleanup(run.kill_django, DEVSERVER_PORT)
         run.run_django(DEVSERVER_PORT)
-        
+
         used = check_devserver_port_used(DEVSERVER_PORT)
         self.assertTrue(used)

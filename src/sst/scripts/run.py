@@ -34,14 +34,14 @@ testtools.try_import('selenium')
 
 import sst
 from sst import (
+    command,
     runtests,
     tests,
 )
-from sst.command import get_opts_run, clear_old_results
 
 
 def main():
-    cmd_opts, args = get_opts_run()
+    cmd_opts, args = command.get_opts_run()
 
     print '--------------------------------------------------------------'
     print 'starting SST...'
@@ -52,7 +52,8 @@ def main():
         cmd_opts.dir_name = 'selftests'
         if not tests.check_devserver_port_used(sst.DEVSERVER_PORT):
             run_django(sst.DEVSERVER_PORT)
-            cleanups.append(('\nkilling django...', kill_django, sst.DEVSERVER_PORT))
+            cleanups.append(('\nkilling django...', kill_django,
+                             sst.DEVSERVER_PORT))
         else:
             print 'Error: port is in use.'
             print 'can not launch devserver for internal tests.'
@@ -80,7 +81,7 @@ def main():
         print ''
 
     try:
-        clear_old_results()
+        command.clear_old_results()
         factory = runtests.browser_factories.get(cmd_opts.browser_type)
         runtests.runtests(
             args,
@@ -126,9 +127,9 @@ def run_django(port):
         print 'you must have django installed to run the test project.'
         sys.exit(1)
     proc = subprocess.Popen([manage_file, 'runserver', port],
-                     stderr=open(os.devnull, 'w'),
-                     stdout=open(os.devnull, 'w')
-                     )
+                            stderr=open(os.devnull, 'w'),
+                            stdout=open(os.devnull, 'w')
+                            )
     print '--------------------------------------------------------------'
     print 'waiting for django to come up...'
     attempts = 30

@@ -13,6 +13,7 @@ def skip_as_jenkins():
     if user.lower() == 'jenkins':
         skip()
 
+
 def setup_cleanup_test_db():
     """Restore testproj.db before a test and cleanup db after test.""" 
     # this will copy testproj.db from testproj.db.orginal as setup
