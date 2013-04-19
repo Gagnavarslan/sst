@@ -5,7 +5,7 @@ from sst import config
 if config.browser_type != 'firefox':
     sst.actions.skip()
 
-sst.actions.JAVASCRIPT_DISABLED = True
+JAVASCRIPT_DISABLED = True
 
 sst.actions.go_to('/nojs/')
 
