@@ -36,7 +36,8 @@ fails(assert_url_network_location, '')
 # visit url with query strings and fragments, then test assertions
 go_to('/begin?query_string#fragment_id')
 
-assert_url('http://localhost:%s/begin?query_string#fragment_id' % DEVSERVER_PORT)
+assert_url('http://localhost:%s/begin?query_string#fragment_id'
+           % DEVSERVER_PORT)
 assert_url('/begin?query_string#fragment_id')
 fails(assert_url, '/begin')
 fails(assert_url, 'http://localhost:%s/begin' % DEVSERVER_PORT)
