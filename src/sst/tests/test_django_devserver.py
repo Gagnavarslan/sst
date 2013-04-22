@@ -18,6 +18,9 @@
 #
 
 
+import sys
+from cStringIO import StringIO
+
 import testtools
 
 from sst.scripts import run
@@ -26,6 +29,12 @@ from sst import DEVSERVER_PORT
 
 
 class TestDjangoDevServer(testtools.TestCase):
+    
+    def setUp(self):
+        super(TestDjangoDevServer, self).setUp()
+        # capture test output so we don't pollute the test runs
+        self.out = StringIO()
+        self.patch(sys, 'stdout', self.out)
 
     def test_django_start(self):
         self.addCleanup(run.kill_django, DEVSERVER_PORT)
