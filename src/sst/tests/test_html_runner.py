@@ -53,7 +53,6 @@ class TestHtmlRunner(testtools.TestCase):
     def setUp(self):
         super(TestHtmlRunner, self).setUp()
         tests.set_cwd_to_tmp(self)
-        self.cases_dir = os.path.join(self.test_base_dir, 'cases')
         # capture test output so we don't pollute the test runs
         self.out = StringIO()
         self.patch(sys, 'stdout', self.out)
