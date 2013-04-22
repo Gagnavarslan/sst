@@ -532,7 +532,7 @@ class _TestResult(TestResult):
             sys.stderr.write(str(test))
             sys.stderr.write('\n')
         else:
-            sys.stderr.write('.')
+            sys.stdout.write('.')
 
     def addError(self, test, err):
         self.error_count += 1
@@ -545,7 +545,7 @@ class _TestResult(TestResult):
             sys.stderr.write(str(test))
             sys.stderr.write('\n')
         else:
-            sys.stderr.write('E')
+            sys.stdout.write('E')
 
     def addFailure(self, test, err):
         self.failure_count += 1
@@ -558,7 +558,7 @@ class _TestResult(TestResult):
             sys.stderr.write(str(test))
             sys.stderr.write('\n')
         else:
-            sys.stderr.write('F')
+            sys.stdout.write('F')
 
 
 class HTMLTestRunner(Template_mixin):
@@ -587,8 +587,7 @@ class HTMLTestRunner(Template_mixin):
         test(result)
         self.stopTime = datetime.datetime.now()
         self.generateReport(test, result)
-        print >>sys.stderr,\
-            '\nTime Elapsed: %s' % (self.stopTime - self.startTime)
+        print '\nTime Elapsed: %s' % (self.stopTime - self.startTime)
         return result
 
     def sortResult(self, result_list):
