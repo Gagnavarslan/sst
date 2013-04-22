@@ -21,7 +21,7 @@ import ast
 import logging
 import datetime
 import fnmatch
-import junithtmlrunner
+import htmlrunner
 import junitxmlrunner
 import os
 import pdb
@@ -119,7 +119,7 @@ def runtests(test_names, test_dir='.', collect_only=False,
     elif report_format == 'html':
         _make_results_dir()
         fp = file(os.path.join(config.results_directory, 'results.html'), 'wb')
-        runner = junithtmlrunner.HTMLTestRunner(
+        runner = htmlrunner.HTMLTestRunner(
             stream=fp, title='SST Test Report', verbosity=2, failfast=failfast
         )
 

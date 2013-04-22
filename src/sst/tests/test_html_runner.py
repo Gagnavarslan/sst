@@ -27,7 +27,7 @@ from cStringIO import StringIO
 import testtools
 
 from sst import (
-    junithtmlrunner,
+    htmlrunner,
     tests
 )
 
@@ -63,7 +63,7 @@ class TestHtmlRunner(testtools.TestCase):
         
         report_filename = 'report.html'
         fp = file(report_filename, 'wb')
-        runner = junithtmlrunner.HTMLTestRunner(
+        runner = htmlrunner.HTMLTestRunner(
             stream=fp,
             title='My Unit Test',
             description='Test Description',

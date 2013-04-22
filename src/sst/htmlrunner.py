@@ -1,4 +1,4 @@
-#  junithtmlrunner - PyUnit TestRunner with HTML report output.
+#  htmlrunner - PyUnit TestRunner with HTML report output.
 #
 #  ------------------------------------------------------------------------
 #  original HTMLTestRunner by Wai Yip Tung, Copyright (c) 2004-2007
@@ -37,12 +37,12 @@ generates a HTML report to show the result at a glance.
 The simplest way to use this is to invoke its main method. E.g.
 
     import unittest
-    import junithtmlrunner
+    import htmlrunner
 
     ... define your tests ...
 
     if __name__ == '__main__':
-        junithtmlrunner.main()
+        htmlrunner.main()
 
 
 For more customization options, instantiates a HTMLTestRunner object.
@@ -50,7 +50,7 @@ HTMLTestRunner is a counterpart to unittest's TextTestRunner. E.g.
 
     # output to a file
     fp = file('my_report.html', 'wb')
-    runner = junithtmlrunner.HTMLTestRunner(
+    runner = htmlrunner.HTMLTestRunner(
                 stream=fp,
                 title='My unit test',
                 description=
@@ -630,7 +630,7 @@ class HTMLTestRunner(Template_mixin):
 
     def generateReport(self, test, result):
         report_attrs = self.getReportAttributes(result)
-        generator = 'junithtmlrunner'
+        generator = 'htmlrunner'
         stylesheet = self._generate_stylesheet()
         heading = self._generate_heading(report_attrs)
         report = self._generate_report(result)
