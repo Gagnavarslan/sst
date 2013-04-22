@@ -32,17 +32,20 @@ from sst import (
 )
 
 
-def _make_testcase_files(dir):
-    file_names = (
-        'test_foo.py',
-        'test_bar.py'
-    )
-    os.mkdir(dir)
-    for fn in file_names:
-        with open(os.path.join(dir, fn), 'w') as f:
-            f.write('import unittest\n')
-            f.write('class Test_%s(unittest.TestCase):\n' % fn[:-3])
-            f.write('    def test_%s(self): assert True\n' % fn[:-3])
+def _make_test_suite():
+    """create a suite of tests so we have something to load and run."""
+    class TruthyTestCase(unittest.TestCase):
+
+        def test_true(self):
+            pass
+
+        def test_false(self):
+            pass
+
+    suite = unittest.TestSuite()
+    suite.addTest(TruthyTestCase('test_true'))
+    suite.addTest(TruthyTestCase('test_false'))
+    return suite
 
 
 class TestHtmlRunner(testtools.TestCase):
@@ -56,12 +59,12 @@ class TestHtmlRunner(testtools.TestCase):
         self.patch(sys, 'stdout', self.out)
 
     def test_html_output(self):
-        _make_testcase_files(self.cases_dir)
-        loader = unittest.TestLoader()
-        test_suite = loader.discover(self.cases_dir)
-        self.assertEqual(test_suite.countTestCases(), 2)
+        suite = _make_test_suite()
+        self.assertEqual(suite.countTestCases(), 2)
         
         report_filename = 'report.html'
+        
+        # create a runner and run the tests
         fp = file(report_filename, 'wb')
         runner = htmlrunner.HTMLTestRunner(
             stream=fp,
@@ -69,7 +72,7 @@ class TestHtmlRunner(testtools.TestCase):
             description='Test Description',
             verbosity=0
         )
-        runner.run(test_suite)
+        runner.run(suite)
         fp.close()  # close file handle so output flushes before asserting content
         
         self.assertIn(report_filename, os.listdir(self.test_base_dir))
