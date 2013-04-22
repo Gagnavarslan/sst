@@ -1,13 +1,14 @@
-from sst.actions import *
+import sst.actions
 
-go_to('/')
 
-get_element_by_css('#headline')
-get_element_by_css('.unique_class')
+sst.actions.go_to('/')
 
-fails(get_element_by_css, '#doesnotexist')
-fails(get_element_by_css, '.someclass')
+sst.actions.get_element_by_css('#headline')
+sst.actions.get_element_by_css('.unique_class')
 
-assert len(get_elements_by_css('#doesnotexist')) == 0
-assert len(get_elements_by_css('#headline')) == 1
-assert len(get_elements_by_css('.some_class')) == 2
+sst.actions.fails(sst.actions.get_element_by_css, '#doesnotexist')
+sst.actions.fails(sst.actions.get_element_by_css, '.someclass')
+
+assert len(sst.actions.get_elements_by_css('#doesnotexist')) == 0
+assert len(sst.actions.get_elements_by_css('#headline')) == 1
+assert len(sst.actions.get_elements_by_css('.some_class')) == 2

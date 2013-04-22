@@ -1,4 +1,4 @@
-from sst.actions import *
+import sst.actions
 
 
 # vars from data_driven_form.csv are available in namespace
@@ -9,12 +9,15 @@ assert(len(list_field) > 1)
 assert((list_field[0] == 1) or (list_field[0] == 'a'))
 assert isinstance(should_pass, bool)
 
-go_to('/')
-assert_title('The Page Title')
+sst.actions.go_to('/')
+sst.actions.assert_title('The Page Title')
 
 # fields come from the associated csv data file
-write_textfield(get_element(name='textfield1'), textfield1)
-write_textfield(get_element(name='password1'), password1)
+sst.actions.write_textfield(
+    sst.actions.get_element(name='textfield1'), textfield1)
+sst.actions.write_textfield(
+    sst.actions.get_element(name='password1'), password1)
 
-click_button(get_element(tag='input', value='Begin'))
-assert_title('The Next Page')
+sst.actions.click_button(
+    sst.actions.get_element(tag='input', value='Begin'))
+sst.actions.assert_title('The Next Page')

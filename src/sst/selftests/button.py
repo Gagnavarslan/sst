@@ -1,31 +1,31 @@
-from sst.actions import *
+import sst.actions
 
 
-go_to('/')
+sst.actions.go_to('/')
 
-assert_button('mainform')
-assert_button('lonely')
-fails(assert_button, 'headline')
-fails(assert_button, 'foobar')
+sst.actions.assert_button('mainform')
+sst.actions.assert_button('lonely')
+sst.actions.fails(sst.actions.assert_button, 'headline')
+sst.actions.fails(sst.actions.assert_button, 'foobar')
 
-assert_button(get_element(value='Begin', tag='input'))
-
-# this button has no behaviour, but the action should not fail
-click_button('lonely', wait=False)
+sst.actions.assert_button(sst.actions.get_element(value='Begin', tag='input'))
 
 # this button has no behaviour, but the action should not fail
-click_button('lonely2', wait=False)
+sst.actions.click_button('lonely', wait=False)
 
-click_button('mainform')
-assert_url('/begin')
-assert_title('The Next Page')
+# this button has no behaviour, but the action should not fail
+sst.actions.click_button('lonely2', wait=False)
 
-click_link('the_band_link')
-assert_url('/')
+sst.actions.click_button('mainform')
+sst.actions.assert_url('/begin')
+sst.actions.assert_title('The Next Page')
 
-click_link('longscroll_link')
-assert_url('/longscroll')
+sst.actions.click_link('the_band_link')
+sst.actions.assert_url('/')
+
+sst.actions.click_link('longscroll_link')
+sst.actions.assert_url('/longscroll')
 
 # button is initially scrolled out of view
-click_button('mainform')
-assert_url('/begin')
+sst.actions.click_button('mainform')
+sst.actions.assert_url('/begin')
