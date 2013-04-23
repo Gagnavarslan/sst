@@ -56,7 +56,7 @@ def check_devserver_port_used(port):
     try:
         sock.bind(('127.0.0.1', int(port)))
         used = False
-    except socket.error as e:
+    except socket.error:
         used = True
     finally:
         sock.close()

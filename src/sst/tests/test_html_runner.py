@@ -72,7 +72,8 @@ class TestHtmlRunner(testtools.TestCase):
             verbosity=0
         )
         runner.run(suite)
-        fp.close()  # close file handle so output flushes before asserting content
+        # Close file handle so output flushes before asserting content.
+        fp.close() 
         
         self.assertIn(report_filename, os.listdir(self.test_base_dir))
         with open(report_filename) as f:
