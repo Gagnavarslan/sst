@@ -520,6 +520,8 @@ class SSTScriptTestCase(SSTTestCase):
         actions.reset_base_url()
         actions._set_wait_timeout(10, 0.1)
         # Possibly inject parametrization from associated .csv file
+        previous_context = context.store_context()
+        self.addCleanup(context.restore_context, previous_context)
         context.populate_context(self.context, self.script_path,
                                  self.browser.name, self.javascript_disabled)
 

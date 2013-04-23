@@ -73,7 +73,7 @@ class TestSSTTestCase(testtools.TestCase):
 
     def test_config(self):
         self.assertIsNone(config._current_context)
-        self.assertEqual(config.browser_type, 'Firefox')
+        self.assertEqual(config.browser_type, 'firefox')
         self.assertEqual(config.cache, {})
         self.assertEqual(config.flags, [])
         self.assertFalse(config.javascript_disabled)
