@@ -43,4 +43,5 @@ sst.actions.assert_url(
     'http://localhost:%s/begin?query_string#fragment_id' % DEVSERVER_PORT)
 sst.actions.assert_url('/begin?query_string#fragment_id')
 sst.actions.fails(sst.actions.assert_url, '/begin')
-sst.actions.fails(sst.actions.assert_url, 'http://localhost:%s/begin' % DEVSERVER_PORT)
+sst.actions.fails(
+    sst.actions.assert_url, 'http://localhost:%s/begin' % DEVSERVER_PORT)

@@ -26,7 +26,7 @@ import testtools
 # test names like test_list_single does below (that's probably a bug in
 # TestLoader.loadTestsFromName...) -- vila 2012-11-29
 import sst
-import sst.tests
+import sst.tests  # NOQA
 from sst.tests import main
 
 

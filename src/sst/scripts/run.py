@@ -21,7 +21,6 @@
 
 import datetime
 import os
-import socket
 import subprocess
 import sys
 import time
@@ -121,7 +120,7 @@ def run_django(port):
         print 'you must run self-tests from the dev branch or package source.'
         sys.exit(1)
     try:
-        import django
+        import django  # NOQA
     except ImportError:
         print 'Error: can not find django module.'
         print 'you must have django installed to run the test project.'
