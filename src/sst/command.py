@@ -158,7 +158,7 @@ def get_opts(get_options):
 
     if cmd_opts.browser_type not in runtests.browser_factories:
         print ("Error: %s should be one of %s"
-               % (cmd_opts.browser_type, runtests.browser_factories.keys))
+               % (cmd_opts.browser_type, runtests.browser_factories.keys()))
         sys.exit(1)
 
     logging.basicConfig(format='    %(levelname)s:%(name)s:%(message)s')
