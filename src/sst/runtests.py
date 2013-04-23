@@ -19,7 +19,6 @@
 
 import ast
 import logging
-import datetime
 import fnmatch
 import htmlrunner
 import junitxmlrunner
@@ -281,7 +280,7 @@ def use_xvfb_server(test, xvfb=None):
 class BrowserFactory(object):
     """Handle browser creation for tests.
 
-    One instance is used for a given test run 
+    One instance is used for a given test run.
     """
 
     webdriver_class = None

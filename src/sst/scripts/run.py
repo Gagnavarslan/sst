@@ -119,9 +119,9 @@ def run_django(port):
         print '%r does not exist' % manage_file
         print 'you must run self-tests from the dev branch or package source.'
         sys.exit(1)
-    try:
-        import django  # NOQA
-    except ImportError:
+
+    django = testtools.try_import('django')
+    if django is None:
         print 'Error: can not find django module.'
         print 'you must have django installed to run the test project.'
         sys.exit(1)

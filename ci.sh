@@ -86,8 +86,7 @@ python -c "import selenium; print 'Selenium %s' % selenium.__version__"
 if [ -n "$FLAKE8" ]; then
     echo "----------------------------------"
     echo "running flake8 (pyflakes/pep8) checks..."
-    flake8 src/ docs/ sst-* *.py > flake8.log
-    cat flake8.log | grep -v ': W'  # print errors, but not warnings
+    flake8 src/ docs/ sst-* *.py
 fi
 
 if [ -n "$UNIT" ]; then
