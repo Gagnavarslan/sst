@@ -25,8 +25,8 @@ import testtools
 # The following two imports are required by unittest when running a list of
 # test names like test_list_single does below (that's probably a bug in
 # TestLoader.loadTestsFromName...) -- vila 2012-11-29
-import sst
-import sst.tests  # NOQA
+import sst  # NOQA, see above
+import sst.tests  # NOQA, see above
 from sst.tests import main
 
 
