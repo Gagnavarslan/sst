@@ -42,7 +42,7 @@ The `sst.config` module has the following information::
     config.cache
 """
 
-browser_type = 'Firefox'
+browser_type = 'firefox'
 _current_context = None
 javascript_disabled = False
 shared_directory = None
