@@ -29,7 +29,7 @@ from sst import DEVSERVER_PORT
 
 
 class TestDjangoDevServer(testtools.TestCase):
-    
+
     def setUp(self):
         super(TestDjangoDevServer, self).setUp()
         # capture test output so we don't pollute the test runs

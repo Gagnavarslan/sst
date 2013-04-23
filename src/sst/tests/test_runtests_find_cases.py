@@ -99,7 +99,7 @@ class TestFindCases(testtools.TestCase):
         matches = {
             'test_a_real_test2.py',
         }
-        
+
         found = runtests.find_cases(args, self.cases_dir)
         self.assertSetEqual(matches, found)
 

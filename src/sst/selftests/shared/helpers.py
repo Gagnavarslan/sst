@@ -15,7 +15,7 @@ def skip_as_jenkins():
 
 
 def setup_cleanup_test_db():
-    """Restore testproj.db before a test and cleanup db after test.""" 
+    """Restore testproj.db before a test and cleanup db after test."""
     # this will copy testproj.db from testproj.db.orginal as setup
     # and remove database after test as a cleanup.
     # (this is used for all tests that access local django admin app only)

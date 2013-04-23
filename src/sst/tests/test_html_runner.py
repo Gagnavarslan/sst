@@ -60,9 +60,9 @@ class TestHtmlRunner(testtools.TestCase):
     def test_html_output(self):
         suite = _make_test_suite()
         self.assertEqual(suite.countTestCases(), 2)
-        
+
         report_filename = 'report.html'
-        
+
         # create a runner and run the tests
         fp = file(report_filename, 'wb')
         runner = htmlrunner.HTMLTestRunner(
@@ -73,8 +73,8 @@ class TestHtmlRunner(testtools.TestCase):
         )
         runner.run(suite)
         # Close file handle so output flushes before asserting content.
-        fp.close() 
-        
+        fp.close()
+
         self.assertIn(report_filename, os.listdir(self.test_base_dir))
         with open(report_filename) as f:
             content = f.read()

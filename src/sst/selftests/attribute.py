@@ -14,5 +14,5 @@ sst.actions.fails(
 sst.actions.fails(
     sst.actions.assert_attribute, 'longscroll_link', 'fish', 'shortscroll')
 sst.actions.fails(
-    sst.actions.assert_attribute, 'longscroll_link', 'fish', 'shortscroll', 
+    sst.actions.assert_attribute, 'longscroll_link', 'fish', 'shortscroll',
     regex=True)

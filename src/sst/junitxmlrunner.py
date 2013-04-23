@@ -18,11 +18,11 @@ import sys
 import time
 from unittest import TestResult, _TextTestResult, TextTestRunner
 
-try:
-    # Removed in Python 3
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
+import testtools
+
+testtools.try_import('selenium')
+
+StringIO = testtools.try_imports(['StringIO.StringIO', 'io.StringIO'])
 
 
 class _DelegateIO(object):
@@ -268,12 +268,12 @@ class _XMLTestResult(_TextTestResult):
         if isinstance(test_runner.output, str) and not \
                 os.path.exists(test_runner.output):
             os.makedirs(test_runner.output)
-        
+
         test_runner.output.write('<?xml version="1.0"?>\n<testsuites>\n')
-        
+
         for suite, tests in all_results.items():
             doc = Document()
-            
+
             # Build the XML file
             testsuite = _XMLTestResult._report_testsuite(
                 suite, test_runner.outsuffix, tests, doc
@@ -283,7 +283,7 @@ class _XMLTestResult(_TextTestResult):
             _XMLTestResult._report_output(test_runner, testsuite, doc)
 
             xml_content = doc.documentElement.toprettyxml(indent='\t')
-            
+
             if type(test_runner.output) is str:
                 report_file = open('%s%sTEST-%s-%s.xml' %
                                    (test_runner.output, os.sep, suite,

@@ -1,7 +1,7 @@
 import sst.actions
 from sst import config
 
-# currently failing in Chrome.  
+# currently failing in Chrome.
 # need to investigate and file upstream chromedriver bug.
 if config.browser_type == 'chrome':
     sst.actions.skip()

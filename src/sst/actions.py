@@ -93,7 +93,7 @@ __all__ = [
 _check_flags = True
 _test = None
 
-BASE_URL = 'http://localhost:%s/' % DEVSERVER_PORT 
+BASE_URL = 'http://localhost:%s/' % DEVSERVER_PORT
 __DEFAULT_BASE_URL__ = BASE_URL
 
 logger = logging.getLogger('SST')
@@ -338,7 +338,7 @@ def go_back(wait=True):
     if wait:
         _waitforbody()
 
-        
+
 def assert_checkbox(id_or_elem):
     """
     Assert that the element is a checkbox.
@@ -630,7 +630,7 @@ def assert_url_contains(text, regex=False):
 
 def assert_url_network_location(netloc):
     """Assert the current url's network location is as specified.
-    
+
     `netloc` is a string containing 'domain:port'.
     In the case of port 80, `netloc` may contain domain only."""
     real_netloc = urlparse(_test.browser.current_url).netloc
