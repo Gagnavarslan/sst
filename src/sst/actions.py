@@ -1318,7 +1318,7 @@ def assert_attribute(id_or_elem, attribute, value, regex=False):
     """
     elem = _get_elem(id_or_elem)
     logger.debug(
-        'Checking attribute %r of %r' % (attribute,  _element_to_string(elem)))
+        'Checking attribute %r of %r' % (attribute, element_to_string(elem)))
     actual = elem.get_attribute(attribute)
     if not regex:
         success = value == actual
@@ -1411,18 +1411,20 @@ def set_window_size(width, height):
     """Resize the current window (width, height) in pixels."""
     logger.debug('Resizing window to: %s x %s' % (width, height))
     orig_width, orig_height = get_window_size()
+    # Do not actually resize if the specified size is same as original.
     if (orig_width == width) and (orig_height == height):
         return (width, height)
+
     _test.browser.set_window_size(width, height)
 
-    def _was_resized(orig_width, orig_height):
+    def _was_resized(width, height):
         w, h = get_window_size()
-        if (w != orig_width) or (h != orig_height):
+        if (w == width) and (h == height):
             return True
         else:
             return False
 
-    _wait_for(_was_resized, False, 5, .1, orig_width, orig_height)
+    wait_for(_was_resized, width, height)
     return (width, height)
 
 
