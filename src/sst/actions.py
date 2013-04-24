@@ -1410,10 +1410,6 @@ def clear_cookies():
 def set_window_size(width, height):
     """Resize the current window (width, height) in pixels."""
     logger.debug('Resizing window to: %s x %s' % (width, height))
-    orig_width, orig_height = get_window_size()
-    # Do not actually resize if the specified size is same as original.
-    if (orig_width == width) and (orig_height == height):
-        return (width, height)
 
     _test.browser.set_window_size(width, height)
 
