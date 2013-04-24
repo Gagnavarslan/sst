@@ -1318,7 +1318,7 @@ def assert_attribute(id_or_elem, attribute, value, regex=False):
     """
     elem = _get_elem(id_or_elem)
     logger.debug(
-        'Checking attribute %r of %r' % (attribute, element_to_string(elem)))
+        'Checking attribute %r of %r' % (attribute, _element_to_string(elem)))
     actual = elem.get_attribute(attribute)
     if not regex:
         success = value == actual
