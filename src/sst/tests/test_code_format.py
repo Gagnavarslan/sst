@@ -29,7 +29,6 @@ class Pep8ConformanceTestCase(testtools.TestCase):
     def test_pep8_conformance(self):
         # scan recursively starting from the 'src' directory
         root_dirname = os.path.realpath(__file__ + '/../../..')
-        print root_dirname
         self.pep8style = pep8.StyleGuide()
         result = self.pep8style.input_dir(root_dirname)
         self.assertEqual(self.pep8style.options.report.total_errors, 0)
