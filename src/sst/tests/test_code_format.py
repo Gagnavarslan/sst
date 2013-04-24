@@ -19,10 +19,8 @@
 
 
 import os
-from os.path import dirname
 
 import pep8
-
 import testtools
 
 
