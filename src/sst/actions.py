@@ -1417,15 +1417,14 @@ def set_window_size(width, height):
 
     _test.browser.set_window_size(width, height)
 
-    def _was_resized(width, height):
+    def _was_resized():
         w, h = get_window_size()
         if (w == width) and (h == height):
             return True
         else:
             return False
 
-    wait_for(_was_resized, width, height)
-    return (width, height)
+    wait_for(_was_resized)
 
 
 def get_window_size():
