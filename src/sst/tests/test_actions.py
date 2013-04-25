@@ -62,7 +62,7 @@ class TestRetryOnStale(testtools.TestCase):
         self.assertRaisesOnlyOnce('success', protected_raiser)
 
     def test_wait_for_retries(self):
-        self.assertRaisesOnlyOnce(None, actions.wait_for,
+        self.assertRaisesOnlyOnce('success', actions.wait_for,
                                   self.raise_stale_element)
 
 
