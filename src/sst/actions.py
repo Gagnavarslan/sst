@@ -706,6 +706,7 @@ def _wait_for(condition, refresh_page, timeout, poll, *args, **kwargs):
                 _raise(error)
             time.sleep(poll)
     finally:
+        # Re-enable logging.
         logging.disable(logging.NOTSET)
     return result
 
