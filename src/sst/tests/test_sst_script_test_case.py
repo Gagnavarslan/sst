@@ -34,9 +34,11 @@ from sst import (
 
 class SSTStringTestCase(runtests.SSTScriptTestCase):
 
-    script_name = 'test_foo'
-    script_code = 'pass'
     xserver_headless = True
+
+    def __init__(self, code='pass'):
+        super(SSTStringTestCase, self).__init__('ingored_dir', 'ignored_name')
+        self.script_code = code
 
     def setUp(self):
         # We don't need to compile the script because we have already define

@@ -34,7 +34,7 @@ class TestSSTScriptTestCase(testtools.TestCase):
 
     def setUp(self):
         super(TestSSTScriptTestCase, self).setUp()
-        self.test = runtests.SSTScriptTestCase('foo')
+        self.test = runtests.SSTScriptTestCase('dir', 'foo.py')
 
     def test_id(self):
         """The test id mentions the python class path and the test name."""

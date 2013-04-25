@@ -26,12 +26,7 @@ import os
 import pdb
 import sys
 import traceback
-
-from unittest import (
-    defaultTestLoader,
-    TestSuite,
-    TextTestRunner,
-)
+import unittest
 
 from selenium import webdriver
 import testtools
@@ -66,7 +61,6 @@ def runtests(test_names, test_dir='.', collect_only=False,
         package_dir = os.path.dirname(__file__)
         test_dir = os.path.join(package_dir, 'selftests')
 
-    test_dir = _get_full_path(test_dir)
     if not os.path.isdir(test_dir):
         msg = 'Specified directory %r does not exist' % test_dir
         print msg
@@ -87,11 +81,11 @@ def runtests(test_names, test_dir='.', collect_only=False,
 
     suites = get_suites(test_names, test_dir, shared_directory, collect_only,
                         browser_factory,
-                        screenshots_on, failfast, debug,
+                        screenshots_on, debug,
                         extended=extended,
                         )
 
-    alltests = TestSuite(suites)
+    alltests = unittest.TestSuite(suites)
 
     print ''
     print '  %s test cases loaded\n' % alltests.countTestCases()
@@ -123,7 +117,7 @@ def runtests(test_names, test_dir='.', collect_only=False,
         )
 
     else:
-        runner = TextTestRunner(verbosity=2, failfast=failfast)
+        runner = unittest.TextTestRunner(verbosity=2, failfast=failfast)
 
     try:
         runner.run(alltests)
@@ -135,11 +129,7 @@ def runtests(test_names, test_dir='.', collect_only=False,
 
 
 def _get_full_path(relpath):
-    return os.path.normpath(
-        os.path.abspath(
-            os.path.join(os.getcwd(), relpath)
-        )
-    )
+    return os.path.abspath(relpath)
 
 
 def _make_results_dir():
@@ -183,21 +173,21 @@ def find_shared_directory(test_dir, shared_directory):
                 if os.path.isdir(this_shared):
                     shared_directory = this_shared
                     break
-                relpath = os.path.split(relpath)[0]
+                relpath = os.path.dirname(relpath)
 
     return _get_full_path(shared_directory)
 
 
 def get_suites(test_names, test_dir, shared_dir, collect_only,
                browser_factory,
-               screenshots_on, failfast, debug,
+               screenshots_on, debug,
                extended=False
                ):
     return [
         get_suite(
             test_names, root, collect_only,
             browser_factory,
-            screenshots_on, failfast, debug,
+            screenshots_on, debug,
             extended=extended,
         )
         for root, _, _ in os.walk(test_dir, followlinks=True)
@@ -234,10 +224,10 @@ def find_cases(test_names, test_dir):
 
 def get_suite(test_names, test_dir, collect_only,
               browser_factory,
-              screenshots_on, failfast, debug,
+              screenshots_on, debug,
               extended=False):
 
-    suite = TestSuite()
+    suite = unittest.TestSuite()
 
     for case in find_cases(test_names, test_dir):
         csv_path = os.path.join(test_dir, case.replace('.py', '.csv'))
@@ -248,14 +238,14 @@ def get_suite(test_names, test_dir, collect_only,
                 suite.addTest(
                     get_case(
                         test_dir, case, browser_factory, screenshots_on, row,
-                        failfast=failfast, debug=debug, extended=extended
+                        debug=debug, extended=extended
                     )
                 )
         else:
             suite.addTest(
                 get_case(
                     test_dir, case, browser_factory, screenshots_on,
-                    failfast=failfast, debug=debug, extended=extended
+                    debug=debug, extended=extended
                 )
             )
 
@@ -481,13 +471,21 @@ class SSTTestCase(testtools.TestCase):
 class SSTScriptTestCase(SSTTestCase):
     """Test case used internally by sst-run and sst-remote."""
 
-    script_dir = '.'
-    script_name = None
-
-    def __init__(self, testMethod, context_row=None):
+    def __init__(self, script_dir, script_name, context_row=None):
         super(SSTScriptTestCase, self).__init__('run_test_script')
+        self.script_dir = script_dir
+        self.script_name = script_name
+        self.script_path = os.path.join(self.script_dir, self.script_name)
+
+        # pythonify the script path into a python path
+# The following will give better test ids.
+#        rel = os.path.relpath(script_dir, os.getcwd())
+#
+#        self.id = lambda: '%s.%s' % (rel.replace(os.sep, '.'),
+#                                    script_name.replace('.py', ''))
         self.id = lambda: '%s.%s.%s' % (self.__class__.__module__,
-                                        self.__class__.__name__, testMethod)
+                                        self.__class__.__name__,
+                                        script_name[:-3]) # drop .py
         if context_row is None:
             context_row = {}
         self.context = context_row
@@ -500,9 +498,6 @@ class SSTScriptTestCase(SSTTestCase):
                                self.__class__.__name__)
 
     def setUp(self):
-        self.script_path = os.path.join(self.script_dir, self.script_name)
-        sys.path.append(self.script_dir)
-        self.addCleanup(sys.path.remove, self.script_dir)
         self._compile_script()
         # The script may override some settings. The default value for
         # JAVASCRIPT_DISABLED and ASSUME_TRUSTED_CERT_ISSUER are False, so if
@@ -523,6 +518,9 @@ class SSTScriptTestCase(SSTTestCase):
                                  self.browser.name, self.javascript_disabled)
 
     def _compile_script(self):
+        self.script_path = os.path.join(self.script_dir, self.script_name)
+        sys.path.append(self.script_dir)
+        self.addCleanup(sys.path.remove, self.script_dir)
         with open(self.script_path) as f:
             source = f.read() + '\n'
         self.code = compile(source, self.script_path, 'exec')
@@ -551,7 +549,7 @@ def _has_classes(test_dir, entry):
 
 
 def get_case(test_dir, entry, browser_factory, screenshots_on,
-             context=None, failfast=False, debug=False, extended=False):
+             context=None, debug=False, extended=False):
     # our naming convention for tests requires that script-based tests must
     # not begin with "test_*."  SSTTestCase class-based or other
     # unittest.TestCase based source files must begin with "test_*".
@@ -560,13 +558,11 @@ def get_case(test_dir, entry, browser_factory, screenshots_on,
     # tests always will.
     if entry.startswith('test_') and _has_classes(test_dir, entry):
         # load just the individual file's tests
-        this_test = defaultTestLoader.discover(test_dir, pattern=entry)
+        this_test = unittest.defaultTestLoader.discover(test_dir, pattern=entry,
+                                                        top_level_dir=test_dir)
     else:  # this is for script-based test
-        name = entry[:-3]
-        test_name = 'test_%s' % name
-        this_test = SSTScriptTestCase(test_name, context)
-        this_test.script_dir = test_dir
-        this_test.script_name = entry
+        this_test = SSTScriptTestCase(test_dir, entry, context)
+
         this_test.browser_factory = browser_factory
 
         this_test.screenshots_on = screenshots_on

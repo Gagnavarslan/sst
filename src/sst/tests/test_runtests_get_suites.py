@@ -75,14 +75,13 @@ class TestGetSuites(testtools.TestCase):
         shared_dir = '.'
         collect_only = False
         screenshots_on = False
-        failfast = False,
         debug = False
         extended = False
 
         found = runtests.get_suites(
             test_names, test_dir, shared_dir, collect_only,
             runtests.FirefoxFactory(),
-            screenshots_on, failfast, debug, extended
+            screenshots_on, debug, extended
         )
         suite = found[0]._tests
 
@@ -90,9 +89,9 @@ class TestGetSuites(testtools.TestCase):
         self.assertEquals(len(suite), 6)
 
         expected_scripted_tests = (
-            'test_script1',
-            'test_script2',
-            'test_class_hiding_case',
+            'script1',
+            'script2',
+            'class_hiding_case',
         )
         expected_testcase_tests = (
             'test_test_a_real_test',
