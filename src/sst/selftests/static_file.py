@@ -6,8 +6,8 @@ import os
 import sst.actions
 
 
-static_file = os.path.join(''.join(os.path.split(__file__)[:-1]),
-                           'static.html')
+static_file = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), 'static.html'))
 
 # using full path
 sst.actions.go_to('file:////%s' % static_file)
