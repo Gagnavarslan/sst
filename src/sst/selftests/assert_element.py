@@ -1,10 +1,12 @@
-from sst.actions import *
+import sst.actions
 
-go_to('/')
 
-assert_element(id='select_with_id_1')
-assert_element(css_class='unique_class', id='some_id')
-assert_element(name='longscroll', href='/longscroll')
+sst.actions.go_to('/')
 
-fails(assert_element, id='nonexistent')
-fails(assert_element, css_class='unique_class', name='fish')
+sst.actions.assert_element(id='select_with_id_1')
+sst.actions.assert_element(css_class='unique_class', id='some_id')
+sst.actions.assert_element(name='longscroll', href='/longscroll')
+
+sst.actions.fails(sst.actions.assert_element, id='nonexistent')
+sst.actions.fails(
+    sst.actions.assert_element, css_class='unique_class', name='fish')

@@ -1,16 +1,22 @@
 import os
-from sst.actions import *
+import sst.actions
+from sst import config
 
-"""Test actions related to file input elements."""
+# Test actions related to file input elements.
 
 
-go_to('/')
+# file input is currently only implemented for Firefox in sst
+if config.browser_type != 'firefox':
+    sst.actions.skip()
+
+
+sst.actions.go_to('/')
 
 # Assert that the input file is a textfield.
-assert_textfield('file_input')
-assert_textfield(get_element(id='file_input'))
+sst.actions.assert_textfield('file_input')
+sst.actions.assert_textfield(sst.actions.get_element(id='file_input'))
 
 # Enter a path to an existing file on the file input.
 file_path = os.path.abspath(__file__)
-write_textfield('file_input', file_path)
-assert_text('file_input', file_path)
+sst.actions.write_textfield('file_input', file_path)
+sst.actions.assert_text('file_input', file_path)

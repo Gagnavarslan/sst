@@ -1,4 +1,2 @@
 selenium
-junitxml
-pyvirtualdisplay
-unittest2
+testtools

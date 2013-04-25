@@ -1,13 +1,16 @@
-from sst.actions import *
+import sst.actions
 
-go_to('/')
+
+sst.actions.go_to('/')
 
 # checks that clicking works at the element level as well
-click_element(get_element(id='the_band_link'), wait=False)
-assert_url('/begin')
+sst.actions.click_element(
+    sst.actions.get_element(id='the_band_link'), wait=False)
+sst.actions.assert_url('/begin')
 
-go_to('/')
+sst.actions.go_to('/')
 
-# checks the wait option 
-click_element(get_element(id='the_band_link'), wait=True)
-assert_url('/begin')
+# checks the wait option
+sst.actions.click_element(
+    sst.actions.get_element(id='the_band_link'), wait=True)
+sst.actions.assert_url('/begin')

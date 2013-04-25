@@ -1,13 +1,14 @@
-from sst.actions import *
+import sst.actions
 
-assert_equal(1, 1)
-assert_equal('foo', 'foo')
 
-fails(assert_equal, 1, 2)
-fails(assert_equal, 'foo', 'bar')
+sst.actions.assert_equal(1, 1)
+sst.actions.assert_equal('foo', 'foo')
 
-assert_not_equal(1, 2)
-assert_not_equal('foo', 'bar')
+sst.actions.fails(sst.actions.assert_equal, 1, 2)
+sst.actions.fails(sst.actions.assert_equal, 'foo', 'bar')
 
-fails(assert_not_equal, 1, 1)
-fails(assert_not_equal, 'foo', 'foo')
+sst.actions.assert_not_equal(1, 2)
+sst.actions.assert_not_equal('foo', 'bar')
+
+sst.actions.fails(sst.actions.assert_not_equal, 1, 1)
+sst.actions.fails(sst.actions.assert_not_equal, 'foo', 'foo')

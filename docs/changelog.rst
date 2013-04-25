@@ -9,20 +9,52 @@
 Official Releases:
 ------------------
 
-
-version **0.2.2** (2012 ??? ??)
+version **0.2.4** (Not yet released)
 *******************************
 
-* add ``wait_for_and_refresh`` action
+* added ``get_text`` action
+* made it clearer that ``assert_text`` and ``assert_text_contains`` will check
+  the value instead of the text for text field elements.
+
+version **0.2.3** (2013 Apr 17)
+*******************************
+
+* added the ``save_page_source`` action.
+* added a parameter to ``take_screenshot`` to include a timestamp in the file 
+  name
+* expose the SSTTestCase class which is used internally to create test cases
+* start implementing an internal test suite (#1084007)
+* ensure Xvfb is properly killed if sst-run is interrupted (#1084006)
+* protect ``wait_for`` from transient failures caused by
+  StaleElementReferenceException (#1084008)
+* include test class full name in test ids for SSTScriptTestCase (#1087606)
+* add support for xfvb to SSTTestCase (#1084011)
+* removed ``junitxml`` package dependency for junit-style xml output
+* in xml report mode, progress is printed to stdout during test run
+* added ``get_window_size`` action
+* added ``set_window_size`` action
+* added ``testtools`` dependency
+* command-line test names may use glob patterns for discovery
+* added ``--collect-only`` option to ``sst-run`` command line
+* removed `Browsermob` proxy integration
+* removed ``start`` and ``stop`` actions
+* added hookable browser
+
+
+version **0.2.2** (2012 Nov 4)
+*******************************
+
+* added ``wait_for_and_refresh`` action
 * ``set_dropdown_value`` can set text or value now
-* add ``add_cleanup`` action
-* made tests compatible with Django 1.4
+* added ``add_cleanup`` action
+* made internal tests compatible with Django 1.4
 * added ``config.cache``, a per test cache (dictionary) cleared at the start of
   every test
 * added ``--extended-tracebacks`` command line option
 * added ``get_cookies`` and ``clear_cookies`` actions
 * added ``execute_script`` action
 * added ``get_element_source`` action
+* removed PyVirtualDisplay dependency; replaced with lightweight Xvfb wrapper
 
 
 version **0.2.1** (2012 Apr 22)

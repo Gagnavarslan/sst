@@ -1,19 +1,19 @@
-from sst.actions import *
+import sst.actions
 
 # tests for simulate_keys
 
 
-go_to('/')
-assert_title('The Page Title')
+sst.actions.go_to('/')
+sst.actions.assert_title('The Page Title')
 
-write_textfield('text_1', 'Foobar..')
+sst.actions.write_textfield('text_1', 'Foobar..')
 
-simulate_keys('text_1', 'BACK_SPACE')
-simulate_keys('text_1', 'back_space')  # not case sensitive
-simulate_keys('text_1', 'SPACE')
-simulate_keys('text_1', 'Space')
+sst.actions.simulate_keys('text_1', 'BACK_SPACE')
+sst.actions.simulate_keys('text_1', 'back_space')  # not case sensitive
+sst.actions.simulate_keys('text_1', 'SPACE')
+sst.actions.simulate_keys('text_1', 'Space')
 
-assert_text('text_1', 'Foobar  ')
+sst.actions.assert_text('text_1', 'Foobar  ')
 
 
 # available keys (from selenium/webdriver/common/keys.py):

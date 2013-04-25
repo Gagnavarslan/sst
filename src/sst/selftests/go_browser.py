@@ -1,18 +1,19 @@
-from sst.actions import *
+import sst.actions
+
 
 # navigate to populate history
-go_to('/')
-click_element('the_band_link')
-assert_url('/begin')
-go_to('/')
-assert_url('/')
-click_element('the_band_link')
-assert_url('/begin')
+sst.actions.go_to('/')
+sst.actions.click_element('the_band_link')
+sst.actions.assert_url('/begin')
+sst.actions.go_to('/')
+sst.actions.assert_url('/')
+sst.actions.click_element('the_band_link')
+sst.actions.assert_url('/begin')
 
 # go back in Browser history
-go_back()
-assert_url('/')
-go_back()
-assert_url('/begin')
-go_back()
-assert_url('/')
+sst.actions.go_back()
+sst.actions.assert_url('/')
+sst.actions.go_back()
+sst.actions.assert_url('/begin')
+sst.actions.go_back()
+sst.actions.assert_url('/')

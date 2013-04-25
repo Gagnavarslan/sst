@@ -39,7 +39,8 @@ SITE_ID = 1
 USE_I18N = True
 
 # serve static files
-STATIC_DOC_ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static-files/')
+STATIC_DOC_ROOT = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                               'static-files/')
 
 STATIC_URL = '/media/'
 
@@ -75,7 +76,8 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'testproject.urls'
 
 TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+    # Put strings here, like "/home/html/django_templates"
+    #   or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
     os.path.join(os.path.abspath(os.path.dirname(__file__)), 'templates'),

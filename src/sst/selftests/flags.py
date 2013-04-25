@@ -1,12 +1,12 @@
-from sst.actions import *
+import sst.actions
 from sst import config
 
-from unittest2 import SkipTest
+from unittest import SkipTest
 
 
 try:
     # this should always skip
-    check_flags('never-passed')
+    sst.actions.check_flags('never-passed')
 except SkipTest:
     pass
 else:
@@ -18,7 +18,7 @@ assert config.flags == [], (
 config.flags = ['foo']
 try:
     # this should not skip, because 'foo' is a flag
-    check_flags('foo')
-    check_flags('FOO')
+    sst.actions.check_flags('foo')
+    sst.actions.check_flags('FOO')
 finally:
     config.flags = []

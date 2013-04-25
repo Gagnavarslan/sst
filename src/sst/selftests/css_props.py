@@ -1,17 +1,20 @@
-from sst.actions import *
+import sst.actions
 
-go_to('/')
 
-elem = get_element(tag='body')
-assert_css_property(elem, 'font-family', 'Ubuntu,Tahoma,sans-serif')
+sst.actions.go_to('/')
 
-elem = get_element(tag='body')
-assert_css_property(elem, 'font-family', 'Ubuntu', regex=True)
+elem = sst.actions.get_element(tag='body')
+sst.actions.assert_css_property(
+    elem, 'font-family', 'Ubuntu,Tahoma,sans-serif')
 
-elems = get_elements(tag='h2')
+elem = sst.actions.get_element(tag='body')
+sst.actions.assert_css_property(elem, 'font-family', 'Ubuntu', regex=True)
+
+elems = sst.actions.get_elements(tag='h2')
 for elem in elems:
-    assert_css_property(elem, 'padding-left', '8px')
+    sst.actions.assert_css_property(elem, 'padding-left', '8px')
 
-elems = get_elements(tag='h2')
+elems = sst.actions.get_elements(tag='h2')
 for elem in elems:
-    fails(assert_css_property, elem, 'padding-left', '999px')
+    sst.actions.fails(
+        sst.actions.assert_css_property, elem, 'padding-left', 'notfound')

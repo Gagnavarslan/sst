@@ -1,16 +1,21 @@
-from sst.actions import *
+import sst.actions
+from sst import config
 
-go_to('/')
-click_link('popup_link')
+# PhantomJS can not do multiple windows by design
+if config.browser_type == 'phantomjs':
+    sst.actions.skip()
+
+sst.actions.go_to('/')
+sst.actions.click_link('popup_link')
 
 # switch to new window/tab and close it
-switch_to_window(index_or_name='_NEW_WINDOW')
-assert_title('Popup Window')
-close_window()
+sst.actions.switch_to_window(index_or_name='_NEW_WINDOW')
+sst.actions.assert_title('Popup Window')
+sst.actions.close_window()
 
 # switch back to default/main window/tab
-switch_to_window()
-assert_title('The Page Title')
+sst.actions.switch_to_window()
+sst.actions.assert_title('The Page Title')
 
 # fails because the window no longer exists
-fails(switch_to_window, index_or_name='NEW_WINDOW')
+sst.actions.fails(sst.actions.switch_to_window, index_or_name='NEW_WINDOW')

@@ -1,11 +1,12 @@
-from sst.actions import *
+import sst.actions
 
-go_to('/')
 
-assert_title('The Page Title')
-assert_url('/')
+sst.actions.go_to('/')
 
-refresh()
+sst.actions.assert_title('The Page Title')
+sst.actions.assert_url('/')
 
-assert_title('The Page Title')
-assert_url('/')
+sst.actions.refresh()
+
+sst.actions.assert_title('The Page Title')
+sst.actions.assert_url('/')

@@ -1,18 +1,18 @@
-from sst.actions import *
-
-go_to('/')
+import sst.actions
 
 
-num_links = len(get_elements(tag='a'))
-
-assert num_links == len(get_elements(tag='a', text_regex='.*'))
+sst.actions.go_to('/')
 
 
-get_element(tag='p', text_regex='^Some text here')
-exists_element(tag='p', text_regex='^Some text here')
+num_links = len(sst.actions.get_elements(tag='a'))
 
-get_element(tag='p', text_regex='^Some text.*$')
-exists_element(tag='p', text_regex='^Some text.*$')
+assert num_links == len(sst.actions.get_elements(tag='a', text_regex='.*'))
 
-assert len(get_elements(tag='p', text_regex='^Some text.*$')) == 1
 
+sst.actions.get_element(tag='p', text_regex='^Some text here')
+sst.actions.exists_element(tag='p', text_regex='^Some text here')
+
+sst.actions.get_element(tag='p', text_regex='^Some text.*$')
+sst.actions.exists_element(tag='p', text_regex='^Some text.*$')
+
+assert len(sst.actions.get_elements(tag='p', text_regex='^Some text.*$')) == 1

@@ -1,6 +1,5 @@
-#!/usr/bin/env python
 #
-#   Copyright (c) 2011 Canonical Ltd.
+#   Copyright (c) 2011-2013 Canonical Ltd.
 #
 #   This file is part of: SST (selenium-simple-test)
 #   https://launchpad.net/selenium-simple-test
@@ -19,17 +18,6 @@
 #
 
 
-__all__ = ['runtests']
-__version__ = '0.2.2dev'
+__version__ = '0.2.4dev'
 
-
-try:
-    from .runtests import runtests
-except ImportError as e:
-    # Selenium not installed
-    # this means we can import the __version__
-    # for setup.py when we install, without
-    # *having* to install selenium first
-    def runtests(*args, **kwargs):
-        raise e
-
+DEVSERVER_PORT = '8120'  # django devserver for internal acceptance tests

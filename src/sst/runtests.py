@@ -1,6 +1,5 @@
-#!/usr/bin/env python
 #
-#   Copyright (c) 2011 Canonical Ltd.
+#   Copyright (c) 2011-2013 Canonical Ltd.
 #
 #   This file is part of: SST (selenium-simple-test)
 #   https://launchpad.net/selenium-simple-test
@@ -19,33 +18,46 @@
 #
 
 import ast
-import codecs
-import datetime
+import logging
+import fnmatch
+import htmlrunner
+import junitxmlrunner
 import os
 import pdb
 import sys
 import traceback
-from textwrap import dedent
 
-from unittest2 import TestSuite, TextTestRunner, TestCase, SkipTest
-
-from sst import actions, config
-from .actions import (
-    start, stop, reset_base_url, set_wait_timeout, take_screenshot,
-    get_page_source, EndTest
+from unittest import (
+    defaultTestLoader,
+    TestSuite,
+    TextTestRunner,
 )
-from .context import populate_context
+
+from selenium import webdriver
+import testtools
+import testtools.content
+
+from sst import (
+    actions,
+    config,
+    context,
+    xvfbdisplay,
+)
+from .actions import (
+    EndTest
+)
 
 
 __all__ = ['runtests']
 
+logger = logging.getLogger('SST')
 
-def runtests(test_names, test_dir='.', report_format='console',
-             browser_type='Firefox', javascript_disabled=False,
-             browsermob_enabled=False, shared_directory=None,
-             screenshots_on=False, failfast=False, debug=False,
-             webdriver_remote_url=None, browser_version='',
-             browser_platform='ANY', session_name=None,
+
+def runtests(test_names, test_dir='.', collect_only=False,
+             browser_factory=None,
+             report_format='console',
+             shared_directory=None, screenshots_on=False, failfast=False,
+             debug=False,
              extended=False):
 
     if test_dir == 'selftests':
@@ -60,81 +72,66 @@ def runtests(test_names, test_dir='.', report_format='console',
         print msg
         sys.exit(1)
 
+    if browser_factory is None:
+        # TODO: We could raise an error instead as providing a default value
+        # makes little sense here -- vila 2013-04-11
+        browser_factory = FirefoxFactory()
+
     shared_directory = find_shared_directory(test_dir, shared_directory)
     config.shared_directory = shared_directory
     sys.path.append(shared_directory)
 
     config.results_directory = _get_full_path('results')
 
-    config.browsermob_enabled = browsermob_enabled
-
-    found_tests = set()
     test_names = set(test_names)
 
-    suites = (
-        get_suite(
-            test_names, root, browser_type, browser_version,
-            browser_platform, session_name, javascript_disabled,
-            webdriver_remote_url, screenshots_on, found_tests, failfast, debug,
-            extended=extended,
-        )
-        for root, _, _ in os.walk(test_dir, followlinks=True)
-        if os.path.abspath(root) != shared_directory and
-        not os.path.abspath(root).startswith(shared_directory+os.path.sep) and
-        not os.path.split(root)[1].startswith('_')
-    )
+    suites = get_suites(test_names, test_dir, shared_directory, collect_only,
+                        browser_factory,
+                        screenshots_on, failfast, debug,
+                        extended=extended,
+                        )
 
     alltests = TestSuite(suites)
 
     print ''
     print '  %s test cases loaded\n' % alltests.countTestCases()
-    print '----------------------------------------------------------------------'
+    print '--------------------------------------------------------------'
 
     if not alltests.countTestCases():
         print 'Error: Did not find any tests'
         sys.exit(1)
 
-    if report_format == 'console':
-        runner = TextTestRunner(verbosity=2)
-        def run():
-            runner.run(alltests)
-
-    if report_format == 'html':
-        import HTMLTestRunner
-        _make_results_dir()
-        fp = file(os.path.join(config.results_directory, 'results.html'), 'wb')
-        runner = HTMLTestRunner.HTMLTestRunner(
-            stream=fp, title='SST Test Report', verbosity=2
-        )
-        def run():
-            runner.run(alltests)
+    if collect_only:
+        print 'Collect-Only Enabled, Not Running Tests...\n'
+        print 'Tests Collected:'
+        print '-' * 16
+        for t in sorted(testtools.testsuite.iterate_tests(alltests)):
+            print t.id()
+        sys.exit(0)
 
     if report_format == 'xml':
-        try:
-            import junitxml
-        except ImportError:
-            print 'Error: Please install junitxml to use XML output'
-            sys.exit(1)
         _make_results_dir()
         fp = file(os.path.join(config.results_directory, 'results.xml'), 'wb')
-        result = junitxml.JUnitXmlResult(fp)
-        result.startTestRun()
+        # XXX failfast not supported in XMLTestRunner
+        runner = junitxmlrunner.XMLTestRunner(output=fp, verbosity=2)
 
-        def run():
-            try:
-                alltests.run(result)
-            finally:
-                result.stopTestRun()
+    elif report_format == 'html':
+        _make_results_dir()
+        fp = file(os.path.join(config.results_directory, 'results.html'), 'wb')
+        runner = htmlrunner.HTMLTestRunner(
+            stream=fp, title='SST Test Report', verbosity=2, failfast=failfast
+        )
+
+    else:
+        runner = TextTestRunner(verbosity=2, failfast=failfast)
 
     try:
-        run()
+        runner.run(alltests)
     except KeyboardInterrupt:
-        print >> sys.stderr, "Test run interrupted"
+        print >> sys.stderr, 'Test run interrupted'
     finally:
-        missing = test_names - found_tests
-        for name in missing:
-            msg = 'Warning: test %r not found' % name
-            print >> sys.stderr, msg
+        # XXX should warn on cases that were specified but not found
+        pass
 
 
 def _get_full_path(path):
@@ -191,43 +188,73 @@ def find_shared_directory(test_dir, shared_directory):
     return _get_full_path(shared_directory)
 
 
-def get_suite(test_names, test_dir, browser_type, browser_version,
-              browser_platform, session_name, javascript_disabled,
-              webdriver_remote_url, screenshots_on, found, failfast, debug,
-              extended=False):
-    suite = TestSuite()
-    dir_list = os.listdir(test_dir)
+def get_suites(test_names, test_dir, shared_dir, collect_only,
+               browser_factory,
+               screenshots_on, failfast, debug,
+               extended=False
+               ):
+    return [
+        get_suite(
+            test_names, root, collect_only,
+            browser_factory,
+            screenshots_on, failfast, debug,
+            extended=extended,
+        )
+        for root, _, _ in os.walk(test_dir, followlinks=True)
+        if os.path.abspath(root) != shared_dir and
+        not os.path.abspath(root).startswith(shared_dir + os.path.sep)
+        and not os.path.split(root)[1].startswith('_')
+    ]
 
-    for entry in dir_list:
+
+def find_cases(test_names, test_dir):
+    found = set()
+    dir_list = os.listdir(test_dir)
+    filtered_dir_list = set()
+    if not test_names:
+        test_names = ['*', ]
+    for name_pattern in test_names:
+        if not name_pattern.endswith('.py'):
+            name_pattern += '.py'
+        matches = fnmatch.filter(dir_list, name_pattern)
+        if matches:
+            for match in matches:
+                if os.path.isfile(os.path.join(test_dir, match)):
+                    filtered_dir_list.add(match)
+    for entry in filtered_dir_list:
+        # conditions for ignoring files
         if not entry.endswith('.py'):
             continue
-        if test_names and entry[:-3] not in test_names:
+        if entry.startswith('_'):
             continue
-        elif not test_names:
-            if entry.startswith('_'):
-                # ignore entries starting with underscore unless specified
-                continue
-        found.add(entry[:-3])
+        found.add(entry)
 
-        csv_path = os.path.join(test_dir, entry.replace('.py', '.csv'))
+    return found
+
+
+def get_suite(test_names, test_dir, collect_only,
+              browser_factory,
+              screenshots_on, failfast, debug,
+              extended=False):
+
+    suite = TestSuite()
+
+    for case in find_cases(test_names, test_dir):
+        csv_path = os.path.join(test_dir, case.replace('.py', '.csv'))
         if os.path.isfile(csv_path):
             # reading the csv file now
             for row in get_data(csv_path):
                 # row is a dictionary of variables
                 suite.addTest(
                     get_case(
-                        test_dir, entry, browser_type, browser_version,
-                        browser_platform, session_name, javascript_disabled,
-                        webdriver_remote_url, screenshots_on, row,
+                        test_dir, case, browser_factory, screenshots_on, row,
                         failfast=failfast, debug=debug, extended=extended
                     )
                 )
         else:
             suite.addTest(
                 get_case(
-                    test_dir, entry, browser_type, browser_version,
-                    browser_platform, session_name, javascript_disabled,
-                    webdriver_remote_url, screenshots_on,
+                    test_dir, case, browser_factory, screenshots_on,
                     failfast=failfast, debug=debug, extended=extended
                 )
             )
@@ -235,126 +262,320 @@ def get_suite(test_names, test_dir, browser_type, browser_version,
     return suite
 
 
-def get_case(test_dir, entry, browser_type, browser_version,
-             browser_platform, session_name, javascript_disabled,
-             webdriver_remote_url, screenshots_on,
-             context=None, failfast=False, debug=False, extended=False):
-    context_provided = context is not None
-    context = context or {}
-    path = os.path.join(test_dir, entry)
+def use_xvfb_server(test, xvfb=None):
+    """Setup an xvfb server for a given test.
+
+    :param xvfb: An Xvfb object to use. If none is supplied, default values are
+        used to build it.
+
+    :returns: The xvfb server used so tests can use the built one.
+    """
+    if xvfb is None:
+        xvfb = xvfbdisplay.Xvfb()
+    xvfb.start()
+    test.addCleanup(xvfb.stop)
+    return xvfb
+
+
+class BrowserFactory(object):
+    """Handle browser creation for tests.
+
+    One instance is used for a given test run.
+    """
+
+    webdriver_class = None
+
+    def __init__(self, javascript_disabled=False):
+        super(BrowserFactory, self).__init__()
+        self.javascript_disabled = javascript_disabled
+
+    def setup_for_test(self, test):
+        """Setup the browser for the given test.
+
+        Some browsers accept more options that are test (and browser) specific.
+
+        Daughter classes should redefine this method to capture them.
+        """
+        pass
+
+    def browser(self):
+        """Create a browser based on previously collected options.
+
+        Daughter classes should override this method if they need to provide
+        more context.
+        """
+        return self.webdriver_class()
+
+
+# FIXME: Missing tests -- vila 2013-04-11
+class RemoteBrowserFactory(BrowserFactory):
+
+    webdriver_class = webdriver.Remote
+
+    def __init__(self, capabilities, remote_url):
+        super(RemoteBrowserFactory, self).__init__()
+        self.capabilities = capabilities
+        self.remote_url = remote_url
+
+    def browser(self):
+        return self.webdriver_class(self.capabilities, self.remote_url)
+
+
+# FIXME: Missing tests -- vila 2013-04-11
+class ChromeFactory(BrowserFactory):
+
+    webdriver_class = webdriver.Chrome
+
+
+# FIXME: Missing tests -- vila 2013-04-11
+class IeFactory(BrowserFactory):
+
+    webdriver_class = webdriver.Ie
+
+
+# FIXME: Missing tests -- vila 2013-04-11
+class PhantomJSFactory(BrowserFactory):
+
+    webdriver_class = webdriver.PhantomJS
+
+
+# FIXME: Missing tests -- vila 2013-04-11
+class OperaFactory(BrowserFactory):
+
+    webdriver_class = webdriver.Opera
+
+
+class FirefoxFactory(BrowserFactory):
+
+    webdriver_class = webdriver.Firefox
+
+    def setup_for_test(self, test):
+        profile = webdriver.FirefoxProfile()
+        profile.set_preference('intl.accept_languages', 'en')
+        if test.assume_trusted_cert_issuer:
+            profile.set_preference('webdriver_assume_untrusted_issuer', False)
+            profile.set_preference(
+                'capability.policy.default.Window.QueryInterface', 'allAccess')
+            profile.set_preference(
+                'capability.policy.default.Window.frameElement.get',
+                'allAccess')
+        if test.javascript_disabled or self.javascript_disabled:
+            profile.set_preference('javascript.enabled', False)
+        self.profile = profile
+
+    def browser(self):
+        return self.webdriver_class(self.profile)
+
+
+# FIXME: Missing tests -- vila 2013-04-11
+browser_factories = {
+    'Chrome': ChromeFactory,
+    'Firefox': FirefoxFactory,
+    'Ie': IeFactory,
+    'Opera': OperaFactory,
+    'PhantomJS': PhantomJSFactory,
+}
+
+
+class SSTTestCase(testtools.TestCase):
+    """A test case that can use the sst framework."""
+
+    xvfb = None
+    xserver_headless = False
+
+    browser_factory = FirefoxFactory()
+
+    javascript_disabled = False
+    assume_trusted_cert_issuer = False
+
+    wait_timeout = 10
+    wait_poll = 0.1
+    base_url = None
+
+    results_directory = _get_full_path('results')
+    screenshots_on = False
+    debug_post_mortem = False
+    extended_report = False
+
+    def shortDescription(self):
+        return None
 
     def setUp(self):
+        super(SSTTestCase, self).setUp()
+        if self.base_url is not None:
+            actions.set_base_url(self.base_url)
+        actions._set_wait_timeout(self.wait_timeout, self.wait_poll)
+        # Ensures sst.actions will find me
         actions._test = self
+        if self.xserver_headless and self.xvfb is None:
+            # If we need to run headless and no xvfb is already running, start
+            # a new one for the current test, scheduling the shutdown for the
+            # end of the test.
+            self.xvfb = use_xvfb_server(self)
+        config.results_directory = self.results_directory
+        _make_results_dir()
+        self.start_browser()
+        self.addCleanup(self.stop_browser)
+        if self.screenshots_on:
+            self.addOnException(self.take_screenshot_and_page_dump)
+        if self.debug_post_mortem:
+            self.addOnException(
+                self.print_exception_and_enter_post_mortem)
+        if self.extended_report:
+            self.addOnException(self.report_extensively)
 
-        sys.path.append(test_dir)
-        with open(path) as h:
-            source = h.read() + '\n'
-            self.code = compile(source, path, 'exec')
+    def start_browser(self):
+        logger.debug('\nStarting browser')
+        self.browser_factory.setup_for_test(self)
+        self.browser = self.browser_factory.browser()
+        logger.debug('Browser started: %s' % (self.browser.name))
 
-        js_disabled = javascript_disabled or \
-            'JAVASCRIPT_DISABLED' in self.code.co_names
-        populate_context(context, path, browser_type, js_disabled)
+    def stop_browser(self):
+        logger.debug('Stopping browser')
+        self.browser.quit()
 
-        original = actions.VERBOSE
-        actions.VERBOSE = False
+    def take_screenshot_and_page_dump(self, exc_info):
         try:
-            reset_base_url()
-            set_wait_timeout(10, 0.1)
-        finally:
-            actions.VERBOSE = original
-
-        assume_trusted_cert_issuer = 'ASSUME_TRUSTED_CERT_ISSUER' in self.code.co_names
-
-        start(browser_type, browser_version, browser_platform,
-              session_name, js_disabled, assume_trusted_cert_issuer,
-              webdriver_remote_url)
-
-    def clean_up():
-        # We do this as a clean up function rather than a tearDown, because
-        # other clean up functions will want to use the browser before it is
-        # stopped. As the first added clean up this one will be executed last.
-        sys.path.remove(test_dir)
-        stop()
-
-    def test(self):
-        if context_provided:
-            if actions.VERBOSE:
-                print '    Loading data row %r' % context['_row_num']
+            filename = 'screenshot-{0}.png'.format(self.id())
+            actions.take_screenshot(filename)
+        except Exception:
+            # FIXME: Needs to be reported somehow ? -- vila 2012-10-16
+            pass
         try:
-            exec self.code in context
+            # also dump page source
+            filename = 'pagesource-{0}.html'.format(self.id())
+            actions.save_page_source(filename)
+        except Exception:
+            # FIXME: Needs to be reported somehow ? -- vila 2012-10-16
+            pass
+
+    def print_exception_and_enter_post_mortem(self, exc_info):
+        exc_class, exc, tb = exc_info
+        traceback.print_exception(exc_class, exc, tb)
+        pdb.post_mortem(tb)
+
+    def report_extensively(self, exc_info):
+        exc_class, exc, tb = exc_info
+        original_message = str(exc)
+        try:
+            current_url = actions.get_current_url()
+        except Exception:
+            current_url = 'unavailable'
+        try:
+            page_source = actions.get_page_source()
+        except Exception:
+            page_source = 'unavailable'
+        self.addDetail(
+            'Original exception',
+            testtools.content.text_content('{0} : {1}'.format(
+                exc.__class__.__name__, original_message)))
+        self.addDetail('Current url',
+                       testtools.content.text_content(current_url))
+        self.addDetail('Page source',
+                       testtools.content.text_content(page_source))
+
+
+class SSTScriptTestCase(SSTTestCase):
+    """Test case used internally by sst-run and sst-remote."""
+
+    script_dir = '.'
+    script_name = None
+
+    def __init__(self, testMethod, context_row=None):
+        super(SSTScriptTestCase, self).__init__('run_test_script')
+        self.id = lambda: '%s.%s.%s' % (self.__class__.__module__,
+                                        self.__class__.__name__, testMethod)
+        if context_row is None:
+            context_row = {}
+        self.context = context_row
+
+    def __str__(self):
+        # Since we use run_test_script to encapsulate the call to the
+        # compiled code, we need to override __str__ to get a proper name
+        # reported.
+        return "%s (%s.%s)" % (self.id(), self.__class__.__module__,
+                               self.__class__.__name__)
+
+    def shortDescription(self):
+        # The description should be first line of the test method's docstring.
+        # Since we have no real test method here, we override it to always
+        # return none.
+        return None
+
+    def setUp(self):
+        self.script_path = os.path.join(self.script_dir, self.script_name)
+        sys.path.append(self.script_dir)
+        self.addCleanup(sys.path.remove, self.script_dir)
+        self._compile_script()
+        # The script may override some settings. The default value for
+        # JAVASCRIPT_DISABLED and ASSUME_TRUSTED_CERT_ISSUER are False, so if
+        # the user mentions them in his script, it's to turn them on. Also,
+        # getting our hands on the values used in the script is too hackish ;)
+        if 'JAVASCRIPT_DISABLED' in self.code.co_names:
+            self.javascript_disabled = True
+        if 'ASSUME_TRUSTED_CERT_ISSUER' in self.code.co_names:
+            self.assume_trusted_cert_issuer = True
+        super(SSTScriptTestCase, self).setUp()
+        # Start with default values
+        actions.reset_base_url()
+        actions._set_wait_timeout(10, 0.1)
+        # Possibly inject parametrization from associated .csv file
+        previous_context = context.store_context()
+        self.addCleanup(context.restore_context, previous_context)
+        context.populate_context(self.context, self.script_path,
+                                 self.browser.name, self.javascript_disabled)
+
+    def _compile_script(self):
+        with open(self.script_path) as f:
+            source = f.read() + '\n'
+        self.code = compile(source, self.script_path, 'exec')
+
+    def run_test_script(self, result=None):
+        # Run the test catching exceptions sstnam style
+        try:
+            exec self.code in self.context
         except EndTest:
             pass
-        except SkipTest:
-            raise
-        except:
-            exc, tb = sys.exc_info()[1:]
-            if screenshots_on:
-                now = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-                tc_name = entry[:-3]
-                filename = 'screenshot-%s-%s.png' % (now, tc_name)
-                take_screenshot(filename)
-                # also dump page source
-                filename = 'pagesource-%s-%s.html' % (now, tc_name)
-                path = os.path.join(config.results_directory, filename)
-                with codecs.open(path, 'w', encoding='utf-8') as f:
-                    f.write(get_page_source())
-            if debug:
-                traceback.print_exc()
-                pdb.post_mortem()
-            if not extended:
-                raise
-            original_message = str(exc)
-            page_source = 'unavailable'
-            current_url = 'unavailable'
-            try:
-                current_url = actions.get_current_url()
-            except Exception:
-                pass
-            try:
-                page_source = actions.browser.page_source
-            except Exception:
-                pass
 
-            new_message = dedent("""
-            Original exception: %s: %s
 
-            Current url: %s
+def _has_classes(test_dir, entry):
+    """Scan Python source file and check for a class definition."""
+    with open(os.path.join(test_dir, entry)) as f:
+        source = f.read() + '\n'
+    found_classes = []
 
-            Page source:
+    def visit_class_def(node):
+        found_classes.append(True)
 
-            %s
+    node_visitor = ast.NodeVisitor()
+    node_visitor.visit_ClassDef = visit_class_def
+    node_visitor.visit(ast.parse(source))
+    return bool(found_classes)
 
-            """[1:]) % (
-                   exc.__class__.__name__,
-                   original_message,
-                   current_url,
-                   page_source,
-            )
-            if isinstance(new_message, unicode):
-                new_message = new_message.encode('ascii', 'backslashreplace')
-            new_exc = Exception(new_message)
-            raise Exception, new_exc, tb
 
-    def run(self, result=None):
-        # moved bits from original implementation of TestCase.run to
-        # keep the way it works
-        if result is None:
-            result = self.defaultTestResult()
-            startTestRun = getattr(result, 'startTestRun', None)
-            if startTestRun is not None:
-                startTestRun()
-        TestCase.run(self, result)
-        if not result.wasSuccessful() and failfast:
-            result.shouldStop = True
+def get_case(test_dir, entry, browser_factory, screenshots_on,
+             context=None, failfast=False, debug=False, extended=False):
+    # our naming convention for tests requires that script-based tests must
+    # not begin with "test_*."  SSTTestCase class-based or other
+    # unittest.TestCase based source files must begin with "test_*".
+    # we also scan the source file to see if it has class definitions,
+    # since script base cases normally don't, but TestCase class-based
+    # tests always will.
+    if entry.startswith('test_') and _has_classes(test_dir, entry):
+        # load just the individual file's tests
+        this_test = defaultTestLoader.discover(test_dir, pattern=entry)
+    else:  # this is for script-based test
+        name = entry[:-3]
+        test_name = 'test_%s' % name
+        this_test = SSTScriptTestCase(test_name, context)
+        this_test.script_dir = test_dir
+        this_test.script_name = entry
+        this_test.browser_factory = browser_factory
 
-    name = entry[:-3]
-    test_name = 'test_%s' % name
-    FunctionalTest = type(
-        'Test%s' % name.title(), (TestCase,),
-        {'setUp': setUp, test_name: test, 'run': run}
-    )
-    this_test = FunctionalTest(test_name)
-    this_test.addCleanup(clean_up)
+        this_test.screenshots_on = screenshots_on
+        this_test.debug_post_mortem = debug
+        this_test.extended_report = extended
+
     return this_test
 
 
@@ -362,8 +583,8 @@ def get_data(csv_path):
     """
     Return a list of data dicts for parameterized testing.
 
-      the first row (headers) match data_map key names
-      rows beneath that are filled with data values
+      the first row (headers) match data_map key names.
+      rows beneath are filled with data values.
     """
     rows = []
     print '  Reading data from %r...' % os.path.split(csv_path)[-1],

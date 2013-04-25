@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   Copyright (c) 2011-2012 Canonical Ltd.
+#   Copyright (c) 2011,2012,2013 Canonical Ltd.
 #
 #   This file is part of: SST (selenium-simple-test)
 #   https://launchpad.net/selenium-simple-test
@@ -20,7 +20,9 @@
 
 
 import os
+from setuptools import setup
 import sys
+
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(this_dir, 'src'))
@@ -29,8 +31,7 @@ from sst import __version__
 
 
 NAME = 'sst'
-PACKAGES = ['sst',]
-SCRIPTS = ['sst-run', 'sst-remote']
+PACKAGES = ['sst', 'sst.scripts', 'sst.tests']
 DESCRIPTION = 'SST - Web Test Framework'
 URL = 'http://testutils.org/sst'
 LICENSE = 'Apache'
@@ -42,7 +43,7 @@ requirements = os.path.join(this_dir, 'requirements.txt')
 REQUIREMENTS = filter(None, open(requirements).read().splitlines())
 
 CLASSIFIERS = [
-    'Development Status :: 3 - Alpha',
+    'Development Status :: 4 - Beta',
     'Environment :: Console',
     'Environment :: Web Environment',
     'Intended Audience :: Developers',
@@ -58,18 +59,17 @@ CLASSIFIERS = [
     'Topic :: Internet :: WWW/HTTP :: Browsers',
 ]
 
-AUTHOR = 'Canonical ISD Team'
-AUTHOR_EMAIL = 'corey@goldb.org'
+AUTHOR = 'Canonical Online Services Team'
+AUTHOR_EMAIL = 'cgoldberg _at_ gmail.com'
 KEYWORDS = ('selenium webdriver test testing web automation').split(' ')
 
 params = dict(
     name=NAME,
     version=__version__,
     packages=PACKAGES,
-    scripts=SCRIPTS,
-    package_dir={'': 'src',},
-    install_requires = REQUIREMENTS,
-    
+    package_dir={'': 'src', },
+    install_requires=REQUIREMENTS,
+
     # metadata for upload to PyPI
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
@@ -78,7 +78,13 @@ params = dict(
     keywords=KEYWORDS,
     url=URL,
     classifiers=CLASSIFIERS,
+
+    entry_points={
+        'console_scripts': [
+            'sst-run = sst.scripts.run:main',
+            'sst-remote = sst.scripts.remote:main',
+        ],
+    },
 )
 
-from setuptools import setup
 setup(**params)

@@ -13,15 +13,11 @@ import os
 import sys
 import textwrap
 
-try:
-    # installed
-    from sst import actions
-except ImportError:
-    # from the development directory
-    this_dir = os.path.abspath(os.path.dirname(__file__))
-    sys.path.append(os.path.join(this_dir, '../src'))
-    from sst import actions
 
+this_dir = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(this_dir, '../src'))
+
+from sst import actions
 
 
 with open(os.path.join(this_dir, 'actions.rst'), 'w') as h:

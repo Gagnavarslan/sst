@@ -1,38 +1,39 @@
-from sst.actions import *
+import sst.actions
+from sst import DEVSERVER_PORT
 
 # tests go_to, assert_url, assert_title, set_base_url
 # reset_base_url, get_base_url
 
-go_to('/')
+sst.actions.go_to('/')
 
-assert_url('/')
-fails(assert_url, '/foo')
+sst.actions.assert_url('/')
+sst.actions.fails(sst.actions.assert_url, '/foo')
 
-assert_title('The Page Title')
-fails(assert_title, 'this is not the title')
+sst.actions.assert_title('The Page Title')
+sst.actions.fails(sst.actions.assert_title, 'this is not the title')
 
-assert_title_contains('The Page')
-assert_title_contains('.*Pag[E|e]', regex=True)
-fails(assert_title_contains, 'foobar')
+sst.actions.assert_title_contains('The Page')
+sst.actions.assert_title_contains('.*Pag[E|e]', regex=True)
+sst.actions.fails(sst.actions.assert_title_contains, 'foobar')
 
-set_base_url('localhost:8000')
-assert get_base_url() == 'http://localhost:8000'
+sst.actions.set_base_url('localhost:%s' % DEVSERVER_PORT)
+assert sst.actions.get_base_url() == 'http://localhost:%s' % DEVSERVER_PORT
 
-set_base_url('http://localhost:8000/')
-assert get_base_url() == 'http://localhost:8000/'
-go_to('/')
+sst.actions.set_base_url('http://localhost:%s/' % DEVSERVER_PORT)
+assert sst.actions.get_base_url() == 'http://localhost:%s/' % DEVSERVER_PORT
+sst.actions.go_to('/')
 
 # assert_url adds the base url for relative urls
 # so test both ways
-assert_url('http://localhost:8000/')
-assert_url('/')
+sst.actions.assert_url('http://localhost:%s/' % DEVSERVER_PORT)
+sst.actions.assert_url('/')
 
-fails(assert_url, '/begin/')
+sst.actions.fails(sst.actions.assert_url, '/begin/')
 
-reset_base_url()
-assert get_base_url() == 'http://localhost:8000/'
-go_to('/')
-assert_url('http://localhost:8000/')
+sst.actions.reset_base_url()
+assert sst.actions.get_base_url() == 'http://localhost:%s/' % DEVSERVER_PORT
+sst.actions.go_to('/')
+sst.actions.assert_url('http://localhost:%s/' % DEVSERVER_PORT)
 
 # assert_url works also without the trailing slash
-assert_url('http://localhost:8000')
+sst.actions.assert_url('http://localhost:%s' % DEVSERVER_PORT)

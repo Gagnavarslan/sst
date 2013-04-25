@@ -1,17 +1,24 @@
-from sst.actions import *
+import sst.actions
 
-go_to('/')
 
-assert_dropdown('select_with_id_1')
-assert_dropdown(get_element(id='select_with_id_1'))
-fails(assert_dropdown, 'fake_id')
-fails(assert_dropdown, 'headline')
+sst.actions.go_to('/')
 
-set_dropdown_value('select_with_id_1', 'Select Two')
-assert_dropdown_value('select_with_id_1', 'Select Two')
+sst.actions.assert_dropdown('select_with_id_1')
 
-'''The following should fail saying that the option is not set to the expected value'''
-fails(assert_dropdown_value, 'select_with_id_1', 'Fake Text')
-'''The following should fail saying that the option does not exist'''
-fails(set_dropdown_value, 'select_with_id_1', 'Fake Text')
+sst.actions.assert_dropdown(sst.actions.get_element(id='select_with_id_1'))
 
+sst.actions.fails(sst.actions.assert_dropdown, 'fake_id')
+
+sst.actions.fails(sst.actions.assert_dropdown, 'headline')
+
+sst.actions.set_dropdown_value('select_with_id_1', 'Select Two')
+sst.actions.assert_dropdown_value('select_with_id_1', 'Select Two')
+
+#  the following should fail saying that the option
+#  is not set to the expected value
+sst.actions.fails(
+    sst.actions.assert_dropdown_value, 'select_with_id_1', 'Fake Text')
+
+#  The following should fail saying that the option does not exist
+sst.actions.fails(
+    sst.actions.set_dropdown_value, 'select_with_id_1', 'Fake Text')
