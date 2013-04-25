@@ -83,7 +83,7 @@ class _XMLTestResult(_TextTestResult):
 
     Used by XMLTestRunner.
     """
-    def __init__(self, stream=sys.stderr, descriptions=1, verbosity=1,
+    def __init__(self, stream=sys.stderr, descriptions=0, verbosity=1,
                  elapsed_times=True):
         _TextTestResult.__init__(self, stream, descriptions, verbosity)
         self.successes = []
