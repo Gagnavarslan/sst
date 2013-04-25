@@ -23,12 +23,17 @@ import os
 import pep8
 import testtools
 
+import sst
+import sst.selftests
+
 
 class Pep8ConformanceTestCase(testtools.TestCase):
 
+    packages = [sst, sst.scripts, sst.tests, sst.selftests]
+
     def test_pep8_conformance(self):
-        # scan recursively starting from the 'src' directory
-        root_dirname = os.path.realpath(__file__ + '/../../..')
-        self.pep8style = pep8.StyleGuide()
-        self.pep8style.input_dir(root_dirname)
-        self.assertEqual(self.pep8style.options.report.total_errors, 0)
+        pep8style = pep8.StyleGuide(show_source=True)
+        for package in self.packages:
+            dir = os.path.dirname(package.__file__)
+            pep8style.input_dir(dir)
+        self.assertEqual(pep8style.options.report.total_errors, 0)
