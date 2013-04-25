@@ -134,10 +134,10 @@ def runtests(test_names, test_dir='.', collect_only=False,
         pass
 
 
-def _get_full_path(path):
+def _get_full_path(relpath):
     return os.path.normpath(
         os.path.abspath(
-            os.path.join(os.getcwd(), path)
+            os.path.join(os.getcwd(), relpath)
         )
     )
 
@@ -397,9 +397,6 @@ class SSTTestCase(testtools.TestCase):
     debug_post_mortem = False
     extended_report = False
 
-    def shortDescription(self):
-        return None
-
     def setUp(self):
         super(SSTTestCase, self).setUp()
         if self.base_url is not None:
@@ -495,12 +492,6 @@ class SSTScriptTestCase(SSTTestCase):
         # reported.
         return "%s (%s.%s)" % (self.id(), self.__class__.__module__,
                                self.__class__.__name__)
-
-    def shortDescription(self):
-        # The description should be first line of the test method's docstring.
-        # Since we have no real test method here, we override it to always
-        # return none.
-        return None
 
     def setUp(self):
         self.script_path = os.path.join(self.script_dir, self.script_name)

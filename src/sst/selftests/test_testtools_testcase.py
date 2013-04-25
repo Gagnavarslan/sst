@@ -5,8 +5,5 @@ from testtools import TestCase
 
 class TestTestToolsTestCase(TestCase):
 
-    def shortDescription(self):
-        return None
-
     def test_true(self):
         self.assertTrue(True)

@@ -68,7 +68,6 @@ class TestSSTTestCase(testtools.TestCase):
         self.assertFalse(test.screenshots_on)
         self.assertEqual(test.wait_poll, 0.1)
         self.assertEqual(test.wait_timeout, 10)
-        self.assertIsNone(test.shortDescription())
         self.assertEqual(test.id(), 'sst.tests.SSTBrowserLessTestCase.run')
 
     def test_config(self):
@@ -77,5 +76,4 @@ class TestSSTTestCase(testtools.TestCase):
         self.assertEqual(config.cache, {})
         self.assertEqual(config.flags, [])
         self.assertFalse(config.javascript_disabled)
-        self.assertEqual(os.path.split(config.results_directory)[-1],
-                         'results')
+        self.assertEqual(os.path.basename(config.results_directory), 'results')
