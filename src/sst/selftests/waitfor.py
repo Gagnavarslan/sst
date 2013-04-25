@@ -63,14 +63,15 @@ sst.actions.set_wait_timeout(5, 0.1)
 sst.actions.wait_for_and_refresh(get_condition(True))
 sst.actions.fails(sst.actions.wait_for_and_refresh, get_condition(False))
 
+
 # Test the return value when wait_for succeeds.
 def identity(value):
     return value
 
-assert sst.actions.wait_for(identity, None) == None
-assert sst.actions.wait_for(identity, True) == True
+assert sst.actions.wait_for(identity, None) is None
+assert sst.actions.wait_for(identity, True) is True
 assert sst.actions.wait_for(identity, 'test') == 'test'
 assert sst.actions.wait_for(identity, 5) == 5
 assert sst.actions.wait_for(identity, [5]) == [5]
-assert sst.actions.wait_for(identity, {'test':5}) == {'test':5}
+assert sst.actions.wait_for(identity, {'test': 5}) == {'test': 5}
 assert sst.actions.wait_for(identity, (5)) == (5)
