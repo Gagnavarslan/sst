@@ -421,6 +421,12 @@ class SSTTestCase(testtools.TestCase):
         if self.extended_report:
             self.addOnException(self.report_extensively)
 
+    def shortDescription(self):
+        # testools wrongly defines this as returning self.id(). Since we're not
+        # using the short description (who is ?), we revert to the default
+        # behavior so runners and results don't get mad.
+        return None
+
     def start_browser(self):
         logger.debug('\nStarting browser')
         self.browser_factory.setup_for_test(self)
