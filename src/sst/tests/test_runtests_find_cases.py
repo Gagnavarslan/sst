@@ -22,8 +22,10 @@ import os
 
 import testtools
 
-from sst import tests
-from sst import runtests
+from sst import (
+    tests,
+    runtests,
+)
 
 
 def _make_empty_files(dir):
