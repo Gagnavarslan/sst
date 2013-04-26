@@ -158,6 +158,14 @@ def find_shared_directory(test_dir, shared_directory):
     The intention is that if you have 'tests/shared' and 'tests/foo' you
     run `sst-run -d tests/foo` and 'tests/shared' will still be used as
     the shared directory.
+
+    IMHO the above is only needed because we don't allow:
+    sst-run --start with tests.foo
+
+    So I plan to remove the support for searching shared upwards in favor of
+    allowing running a test subset and go with a sane layout and import
+    behavior. No test fail if this feature is removed so it's not supported
+    anyway. -- vila 2013-04-26
     """
     if shared_directory is not None:
         return _get_full_path(shared_directory)
@@ -236,18 +244,13 @@ def get_suite(test_names, test_dir, collect_only,
             for row in get_data(csv_path):
                 # row is a dictionary of variables
                 suite.addTest(
-                    get_case(
-                        test_dir, case, browser_factory, screenshots_on, row,
-                        debug=debug, extended=extended
-                    )
-                )
+                    get_case(test_dir, case, browser_factory, screenshots_on,
+                             row,
+                             debug=debug, extended=extended))
         else:
             suite.addTest(
-                get_case(
-                    test_dir, case, browser_factory, screenshots_on,
-                    debug=debug, extended=extended
-                )
-            )
+                get_case(test_dir, case, browser_factory, screenshots_on,
+                         debug=debug, extended=extended))
 
     return suite
 
@@ -519,6 +522,9 @@ class SSTScriptTestCase(SSTTestCase):
 
     def _compile_script(self):
         self.script_path = os.path.join(self.script_dir, self.script_name)
+        # TODO: Adding script_dir to sys.path only make sense if we want to
+        # allow scripts to import from their own dir. Do we really need that ?
+        # -- vila 2013-04-26
         sys.path.append(self.script_dir)
         self.addCleanup(sys.path.remove, self.script_dir)
         with open(self.script_path) as f:
@@ -531,6 +537,52 @@ class SSTScriptTestCase(SSTTestCase):
             exec self.code in self.context
         except EndTest:
             pass
+
+class TestLoader(unittest.TestLoader):
+    """Load test from an sst tree.
+
+    This loader is able to load sst scripts and create test cases with the
+    right sst specific attributes (browser, error handling, reporting).
+
+    This also allows test case based modules to be loaded when appropriate.
+    """
+
+    def __init__(self, browser_factory=None,
+                 screenshots_on=False, debug_post_mortem=False,
+                 extended_report=False):
+        super(TestLoader, self).__init__()
+        self.browser_factory = browser_factory
+        self.screenshots_on = screenshots_on
+        self.debug_post_mortem = debug_post_mortem
+        self.extended_report = extended_report
+
+    def loadTestsFromScript(self, dir_name, script_name):
+        suite = self.suiteClass()
+        # script specific test parametrization
+        csv_path = os.path.join(dir_name, script_name.replace('.py', '.csv'))
+        if os.path.isfile(csv_path):
+            for row in get_data(csv_path):
+                # row is a dictionary of variables that will magically appear
+                # as globals in the script.
+                test = self.loadTestFromScript(dir_name, script_name, row)
+                suite.addTest(test)
+        else:
+            test = self.loadTestFromScript(dir_name, script_name)
+            suite.addTest(test)
+        return suite
+
+    def loadTestFromScript(self, dir_name, script_name, context=None):
+        test = SSTScriptTestCase(dir_name, script_name, context)
+
+        # FIXME: We shouldn't have to set test attributes manually, something
+        # smells wrong here. -- vila 2013-04-26
+        test.browser_factory = self.browser_factory
+
+        test.screenshots_on = self.screenshots_on
+        test.debug_post_mortem = self.debug_post_mortem
+        test.extended_report = self.extended_report
+
+        return test
 
 
 def _has_classes(test_dir, entry):
