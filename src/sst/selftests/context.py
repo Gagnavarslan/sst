@@ -9,4 +9,5 @@ assert __name__ == 'context'
 assert __file__.endswith('context.py')
 
 thisdir = os.path.dirname(__file__)
-assert config.shared_directory == os.path.join(thisdir, 'shared')
+assert (config.shared_directory
+        == os.path.abspath(os.path.join(thisdir, 'shared')))
