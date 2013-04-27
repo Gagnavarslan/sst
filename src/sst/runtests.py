@@ -27,6 +27,8 @@ import pdb
 import sys
 import traceback
 import unittest
+import unittest.loader
+
 
 from selenium import webdriver
 import testtools
@@ -538,6 +540,120 @@ class SSTScriptTestCase(SSTTestCase):
         except EndTest:
             pass
 
+
+class DirLoader(object):
+
+    def __init__(self, test_loader):
+        """Load tests from a directory."""
+        super(DirLoader, self).__init__()
+        self.test_loader = test_loader
+
+    def discover(self, cur, top=None):
+        if top is None:
+            top = cur
+        paths = os.listdir(cur)
+        tests = self.test_loader.suiteClass()
+        for path in paths:
+            # We don't care about the base name as we use only the full path
+            path = os.path.join(top, path)
+            tests = self.discover_path(path, top)
+            if tests is not None:
+                tests.addTests(tests)
+        return tests
+
+    def discover_path(self, path, top):
+        loader = None
+        if os.path.isfile(path):
+            loader = self.test_loader.fileLoaderClass(self.test_loader)
+        elif os.path.isdir(path):
+            loader = self.test_loader.dirLoaderClass(self.test_loader)
+        if loader:
+            return loader.discover(path, top)
+        return None
+
+
+class PackageLoader(object):
+
+    def discover(self, cur, top=None):
+        if top is None:
+            top = cur
+        if unittest.loader.VALID_MODULE_NAME.match(cur):
+            try:
+                package = self.import_from_path(os.path.join(top, cur))
+            except ImportError:
+                # Explicitly raise the full exception with its backtrace. This
+                # could easily be overwritten by daughter classes to handle
+                # them differently (swallowing included ;)
+                raise
+            # Can we delegate to the package ?
+            discover = getattr(package, 'discover', None)
+            if discover is not None:
+                # Since the user defined it, the package knows better
+                return discover(self, cur)
+            # Can we use the load_tests protocol ?
+            load_tests = getattr(package, 'load_tests', None)
+            if load_tests is not None:
+                # FIXME: This swallows exceptions that we'd better expose --
+                # vila 2013-04-27
+                return self.test_loader.loadTestsFromModule(package)
+            # Anything else with that ?
+            # Nothing for now, thanks
+
+        # Let's delegate to super
+        return super(PackageLoader, self).discover(cur)
+
+    def import_from_path(self, path):
+        name = self.test_loader._get_name_from_path(path)
+        module = self.test_loader._get_module_from_name(name)
+        return module
+
+
+class FileLoader(object):
+
+    included_re = None
+    excluded_re = None
+
+    def __init__(self, test_loader):
+        """Load tests from a file."""
+        super(FileLoader, self).__init__()
+        self.test_loader = test_loader
+
+    def discover(self, path, cur, top):
+        """Return an empty test suite.
+
+        This is mostly for documentation purposes, if a file contains material
+        that can produce tests, a specific file loader should be defined to
+        build tests from the file content.
+        """
+        # I know nothing about tests
+        return self.test_loader.suiteClass()
+
+    def includes(self, path):
+        included = True
+        if self.included_re:
+            included = bool(self.included_re.match(path))
+        return included
+
+    def excludes(self, path):
+        excluded = False
+        if self.excluded_re:
+            excluded = bool(self.excluded_re.match(path))
+        return excluded
+
+
+class ModuleLoader(FileLoader):
+
+    def discover(self, path, cur, top):
+        empty = self.test_loader.suiteClass()
+        if not self.includes(path, cur, top):
+            return empty
+        if self.excludes(path, cur, top):
+            return empty
+        name = self._get_name_from_path(path)
+        module = self.test_loader._get_module_from_name(name)
+        return self.test_loader.loadTestsFromModule(module)
+
+
 class TestLoader(unittest.TestLoader):
     """Load test from an sst tree.
 
@@ -547,6 +663,9 @@ class TestLoader(unittest.TestLoader):
     This also allows test case based modules to be loaded when appropriate.
     """
 
+    dirLoaderClass = DirLoader
+    fileLoaderClass = FileLoader
+
     def __init__(self, browser_factory=None,
                  screenshots_on=False, debug_post_mortem=False,
                  extended_report=False):
@@ -555,6 +674,11 @@ class TestLoader(unittest.TestLoader):
         self.screenshots_on = screenshots_on
         self.debug_post_mortem = debug_post_mortem
         self.extended_report = extended_report
+
+
+    def discover(self, start_dir, pattern='test*.py', top_level_dir=None):
+        dir_loader = self.dirLoaderClass(self)
+        return dir_loader.discover(start_dir)
 
     def loadTestsFromScript(self, dir_name, script_name):
         suite = self.suiteClass()
@@ -587,6 +711,8 @@ class TestLoader(unittest.TestLoader):
 
 def _has_classes(test_dir, entry):
     """Scan Python source file and check for a class definition."""
+    # FIXME: This is not enough, a script can very well define a class that
+    # doesn't inherit from unittest.TestCase -- vila 2012-04-26
     with open(os.path.join(test_dir, entry)) as f:
         source = f.read() + '\n'
     found_classes = []
