@@ -61,3 +61,31 @@ def check_devserver_port_used(port):
     finally:
         sock.close()
     return used
+
+
+def write_tree_from_desc(description):
+    """Write a tree described in a textual form to disk.
+
+    :param description: A text where files and directories contents is
+        described in a textual form separated by file/dir names.
+    """
+    cur_file = None
+    for line in description.splitlines():
+        if line.startswith('file: '):
+            # A new file begins
+            if cur_file:
+                cur_file.close()
+            cur_file = open(line[len('file: '):], 'w')
+            continue
+        if line.startswith('dir:'):
+            # A new dir begins
+            if cur_file:
+                cur_file.close()
+                cur_file = None
+            os.mkdir(line[len('dir: '):])
+            continue
+        if cur_file is not None:  # If no file is declared, nothing is written
+            # splitlines() removed the \n, let's add it again
+            cur_file.write(line + '\n')
+    if cur_file:
+        cur_file.close()
