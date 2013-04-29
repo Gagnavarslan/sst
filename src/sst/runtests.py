@@ -271,8 +271,8 @@ def get_case(test_dir, entry, browser_factory, screenshots_on,
     # tests always will.
     if entry.startswith('test_') and _has_classes(test_dir, entry):
         # load just the individual file's tests
-        this_test = unittest.defaultTestLoader.discover(test_dir, pattern=entry,
-                                                        top_level_dir=test_dir)
+        this_test = unittest.defaultTestLoader.discover(
+            test_dir, pattern=entry, top_level_dir=test_dir)
     else:  # this is for script-based test
         this_test = case.SSTScriptTestCase(test_dir, entry, context)
 

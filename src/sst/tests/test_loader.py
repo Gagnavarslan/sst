@@ -83,9 +83,10 @@ def protect_imports(test):
     # Protect sys.modules and sys.path to be able to test imports
     test.patch(sys, 'path', list(sys.path))
     orig_modules = sys.modules.copy()
+
     def cleanup_modules():
         # Remove all added modules
-        added = [ m for m in sys.modules.keys() if m not in orig_modules ]
+        added = [m for m in sys.modules.keys() if m not in orig_modules]
         if added:
             for m in added:
                 del sys.modules[m]
@@ -102,6 +103,7 @@ class TestProtectImports(testtools.TestCase):
 
     def test_add_module(self):
         self.assertIs(None, sys.modules.get('foo', None))
+
         class Test(testtools.TestCase):
 
             def test_it(self):
@@ -117,6 +119,7 @@ class TestProtectImports(testtools.TestCase):
     def test_remove_module(self):
         self.assertIs(None, sys.modules.get('I_dont_exist', None))
         sys.modules['I_dont_exist'] = 'bar'
+
         class Test(testtools.TestCase):
 
             def test_it(self):
@@ -129,10 +132,10 @@ class TestProtectImports(testtools.TestCase):
         self.assertTrue(result.wasSuccessful())
         self.assertEqual('bar', sys.modules['I_dont_exist'])
 
-
     def test_modify_module(self):
         self.assertIs(None, sys.modules.get('I_dont_exist', None))
         sys.modules['I_dont_exist'] = 'bar'
+
         class Test(testtools.TestCase):
 
             def test_it(self):
@@ -149,6 +152,7 @@ class TestProtectImports(testtools.TestCase):
         tests.set_cwd_to_tmp(self)
         inserted = self.test_base_dir
         self.assertFalse(inserted in sys.path)
+
         class Test(testtools.TestCase):
 
             def test_it(self):
@@ -189,6 +193,12 @@ class TestModuleLoader(testtools.TestCase):
             f.write("I'm no python code")
         mod_loader = loader.ModuleLoader(self.get_test_loader())
         self.assertRaises(SyntaxError, mod_loader.discover, 'foo.py', '.', '.')
+
+
+class TestDirLoader(testtools.TestCase):
+
+    def test_discover_path(self):
+        pass
 
 
 class TestLoadScript(testtools.TestCase):

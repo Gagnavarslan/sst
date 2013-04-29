@@ -27,7 +27,6 @@ import testtools
 
 from sst import (
     case,
-    runtests,
     xvfbdisplay,
 )
 

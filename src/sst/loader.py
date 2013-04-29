@@ -18,7 +18,6 @@
 #
 import os
 import re
-import sys
 import unittest
 import unittest.loader
 
@@ -92,6 +91,7 @@ class PackageLoader(object):
 
 def matches_regexp(regexp):
     include_re = re.compile(regexp)
+
     def matches(path):
         return bool(include_re.match(path))
     return matches
@@ -168,7 +168,6 @@ class TestLoader(unittest.TestLoader):
         self.debug_post_mortem = debug_post_mortem
         self.extended_report = extended_report
 
-
     def discover(self, start_dir, pattern='test*.py', top_level_dir=None):
         dir_loader = self.dirLoaderClass(self)
         return dir_loader.discover(start_dir)
@@ -176,7 +175,7 @@ class TestLoader(unittest.TestLoader):
     def importFromPath(self, path):
         mod_name = path.replace(os.path.sep, '.')
         if mod_name.endswith('.py'):
-            mod_name = mod_name[:3] # Remove the trailing '.py'
+            mod_name = mod_name[:3]  # Remove the trailing '.py'
         module = __import__(mod_name)
         return module
 

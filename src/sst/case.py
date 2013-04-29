@@ -24,7 +24,6 @@ import pdb
 import sys
 import testtools
 import testtools.content
-import unittest
 
 
 from sst import (
@@ -158,7 +157,7 @@ class SSTScriptTestCase(SSTTestCase):
 #                                    script_name.replace('.py', ''))
         self.id = lambda: '%s.%s.%s' % (self.__class__.__module__,
                                         self.__class__.__name__,
-                                        script_name[:-3]) # drop .py
+                                        script_name[:-3])  # drop .py
         if context_row is None:
             context_row = {}
         self.context = context_row
