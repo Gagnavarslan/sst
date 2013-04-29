@@ -27,12 +27,12 @@ import testtools
 from testtools import matchers
 
 from sst import (
-    runtests,
+    case,
     tests,
 )
 
 
-class SSTStringTestCase(runtests.SSTScriptTestCase):
+class SSTStringTestCase(case.SSTScriptTestCase):
 
     xserver_headless = True
 

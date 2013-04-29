@@ -23,25 +23,19 @@ import fnmatch
 import htmlrunner
 import junitxmlrunner
 import os
-import pdb
 import sys
-import traceback
 import unittest
 import unittest.loader
 
 
-from selenium import webdriver
 import testtools
 import testtools.content
 
 from sst import (
     actions,
+    case,
+    browsers,
     config,
-    context,
-    xvfbdisplay,
-)
-from .actions import (
-    EndTest
 )
 
 
@@ -71,7 +65,7 @@ def runtests(test_names, test_dir='.', collect_only=False,
     if browser_factory is None:
         # TODO: We could raise an error instead as providing a default value
         # makes little sense here -- vila 2013-04-11
-        browser_factory = FirefoxFactory()
+        browser_factory = browsers.FirefoxFactory()
 
     shared_directory = find_shared_directory(test_dir, shared_directory)
     config.shared_directory = shared_directory
@@ -105,14 +99,13 @@ def runtests(test_names, test_dir='.', collect_only=False,
             print t.id()
         sys.exit(0)
 
+    actions._make_results_dir()
     if report_format == 'xml':
-        _make_results_dir()
         fp = file(os.path.join(config.results_directory, 'results.xml'), 'wb')
         # XXX failfast not supported in XMLTestRunner
         runner = junitxmlrunner.XMLTestRunner(output=fp, verbosity=2)
 
     elif report_format == 'html':
-        _make_results_dir()
         fp = file(os.path.join(config.results_directory, 'results.html'), 'wb')
         runner = htmlrunner.HTMLTestRunner(
             stream=fp, title='SST Test Report', verbosity=2, failfast=failfast
@@ -132,13 +125,6 @@ def runtests(test_names, test_dir='.', collect_only=False,
 
 def _get_full_path(relpath):
     return os.path.abspath(relpath)
-
-
-def _make_results_dir():
-    try:
-        os.makedirs(config.results_directory)
-    except OSError:
-        pass  # already exists
 
 
 def find_shared_directory(test_dir, shared_directory):
@@ -239,474 +225,23 @@ def get_suite(test_names, test_dir, collect_only,
 
     suite = unittest.TestSuite()
 
-    for case in find_cases(test_names, test_dir):
-        csv_path = os.path.join(test_dir, case.replace('.py', '.csv'))
+    for test_case in find_cases(test_names, test_dir):
+        csv_path = os.path.join(test_dir, test_case.replace('.py', '.csv'))
         if os.path.isfile(csv_path):
             # reading the csv file now
-            for row in get_data(csv_path):
+            for row in case.get_data(csv_path):
                 # row is a dictionary of variables
                 suite.addTest(
-                    get_case(test_dir, case, browser_factory, screenshots_on,
+                    get_case(test_dir, test_case, browser_factory,
+                             screenshots_on,
                              row,
                              debug=debug, extended=extended))
         else:
             suite.addTest(
-                get_case(test_dir, case, browser_factory, screenshots_on,
+                get_case(test_dir, test_case, browser_factory, screenshots_on,
                          debug=debug, extended=extended))
 
     return suite
-
-
-def use_xvfb_server(test, xvfb=None):
-    """Setup an xvfb server for a given test.
-
-    :param xvfb: An Xvfb object to use. If none is supplied, default values are
-        used to build it.
-
-    :returns: The xvfb server used so tests can use the built one.
-    """
-    if xvfb is None:
-        xvfb = xvfbdisplay.Xvfb()
-    xvfb.start()
-    test.addCleanup(xvfb.stop)
-    return xvfb
-
-
-class BrowserFactory(object):
-    """Handle browser creation for tests.
-
-    One instance is used for a given test run.
-    """
-
-    webdriver_class = None
-
-    def __init__(self, javascript_disabled=False):
-        super(BrowserFactory, self).__init__()
-        self.javascript_disabled = javascript_disabled
-
-    def setup_for_test(self, test):
-        """Setup the browser for the given test.
-
-        Some browsers accept more options that are test (and browser) specific.
-
-        Daughter classes should redefine this method to capture them.
-        """
-        pass
-
-    def browser(self):
-        """Create a browser based on previously collected options.
-
-        Daughter classes should override this method if they need to provide
-        more context.
-        """
-        return self.webdriver_class()
-
-
-# FIXME: Missing tests -- vila 2013-04-11
-class RemoteBrowserFactory(BrowserFactory):
-
-    webdriver_class = webdriver.Remote
-
-    def __init__(self, capabilities, remote_url):
-        super(RemoteBrowserFactory, self).__init__()
-        self.capabilities = capabilities
-        self.remote_url = remote_url
-
-    def browser(self):
-        return self.webdriver_class(self.capabilities, self.remote_url)
-
-
-# FIXME: Missing tests -- vila 2013-04-11
-class ChromeFactory(BrowserFactory):
-
-    webdriver_class = webdriver.Chrome
-
-
-# FIXME: Missing tests -- vila 2013-04-11
-class IeFactory(BrowserFactory):
-
-    webdriver_class = webdriver.Ie
-
-
-# FIXME: Missing tests -- vila 2013-04-11
-class PhantomJSFactory(BrowserFactory):
-
-    webdriver_class = webdriver.PhantomJS
-
-
-# FIXME: Missing tests -- vila 2013-04-11
-class OperaFactory(BrowserFactory):
-
-    webdriver_class = webdriver.Opera
-
-
-class FirefoxFactory(BrowserFactory):
-
-    webdriver_class = webdriver.Firefox
-
-    def setup_for_test(self, test):
-        profile = webdriver.FirefoxProfile()
-        profile.set_preference('intl.accept_languages', 'en')
-        if test.assume_trusted_cert_issuer:
-            profile.set_preference('webdriver_assume_untrusted_issuer', False)
-            profile.set_preference(
-                'capability.policy.default.Window.QueryInterface', 'allAccess')
-            profile.set_preference(
-                'capability.policy.default.Window.frameElement.get',
-                'allAccess')
-        if test.javascript_disabled or self.javascript_disabled:
-            profile.set_preference('javascript.enabled', False)
-        self.profile = profile
-
-    def browser(self):
-        return self.webdriver_class(self.profile)
-
-
-# FIXME: Missing tests -- vila 2013-04-11
-browser_factories = {
-    'Chrome': ChromeFactory,
-    'Firefox': FirefoxFactory,
-    'Ie': IeFactory,
-    'Opera': OperaFactory,
-    'PhantomJS': PhantomJSFactory,
-}
-
-
-class SSTTestCase(testtools.TestCase):
-    """A test case that can use the sst framework."""
-
-    xvfb = None
-    xserver_headless = False
-
-    browser_factory = FirefoxFactory()
-
-    javascript_disabled = False
-    assume_trusted_cert_issuer = False
-
-    wait_timeout = 10
-    wait_poll = 0.1
-    base_url = None
-
-    results_directory = _get_full_path('results')
-    screenshots_on = False
-    debug_post_mortem = False
-    extended_report = False
-
-    def setUp(self):
-        super(SSTTestCase, self).setUp()
-        if self.base_url is not None:
-            actions.set_base_url(self.base_url)
-        actions._set_wait_timeout(self.wait_timeout, self.wait_poll)
-        # Ensures sst.actions will find me
-        actions._test = self
-        if self.xserver_headless and self.xvfb is None:
-            # If we need to run headless and no xvfb is already running, start
-            # a new one for the current test, scheduling the shutdown for the
-            # end of the test.
-            self.xvfb = use_xvfb_server(self)
-        config.results_directory = self.results_directory
-        _make_results_dir()
-        self.start_browser()
-        self.addCleanup(self.stop_browser)
-        if self.screenshots_on:
-            self.addOnException(self.take_screenshot_and_page_dump)
-        if self.debug_post_mortem:
-            self.addOnException(
-                self.print_exception_and_enter_post_mortem)
-        if self.extended_report:
-            self.addOnException(self.report_extensively)
-
-    def shortDescription(self):
-        # testools wrongly defines this as returning self.id(). Since we're not
-        # using the short description (who is ?), we revert to the default
-        # behavior so runners and results don't get mad.
-        return None
-
-    def start_browser(self):
-        logger.debug('\nStarting browser')
-        self.browser_factory.setup_for_test(self)
-        self.browser = self.browser_factory.browser()
-        logger.debug('Browser started: %s' % (self.browser.name))
-
-    def stop_browser(self):
-        logger.debug('Stopping browser')
-        self.browser.quit()
-
-    def take_screenshot_and_page_dump(self, exc_info):
-        try:
-            filename = 'screenshot-{0}.png'.format(self.id())
-            actions.take_screenshot(filename)
-        except Exception:
-            # FIXME: Needs to be reported somehow ? -- vila 2012-10-16
-            pass
-        try:
-            # also dump page source
-            filename = 'pagesource-{0}.html'.format(self.id())
-            actions.save_page_source(filename)
-        except Exception:
-            # FIXME: Needs to be reported somehow ? -- vila 2012-10-16
-            pass
-
-    def print_exception_and_enter_post_mortem(self, exc_info):
-        exc_class, exc, tb = exc_info
-        traceback.print_exception(exc_class, exc, tb)
-        pdb.post_mortem(tb)
-
-    def report_extensively(self, exc_info):
-        exc_class, exc, tb = exc_info
-        original_message = str(exc)
-        try:
-            current_url = actions.get_current_url()
-        except Exception:
-            current_url = 'unavailable'
-        try:
-            page_source = actions.get_page_source()
-        except Exception:
-            page_source = 'unavailable'
-        self.addDetail(
-            'Original exception',
-            testtools.content.text_content('{0} : {1}'.format(
-                exc.__class__.__name__, original_message)))
-        self.addDetail('Current url',
-                       testtools.content.text_content(current_url))
-        self.addDetail('Page source',
-                       testtools.content.text_content(page_source))
-
-
-class SSTScriptTestCase(SSTTestCase):
-    """Test case used internally by sst-run and sst-remote."""
-
-    def __init__(self, script_dir, script_name, context_row=None):
-        super(SSTScriptTestCase, self).__init__('run_test_script')
-        self.script_dir = script_dir
-        self.script_name = script_name
-        self.script_path = os.path.join(self.script_dir, self.script_name)
-
-        # pythonify the script path into a python path
-# The following will give better test ids.
-#        rel = os.path.relpath(script_dir, os.getcwd())
-#
-#        self.id = lambda: '%s.%s' % (rel.replace(os.sep, '.'),
-#                                    script_name.replace('.py', ''))
-        self.id = lambda: '%s.%s.%s' % (self.__class__.__module__,
-                                        self.__class__.__name__,
-                                        script_name[:-3]) # drop .py
-        if context_row is None:
-            context_row = {}
-        self.context = context_row
-
-    def __str__(self):
-        # Since we use run_test_script to encapsulate the call to the
-        # compiled code, we need to override __str__ to get a proper name
-        # reported.
-        return "%s (%s.%s)" % (self.id(), self.__class__.__module__,
-                               self.__class__.__name__)
-
-    def setUp(self):
-        self._compile_script()
-        # The script may override some settings. The default value for
-        # JAVASCRIPT_DISABLED and ASSUME_TRUSTED_CERT_ISSUER are False, so if
-        # the user mentions them in his script, it's to turn them on. Also,
-        # getting our hands on the values used in the script is too hackish ;)
-        if 'JAVASCRIPT_DISABLED' in self.code.co_names:
-            self.javascript_disabled = True
-        if 'ASSUME_TRUSTED_CERT_ISSUER' in self.code.co_names:
-            self.assume_trusted_cert_issuer = True
-        super(SSTScriptTestCase, self).setUp()
-        # Start with default values
-        actions.reset_base_url()
-        actions._set_wait_timeout(10, 0.1)
-        # Possibly inject parametrization from associated .csv file
-        previous_context = context.store_context()
-        self.addCleanup(context.restore_context, previous_context)
-        context.populate_context(self.context, self.script_path,
-                                 self.browser.name, self.javascript_disabled)
-
-    def _compile_script(self):
-        self.script_path = os.path.join(self.script_dir, self.script_name)
-        # TODO: Adding script_dir to sys.path only make sense if we want to
-        # allow scripts to import from their own dir. Do we really need that ?
-        # -- vila 2013-04-26
-        sys.path.append(self.script_dir)
-        self.addCleanup(sys.path.remove, self.script_dir)
-        with open(self.script_path) as f:
-            source = f.read() + '\n'
-        self.code = compile(source, self.script_path, 'exec')
-
-    def run_test_script(self, result=None):
-        # Run the test catching exceptions sstnam style
-        try:
-            exec self.code in self.context
-        except EndTest:
-            pass
-
-
-class DirLoader(object):
-
-    def __init__(self, test_loader):
-        """Load tests from a directory."""
-        super(DirLoader, self).__init__()
-        self.test_loader = test_loader
-
-    def discover(self, cur, top=None):
-        if top is None:
-            top = cur
-        paths = os.listdir(cur)
-        tests = self.test_loader.suiteClass()
-        for path in paths:
-            # We don't care about the base name as we use only the full path
-            path = os.path.join(top, path)
-            tests = self.discover_path(path, top)
-            if tests is not None:
-                tests.addTests(tests)
-        return tests
-
-    def discover_path(self, path, top):
-        loader = None
-        if os.path.isfile(path):
-            loader = self.test_loader.fileLoaderClass(self.test_loader)
-        elif os.path.isdir(path):
-            loader = self.test_loader.dirLoaderClass(self.test_loader)
-        if loader:
-            return loader.discover(path, top)
-        return None
-
-
-class PackageLoader(object):
-
-    def discover(self, cur, top=None):
-        if top is None:
-            top = cur
-        if unittest.loader.VALID_MODULE_NAME.match(cur):
-            try:
-                package = self.import_from_path(os.path.join(top, cur))
-            except ImportError:
-                # Explicitly raise the full exception with its backtrace. This
-                # could easily be overwritten by daughter classes to handle
-                # them differently (swallowing included ;)
-                raise
-            # Can we delegate to the package ?
-            discover = getattr(package, 'discover', None)
-            if discover is not None:
-                # Since the user defined it, the package knows better
-                return discover(self, cur)
-            # Can we use the load_tests protocol ?
-            load_tests = getattr(package, 'load_tests', None)
-            if load_tests is not None:
-                # FIXME: This swallows exceptions that we'd better expose --
-                # vila 2013-04-27
-                return self.test_loader.loadTestsFromModule(package)
-            # Anything else with that ?
-            # Nothing for now, thanks
-
-        # Let's delegate to super
-        return super(PackageLoader, self).discover(cur)
-
-    def import_from_path(self, path):
-        name = self.test_loader._get_name_from_path(path)
-        module = self.test_loader._get_module_from_name(name)
-        return module
-
-
-class FileLoader(object):
-
-    included_re = None
-    excluded_re = None
-
-    def __init__(self, test_loader):
-        """Load tests from a file."""
-        super(FileLoader, self).__init__()
-        self.test_loader = test_loader
-
-    def discover(self, path, cur, top):
-        """Return an empty test suite.
-
-        This is mostly for documentation purposes, if a file contains material
-        that can produce tests, a specific file loader should be defined to
-        build tests from the file content.
-        """
-        # I know nothing about tests
-        return self.test_loader.suiteClass()
-
-    def includes(self, path):
-        included = True
-        if self.included_re:
-            included = bool(self.included_re.match(path))
-        return included
-
-    def excludes(self, path):
-        excluded = False
-        if self.excluded_re:
-            excluded = bool(self.excluded_re.match(path))
-        return excluded
-
-
-class ModuleLoader(FileLoader):
-
-    def discover(self, path, cur, top):
-        empty = self.test_loader.suiteClass()
-        if not self.includes(path, cur, top):
-            return empty
-        if self.excludes(path, cur, top):
-            return empty
-        name = self._get_name_from_path(path)
-        module = self.test_loader._get_module_from_name(name)
-        return self.test_loader.loadTestsFromModule(module)
-
-
-class TestLoader(unittest.TestLoader):
-    """Load test from an sst tree.
-
-    This loader is able to load sst scripts and create test cases with the
-    right sst specific attributes (browser, error handling, reporting).
-
-    This also allows test case based modules to be loaded when appropriate.
-    """
-
-    dirLoaderClass = DirLoader
-    fileLoaderClass = FileLoader
-
-    def __init__(self, browser_factory=None,
-                 screenshots_on=False, debug_post_mortem=False,
-                 extended_report=False):
-        super(TestLoader, self).__init__()
-        self.browser_factory = browser_factory
-        self.screenshots_on = screenshots_on
-        self.debug_post_mortem = debug_post_mortem
-        self.extended_report = extended_report
-
-
-    def discover(self, start_dir, pattern='test*.py', top_level_dir=None):
-        dir_loader = self.dirLoaderClass(self)
-        return dir_loader.discover(start_dir)
-
-    def loadTestsFromScript(self, dir_name, script_name):
-        suite = self.suiteClass()
-        # script specific test parametrization
-        csv_path = os.path.join(dir_name, script_name.replace('.py', '.csv'))
-        if os.path.isfile(csv_path):
-            for row in get_data(csv_path):
-                # row is a dictionary of variables that will magically appear
-                # as globals in the script.
-                test = self.loadTestFromScript(dir_name, script_name, row)
-                suite.addTest(test)
-        else:
-            test = self.loadTestFromScript(dir_name, script_name)
-            suite.addTest(test)
-        return suite
-
-    def loadTestFromScript(self, dir_name, script_name, context=None):
-        test = SSTScriptTestCase(dir_name, script_name, context)
-
-        # FIXME: We shouldn't have to set test attributes manually, something
-        # smells wrong here. -- vila 2013-04-26
-        test.browser_factory = self.browser_factory
-
-        test.screenshots_on = self.screenshots_on
-        test.debug_post_mortem = self.debug_post_mortem
-        test.extended_report = self.extended_report
-
-        return test
 
 
 def _has_classes(test_dir, entry):
@@ -739,7 +274,7 @@ def get_case(test_dir, entry, browser_factory, screenshots_on,
         this_test = unittest.defaultTestLoader.discover(test_dir, pattern=entry,
                                                         top_level_dir=test_dir)
     else:  # this is for script-based test
-        this_test = SSTScriptTestCase(test_dir, entry, context)
+        this_test = case.SSTScriptTestCase(test_dir, entry, context)
 
         this_test.browser_factory = browser_factory
 
@@ -748,37 +283,3 @@ def get_case(test_dir, entry, browser_factory, screenshots_on,
         this_test.extended_report = extended
 
     return this_test
-
-
-def get_data(csv_path):
-    """
-    Return a list of data dicts for parameterized testing.
-
-      the first row (headers) match data_map key names.
-      rows beneath are filled with data values.
-    """
-    rows = []
-    print '  Reading data from %r...' % os.path.split(csv_path)[-1],
-    row_num = 0
-    with open(csv_path) as f:
-        headers = f.readline().rstrip().split('^')
-        headers = [header.replace('"', '') for header in headers]
-        headers = [header.replace("'", '') for header in headers]
-        for line in f:
-            row = {}
-            row_num += 1
-            row['_row_num'] = row_num
-            fields = line.rstrip().split('^')
-            for header, field in zip(headers, fields):
-                try:
-                    value = ast.literal_eval(field)
-                except ValueError:
-                    value = field
-                    if value.lower() == 'false':
-                        value = False
-                    if value.lower() == 'true':
-                        value = True
-                row[header] = value
-            rows.append(row)
-    print 'found %s rows' % len(rows)
-    return rows

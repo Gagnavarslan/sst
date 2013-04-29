@@ -20,9 +20,10 @@
 import testtools
 
 from sst import (
-    runtests,
+    loader,
     tests,
 )
+
 
 class TestLoadScript(testtools.TestCase):
 
@@ -37,14 +38,14 @@ class TestLoadScript(testtools.TestCase):
     def test_load_simple_script(self):
         # A simple do nothing script with no imports
         self.create_script('foo.py', 'pass')
-        suite = runtests.TestLoader().loadTestsFromScript('.', 'foo.py')
+        suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
         self.assertEqual(1, suite.countTestCases())
 
-    def test_load_simpler_script_with_csv(self):
+    def test_load_simple_script_with_csv(self):
         self.create_script('foo.py', "pass")
         with open('foo.csv', 'w') as f:
             f.write("'foo'^'bar'\n")
             f.write('1^baz\n')
             f.write('2^qux\n')
-        suite = runtests.TestLoader().loadTestsFromScript('.', 'foo.py')
+        suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
         self.assertEqual(2, suite.countTestCases())

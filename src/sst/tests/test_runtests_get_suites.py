@@ -23,8 +23,12 @@ import os
 import testtools
 import unittest
 
-from sst import tests
-from sst import runtests
+from sst import (
+    browsers,
+    case,
+    runtests,
+    tests,
+)
 
 
 def _make_test_files(dir):
@@ -42,8 +46,8 @@ def _make_test_files(dir):
     )
     for fn in testclass_file_names:
         with open(os.path.join(dir, fn), 'w') as f:
-            f.write('from sst import runtests\n')
-            f.write('class Test_%s(runtests.SSTTestCase):\n' % fn[:-3])
+            f.write('from sst import case\n')
+            f.write('class Test_%s(case.SSTTestCase):\n' % fn[:-3])
             f.write('    def test_%s(self): pass\n' % fn[:-3])
 
     # generate empty files
@@ -80,13 +84,13 @@ class TestGetSuites(testtools.TestCase):
 
         found = runtests.get_suites(
             test_names, test_dir, shared_dir, collect_only,
-            runtests.FirefoxFactory(),
+            browsers.FirefoxFactory(),
             screenshots_on, debug, extended
         )
-        suite = found[0]._tests
+        suite = found[0]
 
         # assert we loaded correct number of cases
-        self.assertEquals(len(suite), 6)
+        self.assertEqual(6, suite.countTestCases())
 
         expected_scripted_tests = (
             'script1',
@@ -100,15 +104,15 @@ class TestGetSuites(testtools.TestCase):
         )
 
         for test in suite:
-            if issubclass(test.__class__, runtests.SSTTestCase):
-                self.assertIsInstance(test, runtests.SSTTestCase)
+            if issubclass(test.__class__, case.SSTTestCase):
+                self.assertIsInstance(test, case.SSTTestCase)
                 name = test.id().split('.')[-1]
                 self.assertIn(name, expected_scripted_tests)
             elif issubclass(test.__class__, unittest.suite.TestSuite):
                 self.assertIsInstance(test, unittest.suite.TestSuite)
-                for test_class in test._tests:
-                    for case in test_class._tests:
-                        for t in case._tests:
+                for tsuite in test:
+                    for tcase in tsuite:
+                        for t in tcase:
                             name = t.id().split('.')[-1]
                             self.assertIn(name, expected_testcase_tests)
             else:

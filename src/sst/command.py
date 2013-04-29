@@ -28,6 +28,7 @@ import optparse
 import sst
 from sst import (
     actions,
+    browsers,
     config,
     runtests,
 )
@@ -156,7 +157,7 @@ def get_opts(get_options):
         print 'run "%s -h" or "%s --help" to see run options.' % (prog, prog)
         sys.exit(1)
 
-    if cmd_opts.browser_type not in runtests.browser_factories:
+    if cmd_opts.browser_type not in browsers.browser_factories:
         print ("Error: %s should be one of %s"
                % (cmd_opts.browser_type, runtests.browser_factories.keys()))
         sys.exit(1)
