@@ -74,9 +74,12 @@ class TestFileLoader(testtools.TestCase):
         self.assertFalse(file_loader.excludes('foo'))
 
 
-# FIXME: Missing tests for protect_imports, add a module, delete a module,
-# modify? a module -- vila 2013-04-29
 def protect_imports(test):
+    """Protect sys.modules and sys.path for the test duration.
+
+    This is useful to test imports which modifies sys.modules or requires
+    modifying sys.path.
+    """
     # Protect sys.modules and sys.path to be able to test imports
     test.patch(sys, 'path', list(sys.path))
     orig_modules = sys.modules.copy()
@@ -89,6 +92,69 @@ def protect_imports(test):
         # Restore deleted or modified modules
         sys.modules.update(orig_modules)
     test.addCleanup(cleanup_modules)
+
+
+class TestProtectImports(testtools.TestCase):
+
+    def setUp(self):
+        super(TestProtectImports, self).setUp()
+        protect_imports(self)
+
+    def test_add_module(self):
+        self.assertIs(None, sys.modules.get('foo', None))
+        class Test(testtools.TestCase):
+
+            def test_it(self):
+                protect_imports(self)
+                sys.modules['foo'] = 'bar'
+
+        test = Test('test_it')
+        result = testtools.TestResult()
+        test.run(result)
+        self.assertTrue(result.wasSuccessful())
+        self.assertIs(None, sys.modules.get('foo', None))
+
+    def test_remove_module(self):
+        self.assertIs(None, sys.modules.get('I_dont_exist', None))
+        sys.modules['I_dont_exist'] = 'bar'
+        class Test(testtools.TestCase):
+
+            def test_it(self):
+                protect_imports(self)
+                self.assertEqual('bar', sys.modules['I_dont_exist'])
+                del sys.modules['I_dont_exist']
+        test = Test('test_it')
+        result = testtools.TestResult()
+        test.run(result)
+        self.assertTrue(result.wasSuccessful())
+        self.assertEqual('bar', sys.modules['I_dont_exist'])
+
+
+    def test_modify_module(self):
+        self.assertIs(None, sys.modules.get('I_dont_exist', None))
+        sys.modules['I_dont_exist'] = 'bar'
+        class Test(testtools.TestCase):
+
+            def test_it(self):
+                protect_imports(self)
+                self.assertEqual('bar', sys.modules['I_dont_exist'])
+                sys.modules['I_dont_exist'] = 'qux'
+        test = Test('test_it')
+        result = testtools.TestResult()
+        test.run(result)
+        self.assertTrue(result.wasSuccessful())
+        self.assertEqual('bar', sys.modules['I_dont_exist'])
+
+    def test_sys_path_restored(self):
+        tests.set_cwd_to_tmp(self)
+        inserted = self.test_base_dir
+        self.assertFalse(inserted in sys.path)
+        class Test(testtools.TestCase):
+
+            def test_it(self):
+                protect_imports(self)
+                sys.path.insert(0, inserted)
+        self.assertFalse(inserted in sys.path)
 
 
 class TestModuleLoader(testtools.TestCase):
