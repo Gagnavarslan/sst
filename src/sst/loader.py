@@ -17,6 +17,8 @@
 #   limitations under the License.
 #
 import os
+import re
+import sys
 import unittest
 import unittest.loader
 
@@ -59,35 +61,40 @@ class PackageLoader(object):
     def discover(self, cur, top=None):
         if top is None:
             top = cur
-        if unittest.loader.VALID_MODULE_NAME.match(cur):
-            try:
-                package = self.import_from_path(os.path.join(top, cur))
-            except ImportError:
-                # Explicitly raise the full exception with its backtrace. This
-                # could easily be overwritten by daughter classes to handle
-                # them differently (swallowing included ;)
-                raise
-            # Can we delegate to the package ?
-            discover = getattr(package, 'discover', None)
-            if discover is not None:
-                # Since the user defined it, the package knows better
-                return discover(self, cur)
-            # Can we use the load_tests protocol ?
-            load_tests = getattr(package, 'load_tests', None)
-            if load_tests is not None:
-                # FIXME: This swallows exceptions that we'd better expose --
-                # vila 2013-04-27
-                return self.test_loader.loadTestsFromModule(package)
-            # Anything else with that ?
-            # Nothing for now, thanks
+        try:
+            # FIXME: We should probably excludes '{cur}/__init__.py' from
+            # the list of files to handle -- vila 2013-04-29
+            package = self.test_loader.importFromPath(
+                os.path.join(top, cur))
+        except ImportError:
+            # Explicitly raise the full exception with its backtrace. This
+            # could easily be overwritten by daughter classes to handle
+            # them differently (swallowing included ;)
+            raise
+        # Can we delegate to the package ?
+        discover = getattr(package, 'discover', None)
+        if discover is not None:
+            # Since the user defined it, the package knows better
+            return discover(self, cur)
+        # Can we use the load_tests protocol ?
+        load_tests = getattr(package, 'load_tests', None)
+        if load_tests is not None:
+            # FIXME: This swallows exceptions raise the by the user defined
+            # 'load_test'. We may want to give awy to expose them instead (with
+            # or without stopping the test loading) -- vila 2013-04-27
+            return self.test_loader.loadTestsFromModule(package)
+        # Anything else with that ?
+        # Nothing for now, thanks
 
         # Let's delegate to super
         return super(PackageLoader, self).discover(cur)
 
-    def import_from_path(self, path):
-        name = self.test_loader._get_name_from_path(path)
-        module = self.test_loader._get_module_from_name(name)
-        return module
+
+def matches_regexp(regexp):
+    include_re = re.compile(regexp)
+    def matches(path):
+        return bool(include_re.match(path))
+    return matches
 
 
 class FileLoader(object):
@@ -95,10 +102,14 @@ class FileLoader(object):
     included_re = None
     excluded_re = None
 
-    def __init__(self, test_loader):
+    def __init__(self, test_loader, includes=None, excludes=None):
         """Load tests from a file."""
         super(FileLoader, self).__init__()
         self.test_loader = test_loader
+        if includes is not None:
+            self.includes = includes
+        if excludes is not None:
+            self.excludes = excludes
 
     def discover(self, path, cur, top):
         """Return an empty test suite.
@@ -108,31 +119,31 @@ class FileLoader(object):
         build tests from the file content.
         """
         # I know nothing about tests
-        return self.test_loader.suiteClass()
+        empty = self.test_loader.suiteClass()
+        return empty
 
     def includes(self, path):
-        included = True
-        if self.included_re:
-            included = bool(self.included_re.match(path))
-        return included
+        return True
 
     def excludes(self, path):
-        excluded = False
-        if self.excluded_re:
-            excluded = bool(self.excluded_re.match(path))
-        return excluded
+        return False
 
 
 class ModuleLoader(FileLoader):
 
+    def __init__(self, test_loader, includes=None, excludes=None):
+        if includes is None:
+            # Default to python source files
+            includes = matches_regexp('^.*\.py$')
+        super(ModuleLoader, self).__init__(test_loader, includes, excludes)
+
     def discover(self, path, cur, top):
         empty = self.test_loader.suiteClass()
-        if not self.includes(path, cur, top):
+        if not self.includes(path):
             return empty
-        if self.excludes(path, cur, top):
+        if self.excludes(path):
             return empty
-        name = self._get_name_from_path(path)
-        module = self.test_loader._get_module_from_name(name)
+        module = self.test_loader.importFromPath(path)
         return self.test_loader.loadTestsFromModule(module)
 
 
@@ -161,6 +172,13 @@ class TestLoader(unittest.TestLoader):
     def discover(self, start_dir, pattern='test*.py', top_level_dir=None):
         dir_loader = self.dirLoaderClass(self)
         return dir_loader.discover(start_dir)
+
+    def importFromPath(self, path):
+        mod_name = path.replace(os.path.sep, '.')
+        if mod_name.endswith('.py'):
+            mod_name = mod_name[:3] # Remove the trailing '.py'
+        module = __import__(mod_name)
+        return module
 
     def loadTestsFromScript(self, dir_name, script_name):
         suite = self.suiteClass()
