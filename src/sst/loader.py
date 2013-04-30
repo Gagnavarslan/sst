@@ -93,6 +93,21 @@ class ModuleLoader(FileLoader):
         return self.test_loader.loadTestsFromModule(module)
 
 
+class ScriptLoader(FileLoader):
+
+    def __init__(self, test_loader, matcher=None):
+        if matcher is None:
+            # Default to python source files, excluding private ones
+            matcher = NameMatcher(includes=matches_for_regexp('.*\.py$'),
+                                  excludes=matches_for_regexp('^_'))
+        super(ScriptLoader, self).__init__(test_loader, matcher=matcher)
+
+    def discover(self, directory, name):
+        if not self.matches(name):
+            return None
+        return self.test_loader.loadTestsFromScript(directory, name)
+
+
 class DirLoader(object):
 
     def __init__(self, test_loader, matcher=None):
@@ -137,16 +152,13 @@ class PackageLoader(DirLoader):
     def discover(self, directory, name):
         if not self.matches(name):
             return None
-        names = None
         path = os.path.join(directory, name)
         try:
             package = self.test_loader.importFromPath(path)
-            names = os.listdir(path)
-            names.remove('__init__.py')
         except ImportError:
             # Explicitly raise the full exception with its backtrace. This
-            # could easily be overwritten by daughter classes to handle
-            # them differently (swallowing included ;)
+            # could be overwritten by daughter classes to handle them
+            # differently (swallowing included ;)
             raise
         # Can we delegate to the package ?
         discover = getattr(package, 'discover', None)
@@ -163,6 +175,8 @@ class PackageLoader(DirLoader):
         # Anything else with that ?
         # Nothing for now, thanks
 
+        names = os.listdir(path)
+        names.remove('__init__.py')
         return self.discover_names(path, names)
 
 
@@ -229,8 +243,11 @@ class TestLoader(unittest.TestLoader):
 
     def loadTestsFromScript(self, dir_name, script_name):
         suite = self.suiteClass()
+        path = os.path.join(dir_name, script_name)
+        if not os.path.isfile(path):
+            return suite
         # script specific test parametrization
-        csv_path = os.path.join(dir_name, script_name.replace('.py', '.csv'))
+        csv_path = path.replace('.py', '.csv')
         if os.path.isfile(csv_path):
             for row in case.get_data(csv_path):
                 # row is a dictionary of variables that will magically appear

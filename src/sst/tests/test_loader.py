@@ -476,3 +476,33 @@ class TestLoadScript(testtools.TestCase):
             f.write('2^qux\n')
         suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
         self.assertEqual(2, suite.countTestCases())
+
+    def test_load_non_existing_script(self):
+        suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
+        self.assertEqual(0, suite.countTestCases())
+
+
+class TestScriptLoader(ImportingLocalFilesTest):
+
+    def get_test_loader(self):
+        return loader.TestLoader()
+
+    def test_simple_script(self):
+        tests.write_tree_from_desc('''dir: tests
+# no tests/__init__.py required, we don't need to import the scripts
+file: tests/foo.py
+from sst.actions import *
+
+raise AssertionError('Loading only, executing fails')
+''')
+        script_loader = loader.ScriptLoader(self.get_test_loader())
+        suite = script_loader.discover('tests', 'foo.py')
+        self.assertEqual(1, suite.countTestCases())
+
+    def test_ignore_privates(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/_private.py
+''')
+        script_loader = loader.ScriptLoader(self.get_test_loader())
+        suite = script_loader.discover('tests', '_private.py')
+        self.assertIs(None, suite)
