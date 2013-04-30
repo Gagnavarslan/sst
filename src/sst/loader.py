@@ -16,6 +16,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import fnmatch
 import os
 import re
 import sys
@@ -25,46 +26,122 @@ import unittest.loader
 from sst import case
 
 
-class DirLoader(object):
+def matches_for_regexp(regexp):
+    match_re = re.compile(regexp)
 
-    def __init__(self, test_loader):
-        """Load tests from a directory."""
-        super(DirLoader, self).__init__()
+    def matches(path):
+        return bool(match_re.match(path))
+    return matches
+
+
+def matches_for_glob(pattern):
+    match_re = fnmatch.translate(pattern)
+    return matches_for_regexp(match_re)
+
+
+class NameMatcher(object):
+
+    def __init__(self, includes=None, excludes=None):
+        if includes is not None:
+            self.includes = includes
+        if excludes is not None:
+            self.excludes = excludes
+
+    def includes(self, path):
+        return True
+
+    def excludes(self, path):
+        return False
+
+    def matches(self, name):
+        return self.includes(name) and not self.excludes(name)
+
+
+class FileLoader(object):
+
+    def __init__(self, test_loader, matcher=None):
+        """Load tests from a file."""
+        super(FileLoader, self).__init__()
+        if matcher is None:
+            self.matches = lambda name: True
+        else:
+            self.matches = matcher.matches
         self.test_loader = test_loader
 
-    def discover(self, cur):
-        paths = os.listdir(cur)
-        return self.discover_paths(cur, paths)
+    def discover(self, directory, name):
+        """Return None to represent an empty test suite.
 
-    def discover_paths(self, cur, paths):
+        This is mostly for documentation purposes, if a file contains material
+        that can produce tests, a specific file loader should be defined to
+        build tests from the file content.
+        """
+        return None
+
+
+class ModuleLoader(FileLoader):
+
+    def __init__(self, test_loader, matcher=None):
+        if matcher is None:
+            # Default to python source files
+            matcher = NameMatcher(includes=matches_for_regexp('.*\.py$'))
+        super(ModuleLoader, self).__init__(test_loader, matcher=matcher)
+
+    def discover(self, directory, name):
+        if not self.matches(name):
+            return None
+        module = self.test_loader.importFromPath(os.path.join(directory, name))
+        return self.test_loader.loadTestsFromModule(module)
+
+
+class DirLoader(object):
+
+    def __init__(self, test_loader, matcher=None):
+        """Load tests from a directory."""
+        super(DirLoader, self).__init__()
+        if matcher is None:
+            # Accept everything
+            self.matches = lambda name: True
+        else:
+            self.matches = matcher.matches
+        self.test_loader = test_loader
+
+    def discover(self, directory, name):
+        if not self.matches(directory):
+            return None
+        names = os.listdir(directory)
+        return self.discover_names(directory, names)
+
+    def discover_names(self, directory, names):
         suite = self.test_loader.suiteClass()
-        for path in paths:
-            # We don't care about the base name as we use only the full path
-            path = os.path.join(cur, path)
-            tests = self.discover_path(path)
+        for name in names:
+            tests = self.discover_path(directory, name)
             if tests is not None:
                 suite.addTests(tests)
         return suite
 
-    def discover_path(self, path):
+    def discover_path(self, directory, name):
         loader = None
+        path = os.path.join(directory, name)
         if os.path.isfile(path):
             loader = self.test_loader.fileLoaderClass(self.test_loader)
         elif os.path.isdir(path):
             loader = self.test_loader.dirLoaderClass(self.test_loader)
         if loader:
-            return loader.discover(path)
+            return loader.discover(directory, name)
         return None
 
 
 class PackageLoader(DirLoader):
 
-    def discover(self, cur):
-        paths = None
+    def discover(self, directory, name):
+        if not self.matches(name):
+            return None
+        names = None
+        path = os.path.join(directory, name)
         try:
-            package = self.test_loader.importFromPath(cur)
-            paths = os.listdir(cur)
-            paths.remove('__init__.py')
+            package = self.test_loader.importFromPath(path)
+            names = os.listdir(path)
+            names.remove('__init__.py')
         except ImportError:
             # Explicitly raise the full exception with its backtrace. This
             # could easily be overwritten by daughter classes to handle
@@ -74,7 +151,7 @@ class PackageLoader(DirLoader):
         discover = getattr(package, 'discover', None)
         if discover is not None:
             # Since the user defined it, the package knows better
-            return discover(self, cur)
+            return discover(self)
         # Can we use the load_tests protocol ?
         load_tests = getattr(package, 'load_tests', None)
         if load_tests is not None:
@@ -85,65 +162,7 @@ class PackageLoader(DirLoader):
         # Anything else with that ?
         # Nothing for now, thanks
 
-        return self.discover_paths(cur, paths)
-
-
-def matches_regexp(regexp):
-    include_re = re.compile(regexp)
-
-    def matches(path):
-        return bool(include_re.match(path))
-    return matches
-
-
-class FileLoader(object):
-
-    included_re = None
-    excluded_re = None
-
-    def __init__(self, test_loader, includes=None, excludes=None):
-        """Load tests from a file."""
-        super(FileLoader, self).__init__()
-        self.test_loader = test_loader
-        if includes is not None:
-            self.includes = includes
-        if excludes is not None:
-            self.excludes = excludes
-
-    def discover(self, path):
-        """Return an empty test suite.
-
-        This is mostly for documentation purposes, if a file contains material
-        that can produce tests, a specific file loader should be defined to
-        build tests from the file content.
-        """
-        # I know nothing about tests
-        empty = self.test_loader.suiteClass()
-        return empty
-
-    def includes(self, path):
-        return True
-
-    def excludes(self, path):
-        return False
-
-
-class ModuleLoader(FileLoader):
-
-    def __init__(self, test_loader, includes=None, excludes=None):
-        if includes is None:
-            # Default to python source files
-            includes = matches_regexp('^.*\.py$')
-        super(ModuleLoader, self).__init__(test_loader, includes, excludes)
-
-    def discover(self, path):
-        empty = self.test_loader.suiteClass()
-        if not self.includes(path):
-            return empty
-        if self.excludes(path):
-            return empty
-        module = self.test_loader.importFromPath(path)
-        return self.test_loader.loadTestsFromModule(module)
+        return self.discover_names(path, names)
 
 
 class TestLoader(unittest.TestLoader):
@@ -168,10 +187,39 @@ class TestLoader(unittest.TestLoader):
         self.extended_report = extended_report
 
     def discover(self, start_dir, pattern='test*.py', top_level_dir=None):
-        dir_loader = self.dirLoaderClass(self)
-        return dir_loader.discover(start_dir)
+        if top_level_dir:
+            # For backward compatibility we insert top_level_dir in
+            # sys.path. More complex import rules are left to the caller to
+            # setup properly
+            sys.path.insert(0, top_level_dir)
+
+        class ModuleLoaderFromPattern(ModuleLoader):
+
+            def __init__(self, test_loader):
+                matcher = NameMatcher(includes=matches_for_glob(pattern))
+                super(ModuleLoaderFromPattern, self).__init__(
+                    test_loader, matcher=matcher)
+
+        return self.discoverTests(start_dir,
+                                  file_loader_class=ModuleLoaderFromPattern)
+
+    def discoverTests(self, start_dir, file_loader_class=None,
+                      dir_loader_class=None):
+        if file_loader_class is None:
+            file_loader_class = self.fileLoaderClass
+        if dir_loader_class is None:
+            dir_loader_class = self.dirLoaderClass
+        orig = self.dirLoaderClass, self.fileLoaderClass
+        try:
+            self.dirLoaderClass = dir_loader_class
+            self.fileLoaderClass = file_loader_class
+            dir_loader = self.dirLoaderClass(self)
+            return dir_loader.discover(*os.path.split(start_dir))
+        finally:
+            self.dirLoaderClass, self.fileLoaderClass = orig
 
     def importFromPath(self, path):
+        path = os.path.normpath(path)
         if path.endswith('.py'):
             path = path[:-3]  # Remove the trailing '.py'
         mod_name = path.replace(os.path.sep, '.')

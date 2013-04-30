@@ -26,14 +26,56 @@ from sst import (
 )
 
 
-class TestMatchesRegexp(testtools.TestCase):
+class TestMatchesForRegexp(testtools.TestCase):
 
     def test_matches(self):
-        matches = loader.matches_regexp('foo.*')
+        matches = loader.matches_for_regexp('foo.*')
+        # All assertions should succeed, if one of them fails, we have a bigger
+        # problem than having one test for each assertion
         self.assertTrue(matches('foo'))
         self.assertFalse(matches('bar'))
         self.assertTrue(matches('foobar'))
         self.assertFalse(matches('barfoo'))
+
+
+class TestMatchesForGlob(testtools.TestCase):
+
+    def test_matches(self):
+        matches = loader.matches_for_glob('foo*')
+        # All assertions should succeed, if one of them fails, we have a bigger
+        # problem than having one test for each assertion
+        self.assertTrue(matches('foo'))
+        self.assertFalse(matches('fo'))
+        self.assertFalse(matches('bar'))
+        self.assertTrue(matches('foobar'))
+        self.assertFalse(matches('barfoo'))
+
+
+class TestNameMatcher(testtools.TestCase):
+
+    def test_default_includes(self):
+        name_matcher = loader.NameMatcher()
+        self.assertTrue(name_matcher.includes('foo'))
+        self.assertTrue(name_matcher.matches('foo'))
+
+    def test_default_exclude(self):
+        name_matcher = loader.NameMatcher()
+        self.assertFalse(name_matcher.excludes('foo'))
+        self.assertTrue(name_matcher.matches('foo'))
+
+    def test_provided_includes(self):
+        name_matcher = loader.NameMatcher(
+            includes=loader.matches_for_regexp('^.*foo$'))
+        self.assertTrue(name_matcher.includes('foo'))
+        self.assertTrue(name_matcher.includes('barfoo'))
+        self.assertFalse(name_matcher.includes('bar'))
+        self.assertFalse(name_matcher.includes('foobar'))
+
+    def test_provided_excludes(self):
+        name_matcher = loader.NameMatcher(
+            excludes=loader.matches_for_regexp('^bar.*foo$'))
+        self.assertTrue(name_matcher.excludes('barfoo'))
+        self.assertFalse(name_matcher.excludes('foo'))
 
 
 class TestFileLoader(testtools.TestCase):
@@ -46,32 +88,8 @@ class TestFileLoader(testtools.TestCase):
         with open('foo', 'w') as f:
             f.write('bar\n')
         file_loader = loader.FileLoader(self.get_test_loader())
-        suite = file_loader.discover('foo')
-        self.assertEqual(0, suite.countTestCases())
-
-    def test_default_includes(self):
-        file_loader = loader.FileLoader(self.get_test_loader())
-        self.assertTrue(file_loader.includes('foo'))
-
-    def test_default_exclude(self):
-        file_loader = loader.FileLoader(self.get_test_loader())
-        self.assertFalse(file_loader.excludes('foo'))
-
-    def test_provided_includes(self):
-        file_loader = loader.FileLoader(
-            self.get_test_loader(),
-            includes=loader.matches_regexp('^.*foo$'))
-        self.assertTrue(file_loader.includes('foo'))
-        self.assertTrue(file_loader.includes('barfoo'))
-        self.assertFalse(file_loader.includes('bar'))
-        self.assertFalse(file_loader.includes('foobar'))
-
-    def test_provided_excludes(self):
-        file_loader = loader.FileLoader(
-            self.get_test_loader(),
-            excludes=loader.matches_regexp('^bar.*foo$'))
-        self.assertTrue(file_loader.excludes('barfoo'))
-        self.assertFalse(file_loader.excludes('foo'))
+        suite = file_loader.discover('.', 'foo')
+        self.assertIs(None, suite)
 
 
 def protect_imports(test):
@@ -178,25 +196,22 @@ class TestModuleLoader(ImportingLocalFilesTest):
 
     def test_default_includes(self):
         mod_loader = loader.ModuleLoader(self.get_test_loader())
-        self.assertTrue(mod_loader.includes('foo.py'))
-        self.assertTrue(mod_loader.includes('package/foo.py'))
-        # We don't try to catch all non importable names, that's import job
-        self.assertTrue(mod_loader.includes('package.py/foo.py'))
+        self.assertTrue(mod_loader.matches('foo.py'))
         # But we won't try to import a random file
-        self.assertFalse(mod_loader.includes('foopy'))
+        self.assertFalse(mod_loader.matches('foopy'))
 
     def test_discover_empty_file(self):
         with open('foo.py', 'w') as f:
             f.write('')
         mod_loader = loader.ModuleLoader(self.get_test_loader())
-        suite = mod_loader.discover('foo.py')
+        suite = mod_loader.discover('.', 'foo.py')
         self.assertEqual(0, suite.countTestCases())
 
     def test_discover_invalid_file(self):
         with open('foo.py', 'w') as f:
             f.write("I'm no python code")
         mod_loader = loader.ModuleLoader(self.get_test_loader())
-        self.assertRaises(SyntaxError, mod_loader.discover, 'foo.py')
+        self.assertRaises(SyntaxError, mod_loader.discover, '.', 'foo.py')
 
 
 class TestDirLoader(ImportingLocalFilesTest):
@@ -206,7 +221,7 @@ class TestDirLoader(ImportingLocalFilesTest):
         test_loader.dirLoaderClass = loader.DirLoader
         return test_loader
 
-    def test_discover_path_for_file_no_package(self):
+    def test_discover_path_for_file_without_package(self):
         tests.write_tree_from_desc('''dir: dir
 file: dir/foo.py
 I'm not even python code
@@ -215,7 +230,7 @@ I'm not even python code
         # ensure we still get some meaningful error message.
         dir_loader = loader.DirLoader(self.get_test_loader())
         e = self.assertRaises(ImportError,
-                              dir_loader.discover_path, 'dir/foo.py')
+                              dir_loader.discover_path, 'dir', 'foo.py')
         self.assertEqual('No module named dir.foo', e.message)
 
     def test_discover_path_for_file(self):
@@ -247,8 +262,74 @@ file: dir/foo.py
 I'm not even python code
 ''')
         pkg_loader = loader.PackageLoader(self.get_test_loader())
-        e = self.assertRaises(SyntaxError, pkg_loader.discover, 'dir')
+        e = self.assertRaises(SyntaxError, pkg_loader.discover, '.', 'dir')
         self.assertEqual('EOL while scanning string literal', e.args[0])
+
+
+class TestTestLoader(ImportingLocalFilesTest):
+
+    def test_simple_file_in_a_dir(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/__init__.py
+file: tests/foo.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_me(self):
+      self.assertTrue(True)
+''')
+        test_loader = loader.TestLoader()
+        suite = test_loader.discoverTests('tests')
+        self.assertEqual(1, suite.countTestCases())
+
+    def test_broken_file_in_a_dir(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/__init__.py
+file: tests/foo.py
+I'm not even python code
+''')
+        test_loader = loader.TestLoader()
+        e = self.assertRaises(SyntaxError, test_loader.discoverTests, 'tests')
+        self.assertEqual('EOL while scanning string literal', e.args[0])
+
+
+class TestTestLoaderPattern(ImportingLocalFilesTest):
+    pass
+
+
+class TestTestLoaderTopLevelDir(testtools.TestCase):
+
+    def setUp(self):
+        super(TestTestLoaderTopLevelDir, self).setUp()
+        # We build trees rooted in test_base_dir from which we will import
+        tests.set_cwd_to_tmp(self)
+        protect_imports(self)
+
+    def _create_foo_in_tests(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/__init__.py
+file: tests/foo.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_me(self):
+      self.assertTrue(True)
+''')
+
+    def test_simple_file_in_a_dir(self):
+        self._create_foo_in_tests()
+        test_loader = loader.TestLoader()
+        suite = test_loader.discover('tests', '*.py', self.test_base_dir)
+        self.assertEqual(1, suite.countTestCases())
+
+    def test_simple_file_in_a_dir_no_sys_path(self):
+        self._create_foo_in_tests()
+        test_loader = loader.TestLoader()
+        e = self.assertRaises(ImportError,
+                              test_loader.discover, 'tests', '*.py')
+        self.assertEqual(e.message, 'No module named tests')
 
 
 class TestLoadScript(testtools.TestCase):
