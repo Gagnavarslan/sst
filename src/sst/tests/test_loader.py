@@ -101,6 +101,11 @@ class TestProtectImports(testtools.TestCase):
         super(TestProtectImports, self).setUp()
         protect_imports(self)
 
+    def run_successful_test(self, test):
+        result = testtools.TestResult()
+        test.run(result)
+        self.assertTrue(result.wasSuccessful())
+
     def test_add_module(self):
         self.assertIs(None, sys.modules.get('foo', None))
 
@@ -110,10 +115,7 @@ class TestProtectImports(testtools.TestCase):
                 protect_imports(self)
                 sys.modules['foo'] = 'bar'
 
-        test = Test('test_it')
-        result = testtools.TestResult()
-        test.run(result)
-        self.assertTrue(result.wasSuccessful())
+        self.run_successful_test(Test('test_it'))
         self.assertIs(None, sys.modules.get('foo', None))
 
     def test_remove_module(self):
@@ -126,10 +128,7 @@ class TestProtectImports(testtools.TestCase):
                 protect_imports(self)
                 self.assertEqual('bar', sys.modules['I_dont_exist'])
                 del sys.modules['I_dont_exist']
-        test = Test('test_it')
-        result = testtools.TestResult()
-        test.run(result)
-        self.assertTrue(result.wasSuccessful())
+        self.run_successful_test(Test('test_it'))
         self.assertEqual('bar', sys.modules['I_dont_exist'])
 
     def test_modify_module(self):
@@ -142,10 +141,7 @@ class TestProtectImports(testtools.TestCase):
                 protect_imports(self)
                 self.assertEqual('bar', sys.modules['I_dont_exist'])
                 sys.modules['I_dont_exist'] = 'qux'
-        test = Test('test_it')
-        result = testtools.TestResult()
-        test.run(result)
-        self.assertTrue(result.wasSuccessful())
+        self.run_successful_test(Test('test_it'))
         self.assertEqual('bar', sys.modules['I_dont_exist'])
 
     def test_sys_path_restored(self):
@@ -158,16 +154,24 @@ class TestProtectImports(testtools.TestCase):
             def test_it(self):
                 protect_imports(self)
                 sys.path.insert(0, inserted)
+        self.run_successful_test(Test('test_it'))
         self.assertFalse(inserted in sys.path)
 
 
-class TestModuleLoader(testtools.TestCase):
+class ImportingLocalFilesTest(testtools.TestCase):
+    """Class for tests requiring import of locally generated files.
 
+    This setup the tests working dir in a newly created temp dir and restore
+    sys.modules and sys.path at the end of the test.
+    """
     def setUp(self):
-        super(TestModuleLoader, self).setUp()
+        super(ImportingLocalFilesTest, self).setUp()
         tests.set_cwd_to_tmp(self)
         protect_imports(self)
         sys.path.insert(0, self.test_base_dir)
+
+
+class TestModuleLoader(ImportingLocalFilesTest):
 
     def get_test_loader(self):
         return loader.TestLoader()
@@ -195,13 +199,7 @@ class TestModuleLoader(testtools.TestCase):
         self.assertRaises(SyntaxError, mod_loader.discover, 'foo.py')
 
 
-class TestDirLoader(testtools.TestCase):
-
-    def setUp(self):
-        super(TestDirLoader, self).setUp()
-        tests.set_cwd_to_tmp(self)
-        protect_imports(self)
-        sys.path.insert(0, self.test_base_dir)
+class TestDirLoader(ImportingLocalFilesTest):
 
     def get_test_loader(self):
         test_loader = loader.TestLoader()
@@ -236,13 +234,7 @@ I'm not even python code
         pass
 
 
-class TestPackageLoader(testtools.TestCase):
-
-    def setUp(self):
-        super(TestPackageLoader, self).setUp()
-        tests.set_cwd_to_tmp(self)
-        protect_imports(self)
-        sys.path.insert(0, self.test_base_dir)
+class TestPackageLoader(ImportingLocalFilesTest):
 
     def get_test_loader(self):
         test_loader = loader.TestLoader()

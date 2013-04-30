@@ -18,6 +18,7 @@
 #
 import os
 import re
+import sys
 import unittest
 import unittest.loader
 
@@ -174,8 +175,8 @@ class TestLoader(unittest.TestLoader):
         if path.endswith('.py'):
             path = path[:-3]  # Remove the trailing '.py'
         mod_name = path.replace(os.path.sep, '.')
-        module = __import__(mod_name)
-        return module
+        __import__(mod_name)
+        return sys.modules[mod_name]
 
     def loadTestsFromScript(self, dir_name, script_name):
         suite = self.suiteClass()
