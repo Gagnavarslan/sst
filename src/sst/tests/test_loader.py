@@ -235,6 +235,7 @@ I'm not even python code
     def test_discover_package(self):
         pass
 
+
 class TestPackageLoader(testtools.TestCase):
 
     def setUp(self):

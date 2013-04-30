@@ -49,4 +49,3 @@ file: dir/foo
 bar
 ''')
         self.assertEqual('bar\n', file('dir/foo').read())
-
