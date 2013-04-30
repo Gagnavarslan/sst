@@ -36,8 +36,30 @@ creation of the package.
   $ bzr bd -S # Alternatively, 'debuild -S' can also be used
 
 
-* Upload the new version to a ppa
+* upload the new version to a ppa
 
   # Replace 'vila/selenium' with your targeted ppa below
   dput ppa:vila/selenium ../sst_0.2.4dev~bzr382-1ubuntu4_source.changes
+  bzr mark-uploaded
+
+
+Packaging selenium itself
+-------------------------
+
+While selenium has been packaged up to 2.25, following upstream releases
+were not. The following steps describe how 2.23 has been packaged in a ppa.
+
+* merge upstream releases into the packaging branch
+
+  $ bzr branch lp:ubuntu/python-selenium raring
+  $ cd raring
+  $ bzr merge-upstream
+  $ debchange -i # s/UNRELEASED/raring/ and document the new upstream release
+  $ debcommit
+  $ bzr bd -S
+
+* upload the new version to a ppa
+
+  # Replace 'vila/selenium' with your targeted ppa below
+  dput ppa:vila/selenium ../python-selenium_2.32.0-0ubuntu3_source.changes
   bzr mark-uploaded
