@@ -213,40 +213,112 @@ class TestModuleLoader(ImportingLocalFilesTest):
         mod_loader = loader.ModuleLoader(self.get_test_loader())
         self.assertRaises(SyntaxError, mod_loader.discover, '.', 'foo.py')
 
+    def test_discover_valid_file(self):
+        with open('foo.py', 'w') as f:
+            f.write('''
+import unittest
 
-class TestDirLoader(ImportingLocalFilesTest):
+class Test(unittest.TestCase):
+
+    def test_it(self):
+        self.assertTrue(True)
+''')
+        mod_loader = loader.ModuleLoader(self.get_test_loader())
+        suite = mod_loader.discover('.', 'foo.py')
+        self.assertEqual(1, suite.countTestCases())
+
+
+class TestDirLoaderDiscoverPath(ImportingLocalFilesTest):
 
     def get_test_loader(self):
         test_loader = loader.TestLoader()
+        # We don't use the default PackageLoader for unit testing DirLoader
+        # behavior. But we still leave ModuleLoader for the file loader.
         test_loader.dirLoaderClass = loader.DirLoader
         return test_loader
 
     def test_discover_path_for_file_without_package(self):
-        tests.write_tree_from_desc('''dir: dir
-file: dir/foo.py
+        tests.write_tree_from_desc('''dir: tests
+file: tests/foo.py
 I'm not even python code
 ''')
         # Since 'foo' can't be imported, discover_path should not be invoked,
         # ensure we still get some meaningful error message.
         dir_loader = loader.DirLoader(self.get_test_loader())
         e = self.assertRaises(ImportError,
-                              dir_loader.discover_path, 'dir', 'foo.py')
-        self.assertEqual('No module named dir.foo', e.message)
+                              dir_loader.discover_path, 'tests', 'foo.py')
+        self.assertEqual('No module named tests.foo', e.message)
 
-    def test_discover_path_for_file(self):
-        pass
+    def test_discover_path_for_valid_file(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/__init__.py
+file: tests/foo.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_it(self):
+        self.assertTrue(True)
+''')
+        dir_loader = loader.DirLoader(self.get_test_loader())
+        suite = dir_loader.discover_path('tests', 'foo.py')
+        self.assertEqual(1, suite.countTestCases())
 
     def test_discover_path_for_dir(self):
-        pass
+        tests.write_tree_from_desc('''dir: tests
+file: tests/__init__.py
+dir: tests/dir
+file: tests/dir/foo.py
+import unittest
 
-    def test_discover_path_for_symlink(self):
-        pass
+class Test(unittest.TestCase):
 
-    def test_discover_no_package(self):
-        pass
+    def test_it(self):
+        self.assertTrue(True)
+''')
+        dir_loader = loader.DirLoader(self.get_test_loader())
+        e = self.assertRaises(ImportError,
+                              dir_loader.discover_path, 'tests', 'dir')
+        # 'tests' is a module but 'dir' is not, hence, 'dir.foo' is not either,
+        # blame python for the approximate message ;-/
+        self.assertEqual('No module named dir.foo', e.message)
 
-    def test_discover_package(self):
-        pass
+    def test_discover_path_for_not_matching_symlink(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/foo
+tagada
+link: tests/foo tests/bar.py
+''')
+        dir_loader = loader.DirLoader(self.get_test_loader())
+        suite = dir_loader.discover_path('tests', 'bar.py')
+        self.assertIs(None, suite)
+
+    def test_discover_path_for_broken_symlink(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/foo
+tagada
+link: bar tests/qux
+''')
+        dir_loader = loader.DirLoader(self.get_test_loader())
+        suite = dir_loader.discover_path('tests', 'qux')
+        self.assertIs(None, suite)
+
+    def test_discover_simple_file_in_dir(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/__init__.py
+file: tests/foo.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_it(self):
+        self.assertTrue(True)
+''')
+        dir_loader = loader.DirLoader(self.get_test_loader())
+        suite = dir_loader.discover('.', 'tests')
+        # Despite using DirLoader, python triggers the 'tests' import so we are
+        # able to import foo.py and all is well
+        self.assertEqual(1, suite.countTestCases())
 
 
 class TestPackageLoader(ImportingLocalFilesTest):
@@ -264,6 +336,21 @@ I'm not even python code
         pkg_loader = loader.PackageLoader(self.get_test_loader())
         e = self.assertRaises(SyntaxError, pkg_loader.discover, '.', 'dir')
         self.assertEqual('EOL while scanning string literal', e.args[0])
+
+    def test_discover_simple_file_in_dir(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/__init__.py
+file: tests/foo.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_it(self):
+        self.assertTrue(True)
+''')
+        dir_loader = loader.DirLoader(self.get_test_loader())
+        suite = dir_loader.discover('.', 'tests')
+        self.assertEqual(1, suite.countTestCases())
 
 
 class TestTestLoader(ImportingLocalFilesTest):
@@ -295,7 +382,40 @@ I'm not even python code
 
 
 class TestTestLoaderPattern(ImportingLocalFilesTest):
-    pass
+
+    def test_default_pattern(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/__init__.py
+file: tests/foo.py
+Don't look at me !
+file: tests/test_foo.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_me(self):
+      self.assertTrue(True)
+''')
+        test_loader = loader.TestLoader()
+        suite = test_loader.discover('tests')
+        self.assertEqual(1, suite.countTestCases())
+
+    def test_pattern(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/__init__.py
+file: tests/foo_foo.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_me(self):
+      self.assertTrue(True)
+file: tests/test_foo.py
+Don't look at me !
+''')
+        test_loader = loader.TestLoader()
+        suite = test_loader.discover('tests', pattern='foo*.py')
+        self.assertEqual(1, suite.countTestCases())
 
 
 class TestTestLoaderTopLevelDir(testtools.TestCase):

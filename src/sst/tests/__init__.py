@@ -66,6 +66,17 @@ def check_devserver_port_used(port):
 def write_tree_from_desc(description):
     """Write a tree described in a textual form to disk.
 
+    The textual form describes the file contents separated by file/dir names.
+
+    'file: <file name>' on a single line starts a file description. The file
+    name must be the relative path from the tree root.
+
+    'dir: <dir name>' on a single line starts a dir description.
+
+    'link: <link source> <link name>' on a single line describes a symlink to
+    <link source> named <link name>. The source may not exist, spaces are not
+    allowed.
+
     :param description: A text where files and directories contents is
         described in a textual form separated by file/dir names.
     """
@@ -83,6 +94,15 @@ def write_tree_from_desc(description):
                 cur_file.close()
                 cur_file = None
             os.mkdir(line[len('dir: '):])
+            continue
+        if line.startswith('link: '):
+            # We don't support spaces in names
+            link_desc = line[len('link: '):]
+            try:
+                source, link = link_desc.split()
+            except ValueError:
+                raise ValueError('Invalid link description: %s' % (link_desc,))
+            os.symlink(source, link)
             continue
         if cur_file is not None:  # If no file is declared, nothing is written
             # splitlines() removed the \n, let's add it again

@@ -106,10 +106,11 @@ class DirLoader(object):
         self.test_loader = test_loader
 
     def discover(self, directory, name):
-        if not self.matches(directory):
+        if not self.matches(name):
             return None
-        names = os.listdir(directory)
-        return self.discover_names(directory, names)
+        path = os.path.join(directory, name)
+        names = os.listdir(path)
+        return self.discover_names(path, names)
 
     def discover_names(self, directory, names):
         suite = self.test_loader.suiteClass()

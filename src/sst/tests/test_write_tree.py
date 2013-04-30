@@ -49,3 +49,23 @@ file: dir/foo
 bar
 ''')
         self.assertEqual('bar\n', file('dir/foo').read())
+
+    def test_simple_symlink(self):
+        tests.write_tree_from_desc('''file: foo
+tagada
+link: foo bar
+''')
+        self.assertEqual('tagada\n', file('foo').read())
+        self.assertEqual('tagada\n', file('bar').read())
+
+    def test_broken_symlink(self):
+        tests.write_tree_from_desc('''link: foo bar
+''')
+        self.assertEqual('foo', os.readlink('bar'))
+
+    def test_invalid_symlink(self):
+        # An exception is raised on invalid symlink descriptions
+        e = self.assertRaises(ValueError,
+                              tests.write_tree_from_desc, '''link: foo
+''')
+        self.assertEqual(e.message, 'Invalid link description: foo')
