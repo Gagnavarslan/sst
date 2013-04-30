@@ -31,40 +31,39 @@ class DirLoader(object):
         super(DirLoader, self).__init__()
         self.test_loader = test_loader
 
-    def discover(self, cur, top=None):
-        if top is None:
-            top = cur
+    def discover(self, cur):
         paths = os.listdir(cur)
-        tests = self.test_loader.suiteClass()
+        return self.discover_paths(cur, paths)
+
+    def discover_paths(self, cur, paths):
+        suite = self.test_loader.suiteClass()
         for path in paths:
             # We don't care about the base name as we use only the full path
-            path = os.path.join(top, path)
-            tests = self.discover_path(path, top)
+            path = os.path.join(cur, path)
+            tests = self.discover_path(path)
             if tests is not None:
-                tests.addTests(tests)
-        return tests
+                suite.addTests(tests)
+        return suite
 
-    def discover_path(self, path, top):
+    def discover_path(self, path):
         loader = None
         if os.path.isfile(path):
             loader = self.test_loader.fileLoaderClass(self.test_loader)
         elif os.path.isdir(path):
             loader = self.test_loader.dirLoaderClass(self.test_loader)
         if loader:
-            return loader.discover(path, top)
+            return loader.discover(path)
         return None
 
 
-class PackageLoader(object):
+class PackageLoader(DirLoader):
 
-    def discover(self, cur, top=None):
-        if top is None:
-            top = cur
+    def discover(self, cur):
+        paths = None
         try:
-            # FIXME: We should probably excludes '{cur}/__init__.py' from
-            # the list of files to handle -- vila 2013-04-29
-            package = self.test_loader.importFromPath(
-                os.path.join(top, cur))
+            package = self.test_loader.importFromPath(cur)
+            paths = os.listdir(cur)
+            paths.remove('__init__.py')
         except ImportError:
             # Explicitly raise the full exception with its backtrace. This
             # could easily be overwritten by daughter classes to handle
@@ -85,8 +84,7 @@ class PackageLoader(object):
         # Anything else with that ?
         # Nothing for now, thanks
 
-        # Let's delegate to super
-        return super(PackageLoader, self).discover(cur)
+        return self.discover_paths(cur, paths)
 
 
 def matches_regexp(regexp):
@@ -111,7 +109,7 @@ class FileLoader(object):
         if excludes is not None:
             self.excludes = excludes
 
-    def discover(self, path, cur, top):
+    def discover(self, path):
         """Return an empty test suite.
 
         This is mostly for documentation purposes, if a file contains material
@@ -137,7 +135,7 @@ class ModuleLoader(FileLoader):
             includes = matches_regexp('^.*\.py$')
         super(ModuleLoader, self).__init__(test_loader, includes, excludes)
 
-    def discover(self, path, cur, top):
+    def discover(self, path):
         empty = self.test_loader.suiteClass()
         if not self.includes(path):
             return empty
@@ -156,8 +154,8 @@ class TestLoader(unittest.TestLoader):
     This also allows test case based modules to be loaded when appropriate.
     """
 
-    dirLoaderClass = DirLoader
-    fileLoaderClass = FileLoader
+    dirLoaderClass = PackageLoader
+    fileLoaderClass = ModuleLoader
 
     def __init__(self, browser_factory=None,
                  screenshots_on=False, debug_post_mortem=False,
@@ -173,9 +171,9 @@ class TestLoader(unittest.TestLoader):
         return dir_loader.discover(start_dir)
 
     def importFromPath(self, path):
+        if path.endswith('.py'):
+            path = path[:-3]  # Remove the trailing '.py'
         mod_name = path.replace(os.path.sep, '.')
-        if mod_name.endswith('.py'):
-            mod_name = mod_name[:3]  # Remove the trailing '.py'
         module = __import__(mod_name)
         return module
 

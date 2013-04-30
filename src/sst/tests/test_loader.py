@@ -46,7 +46,7 @@ class TestFileLoader(testtools.TestCase):
         with open('foo', 'w') as f:
             f.write('bar\n')
         file_loader = loader.FileLoader(self.get_test_loader())
-        suite = file_loader.discover('foo', '.', '.')
+        suite = file_loader.discover('foo')
         self.assertEqual(0, suite.countTestCases())
 
     def test_default_includes(self):
@@ -185,20 +185,77 @@ class TestModuleLoader(testtools.TestCase):
         with open('foo.py', 'w') as f:
             f.write('')
         mod_loader = loader.ModuleLoader(self.get_test_loader())
-        suite = mod_loader.discover('foo.py', '.', '.')
+        suite = mod_loader.discover('foo.py')
         self.assertEqual(0, suite.countTestCases())
 
     def test_discover_invalid_file(self):
         with open('foo.py', 'w') as f:
             f.write("I'm no python code")
         mod_loader = loader.ModuleLoader(self.get_test_loader())
-        self.assertRaises(SyntaxError, mod_loader.discover, 'foo.py', '.', '.')
+        self.assertRaises(SyntaxError, mod_loader.discover, 'foo.py')
 
 
 class TestDirLoader(testtools.TestCase):
 
-    def test_discover_path(self):
+    def setUp(self):
+        super(TestDirLoader, self).setUp()
+        tests.set_cwd_to_tmp(self)
+        protect_imports(self)
+        sys.path.insert(0, self.test_base_dir)
+
+    def get_test_loader(self):
+        test_loader = loader.TestLoader()
+        test_loader.dirLoaderClass = loader.DirLoader
+        return test_loader
+
+    def test_discover_path_for_file_no_package(self):
+        tests.write_tree_from_desc('''dir: dir
+file: dir/foo.py
+I'm not even python code
+''')
+        # Since 'foo' can't be imported, discover_path should not be invoked,
+        # ensure we still get some meaningful error message.
+        dir_loader = loader.DirLoader(self.get_test_loader())
+        e = self.assertRaises(ImportError,
+                              dir_loader.discover_path, 'dir/foo.py')
+        self.assertEqual('No module named dir.foo', e.message)
+
+    def test_discover_path_for_file(self):
         pass
+
+    def test_discover_path_for_dir(self):
+        pass
+
+    def test_discover_path_for_symlink(self):
+        pass
+
+    def test_discover_no_package(self):
+        pass
+
+    def test_discover_package(self):
+        pass
+
+class TestPackageLoader(testtools.TestCase):
+
+    def setUp(self):
+        super(TestPackageLoader, self).setUp()
+        tests.set_cwd_to_tmp(self)
+        protect_imports(self)
+        sys.path.insert(0, self.test_base_dir)
+
+    def get_test_loader(self):
+        test_loader = loader.TestLoader()
+        return test_loader
+
+    def test_discover_package_with_invalid_file(self):
+        tests.write_tree_from_desc('''dir: dir
+file: dir/__init__.py
+file: dir/foo.py
+I'm not even python code
+''')
+        pkg_loader = loader.PackageLoader(self.get_test_loader())
+        e = self.assertRaises(SyntaxError, pkg_loader.discover, 'dir')
+        self.assertEqual('EOL while scanning string literal', e.args[0])
 
 
 class TestLoadScript(testtools.TestCase):
