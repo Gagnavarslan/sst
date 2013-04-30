@@ -684,6 +684,7 @@ def _wait_for(condition, refresh_page, timeout, poll, *args, **kwargs):
     logger.debug('Waiting for %r' % _get_name(condition))
     # Disable logging levels equal to or lower than INFO.
     logging.disable(logging.INFO)
+    result = None
     try:
         max_time = time.time() + timeout
         msg = _get_name(condition)
@@ -708,6 +709,7 @@ def _wait_for(condition, refresh_page, timeout, poll, *args, **kwargs):
     finally:
         # Re-enable logging.
         logging.disable(logging.NOTSET)
+    return result
 
 
 @retry_on_stale_element
@@ -718,15 +720,18 @@ def wait_for(condition, *args, **kwargs):
 
     This action takes a condition function and any arguments it should be
     called with. The condition function can either be an action or a function
-    that returns True for success and False for failure. For example::
+    that returns False or throws an AssertionError for failure, and returns
+    anything different from False (including not returning anything) for
+    success. For example::
 
         wait_for(assert_title, 'Some page title')
 
-    If the specified condition does not become true within 10 seconds then
-    `wait_for` fails.
+    If the specified condition does not succeed within 10 seconds then
+    `wait_for` fails. If it succeeds, wait_for returns the value returned
+    by the condition.
 
     You can set the timeout for `wait_for` by calling `set_wait_timeout`."""
-    _wait_for(condition, False, _TIMEOUT, _POLL, *args, **kwargs)
+    return _wait_for(condition, False, _TIMEOUT, _POLL, *args, **kwargs)
 
 
 def wait_for_and_refresh(condition, *args, **kwargs):
@@ -738,17 +743,20 @@ def wait_for_and_refresh(condition, *args, **kwargs):
 
     This action takes a condition function and any arguments it should be
     called with. The condition function can either be an action or a function
-    that returns True for success and False for failure. For example::
+    that returns False or throws an AssertionError for failure, and returns
+    anything different from False (including not returning anything) for
+    success. For example::
 
         wait_for_and_refresh(assert_title, 'Some page title')
 
-    If the specified condition does not become true within 10 seconds then
-    `wait_for_and_refresh` fails.
+    If the specified condition does not succeed within 10 seconds then
+    `wait_for_and_refresh` fails. If it succeeds, wait_for returns the
+    value returned by the condition.
 
     You can set the timeout for `wait_for_and_refresh` by calling
     `set_wait_timeout`.
     """
-    _wait_for(condition, True, _TIMEOUT, _POLL, *args, **kwargs)
+    return _wait_for(condition, True, _TIMEOUT, _POLL, *args, **kwargs)
 
 
 def fails(action, *args, **kwargs):
