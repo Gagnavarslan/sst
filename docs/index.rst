@@ -125,7 +125,7 @@ Options::
 
   -h, --help                show this help message and exit
   -d DIR_NAME               directory of test case files
-  -r REPORT_FORMAT          valid report types: xml)
+  -r REPORT_FORMAT          report type: xml
   -b BROWSER_TYPE           select webdriver (Firefox, Chrome, PhantomJS, etc)
   -j                        disable javascript in browser
   -m SHARED_MODULES         directory for shared modules
@@ -184,9 +184,9 @@ allows you to put Python packages/modules directly in your test directories
 if you want. A better option is to use the shared directory.
 
 
----------------------------------
-Using sst in unittest test suites
----------------------------------
+-------------------------------------
+    Using sst in unittest test suites
+-------------------------------------
 
 sst uses unittest test cases internally to wrap the execution of the script
 and taking care of starting and stopping the browser. If you prefer to
@@ -269,7 +269,7 @@ information::
     Disabling Javascript
 ------------------------
 
-If you need to disable Javascript for an individual test you can do it by
+If you need to disable Javascript for an individual test, you can do it by
 putting the following at the start of the test::
 
     JAVASCRIPT_DISABLED = True
@@ -294,16 +294,16 @@ putting the following at the start of the test::
     (ENV)$ pip install -r requirements.txt
     (ENV)$ ./sst-run -d examples
     
-* (optional) Install `nose` and run SST's internal unit tests::
+* (optional) Install test dependencies and run SST's internal unit tests::
 
-    (ENV)$ pip install nose
+    (ENV)$ pip install mock nose pep8
     (ENV)$ nosetests --match ^test_.* --exclude="ENV|testproject|selftests"
 
 * (optional) Install `django` and run SST's internal test application with
   acceptance tests
 
     (ENV)$ pip install django
-    (ENV)$ ./sst-run --test x
+    (ENV)$ ./sst-run --test -x
 
 * `Launchpad Project <https://launchpad.net/selenium-simple-test>`_
 

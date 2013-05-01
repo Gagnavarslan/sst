@@ -277,11 +277,7 @@ def use_xvfb_server(test, xvfb=None):
 class TextTestResult(testtools.testresult.TextTestResult):
     """A TestResult which outputs activity to a text stream.
 
-    Extends testtools' TextTestResult to print the names of the tests and
-    their result.
-
     TODO: add the verbosity parameter.
-
     """
 
     def __init__(self, stream, failfast=False):
