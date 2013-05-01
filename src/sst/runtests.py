@@ -26,6 +26,7 @@ import pdb
 import sys
 import traceback
 
+from timeit import default_timer
 from unittest import (
     defaultTestLoader,
     TestSuite,
@@ -292,14 +293,16 @@ class TextTestResult(testtools.testresult.TextTestResult):
     def startTest(self, test):
         self.stream.write(str(test))
         self.stream.write(' ...\n')
+        self.start_time = default_timer()
         super(TextTestResult, self).startTest(test)
 
     def stopTest(self, test):
         self.stream.write('\n')
+        self.stream.flush()
         super(TextTestResult, self).stopTest(test)
 
     def addExpectedFailure(self, test, err=None, details=None):
-        self.stream.write('expected failure\n')
+        self.stream.write('Expected Failure\n')
         super(TextTestResult, self).addExpectedFailure(test, err, details)
 
     def addError(self, test, err=None, details=None):
@@ -311,15 +314,16 @@ class TextTestResult(testtools.testresult.TextTestResult):
         super(TextTestResult, self).addFailure(test, err, details)
 
     def addSkip(self, test, reason=None, details=None):
-        self.stream.write('skipped {0!r}\n'.format(reason))
+        self.stream.write('Skipped {0!r}\n'.format(reason))
         super(TextTestResult, self).addSkip(test, reason, details)
 
     def addSuccess(self, test, details=None):
-        self.stream.write('ok\n')
+        elapsed_time = default_timer() - self.start_time
+        self.stream.write('OK (%.3f secs)\n' % elapsed_time)
         super(TextTestResult, self).addSuccess(test, details)
 
     def addUnexpectedSuccess(self, test, details=None):
-        self.stream.write('unexpected success\n')
+        self.stream.write('Unexpected Success\n')
         super(TextTestResult, self).addUnexpectedSuccess(test, details)
 
 
