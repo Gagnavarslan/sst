@@ -5,6 +5,7 @@
    remote
    changelog
    releasing
+   packaging
 
 ============================
     SST - Web Test Framework
