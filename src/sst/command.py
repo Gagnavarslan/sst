@@ -103,7 +103,7 @@ def get_run_options():
     parser.add_option('--test',
                       dest='run_tests', action='store_true',
                       default=False,
-                      help='run selftests (acceptance tests with django server)')
+                      help='run selftests (acceptance tests using django)')
     parser.add_option('-x', dest='xserver_headless',
                       default=False, action='store_true',
                       help='run browser in headless xserver (Xvfb)')
