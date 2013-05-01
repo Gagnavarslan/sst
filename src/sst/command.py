@@ -90,7 +90,7 @@ def get_common_options():
                       'to flags')
     parser.add_option('--extended-tracebacks', dest='extended_tracebacks',
                       action='store_true', default=False,
-                      help='add extra information (page source) to failure '
+                      help='add extra information (page source) to failure'
                       'reports')
     parser.add_option('--collect-only', dest='collect_only',
                       action='store_true', default=False,
