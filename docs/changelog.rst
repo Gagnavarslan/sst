@@ -17,6 +17,9 @@ version **0.2.4** (Not yet released)
   the value instead of the text for text field elements.
 * return the result of the condition checked by ``wait_for`` and
   ``wait_for_and_refresh``.
+* removed HTML results reports.
+* switched to `junitxml` for XML report generation.
+
 
 version **0.2.3** (2013 Apr 17)
 *******************************
