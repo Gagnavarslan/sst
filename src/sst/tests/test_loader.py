@@ -353,6 +353,95 @@ class Test(unittest.TestCase):
         self.assertEqual(1, suite.countTestCases())
 
 
+class TestLoadScript(testtools.TestCase):
+
+    def setUp(self):
+        super(TestLoadScript, self).setUp()
+        tests.set_cwd_to_tmp(self)
+
+    def create_script(self, path, content):
+        with open(path, 'w') as f:
+            f.write(content)
+
+    def test_load_simple_script(self):
+        # A simple do nothing script with no imports
+        self.create_script('foo.py', 'pass')
+        suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
+        self.assertEqual(1, suite.countTestCases())
+
+    def test_load_simple_script_with_csv(self):
+        self.create_script('foo.py', "pass")
+        with open('foo.csv', 'w') as f:
+            f.write("'foo'^'bar'\n")
+            f.write('1^baz\n')
+            f.write('2^qux\n')
+        suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
+        self.assertEqual(2, suite.countTestCases())
+
+    def test_load_non_existing_script(self):
+        suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
+        self.assertEqual(0, suite.countTestCases())
+
+
+class TestScriptLoader(ImportingLocalFilesTest):
+
+    def get_test_loader(self):
+        return loader.TestLoader()
+
+    def test_simple_script(self):
+        tests.write_tree_from_desc('''dir: tests
+# no tests/__init__.py required, we don't need to import the scripts
+file: tests/foo.py
+from sst.actions import *
+
+raise AssertionError('Loading only, executing fails')
+''')
+        script_loader = loader.ScriptLoader(self.get_test_loader())
+        suite = script_loader.discover('tests', 'foo.py')
+        self.assertEqual(1, suite.countTestCases())
+
+    def test_ignore_privates(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/_private.py
+''')
+        script_loader = loader.ScriptLoader(self.get_test_loader())
+        suite = script_loader.discover('tests', '_private.py')
+        self.assertIs(None, suite)
+
+
+class TesScriptDirLoader(ImportingLocalFilesTest):
+
+    def test_shared(self):
+        tests.write_tree_from_desc('''dir: tests
+# no tests/__init__.py required, we don't need to import the scripts
+file: tests/foo.py
+from sst.actions import *
+
+raise AssertionError('Loading only, executing fails')
+dir: tests/shared
+file: tests/shared/amodule.py
+Don't look at me !
+''')
+        script_dir_loader = loader.ScriptDirLoader(loader.TestLoader())
+        suite = script_dir_loader.discover('tests', 'shared')
+        self.assertIs(None, suite)
+
+    def test_regular(self):
+        tests.write_tree_from_desc('''dir: tests
+# no tests/__init__.py required, we don't need to import the scripts
+dir: tests/subdir
+file: tests/subdir/foo.py
+raise AssertionError('Loading only, executing fails')
+dir: tests/shared
+file: tests/shared/amodule.py
+Don't look at me !
+''')
+        test_loader = loader.TestLoader()
+        suite = test_loader.discoverTests(
+            '.', file_loader_class=loader.ScriptLoader,
+            dir_loader_class=loader.ScriptDirLoader)
+        self.assertEqual(1, suite.countTestCases())
+
 class TestTestLoader(ImportingLocalFilesTest):
 
     def test_simple_file_in_a_dir(self):
@@ -452,91 +541,3 @@ class Test(unittest.TestCase):
         self.assertEqual(e.message, 'No module named tests')
 
 
-class TestLoadScript(testtools.TestCase):
-
-    def setUp(self):
-        super(TestLoadScript, self).setUp()
-        tests.set_cwd_to_tmp(self)
-
-    def create_script(self, path, content):
-        with open(path, 'w') as f:
-            f.write(content)
-
-    def test_load_simple_script(self):
-        # A simple do nothing script with no imports
-        self.create_script('foo.py', 'pass')
-        suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
-        self.assertEqual(1, suite.countTestCases())
-
-    def test_load_simple_script_with_csv(self):
-        self.create_script('foo.py', "pass")
-        with open('foo.csv', 'w') as f:
-            f.write("'foo'^'bar'\n")
-            f.write('1^baz\n')
-            f.write('2^qux\n')
-        suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
-        self.assertEqual(2, suite.countTestCases())
-
-    def test_load_non_existing_script(self):
-        suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
-        self.assertEqual(0, suite.countTestCases())
-
-
-class TestScriptLoader(ImportingLocalFilesTest):
-
-    def get_test_loader(self):
-        return loader.TestLoader()
-
-    def test_simple_script(self):
-        tests.write_tree_from_desc('''dir: tests
-# no tests/__init__.py required, we don't need to import the scripts
-file: tests/foo.py
-from sst.actions import *
-
-raise AssertionError('Loading only, executing fails')
-''')
-        script_loader = loader.ScriptLoader(self.get_test_loader())
-        suite = script_loader.discover('tests', 'foo.py')
-        self.assertEqual(1, suite.countTestCases())
-
-    def test_ignore_privates(self):
-        tests.write_tree_from_desc('''dir: tests
-file: tests/_private.py
-''')
-        script_loader = loader.ScriptLoader(self.get_test_loader())
-        suite = script_loader.discover('tests', '_private.py')
-        self.assertIs(None, suite)
-
-
-class TesScriptDirLoader(ImportingLocalFilesTest):
-
-    def test_shared(self):
-        tests.write_tree_from_desc('''dir: tests
-# no tests/__init__.py required, we don't need to import the scripts
-file: tests/foo.py
-from sst.actions import *
-
-raise AssertionError('Loading only, executing fails')
-dir: tests/shared
-file: tests/shared/amodule.py
-Don't look at me !
-''')
-        script_dir_loader = loader.ScriptDirLoader(loader.TestLoader())
-        suite = script_dir_loader.discover('tests', 'shared')
-        self.assertIs(None, suite)
-
-    def test_regular(self):
-        tests.write_tree_from_desc('''dir: tests
-# no tests/__init__.py required, we don't need to import the scripts
-dir: tests/subdir
-file: tests/subdir/foo.py
-raise AssertionError('Loading only, executing fails')
-dir: tests/shared
-file: tests/shared/amodule.py
-Don't look at me !
-''')
-        test_loader = loader.TestLoader()
-        suite = test_loader.discoverTests(
-            '.', file_loader_class=loader.ScriptLoader,
-            dir_loader_class=loader.ScriptDirLoader)
-        self.assertEqual(1, suite.countTestCases())
