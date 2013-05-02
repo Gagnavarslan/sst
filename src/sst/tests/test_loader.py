@@ -506,3 +506,37 @@ file: tests/_private.py
         script_loader = loader.ScriptLoader(self.get_test_loader())
         suite = script_loader.discover('tests', '_private.py')
         self.assertIs(None, suite)
+
+
+class TesScriptDirLoader(ImportingLocalFilesTest):
+
+    def test_shared(self):
+        tests.write_tree_from_desc('''dir: tests
+# no tests/__init__.py required, we don't need to import the scripts
+file: tests/foo.py
+from sst.actions import *
+
+raise AssertionError('Loading only, executing fails')
+dir: tests/shared
+file: tests/shared/amodule.py
+Don't look at me !
+''')
+        script_dir_loader = loader.ScriptDirLoader(loader.TestLoader())
+        suite = script_dir_loader.discover('tests', 'shared')
+        self.assertIs(None, suite)
+
+    def test_regular(self):
+        tests.write_tree_from_desc('''dir: tests
+# no tests/__init__.py required, we don't need to import the scripts
+dir: tests/subdir
+file: tests/subdir/foo.py
+raise AssertionError('Loading only, executing fails')
+dir: tests/shared
+file: tests/shared/amodule.py
+Don't look at me !
+''')
+        test_loader = loader.TestLoader()
+        suite = test_loader.discoverTests(
+            '.', file_loader_class=loader.ScriptLoader,
+            dir_loader_class=loader.ScriptDirLoader)
+        self.assertEqual(1, suite.countTestCases())

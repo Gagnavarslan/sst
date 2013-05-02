@@ -147,6 +147,15 @@ class DirLoader(object):
         return None
 
 
+class ScriptDirLoader(DirLoader):
+
+    def __init__(self, test_loader, matcher=None):
+        if matcher is None:
+            # Excludes the 'shared' directory
+            matcher = NameMatcher(excludes=matches_for_regexp('^shared$'))
+        super(ScriptDirLoader, self).__init__(test_loader, matcher=matcher)
+
+
 class PackageLoader(DirLoader):
 
     def discover(self, directory, name):
