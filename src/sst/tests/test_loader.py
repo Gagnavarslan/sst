@@ -442,6 +442,7 @@ Don't look at me !
             dir_loader_class=loader.ScriptDirLoader)
         self.assertEqual(1, suite.countTestCases())
 
+
 class TestTestLoader(ImportingLocalFilesTest):
 
     def test_simple_file_in_a_dir(self):
@@ -468,6 +469,65 @@ I'm not even python code
         test_loader = loader.TestLoader()
         e = self.assertRaises(SyntaxError, test_loader.discoverTests, 'tests')
         self.assertEqual('EOL while scanning string literal', e.args[0])
+
+    def test_scripts_below_regular(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/__init__.py
+file: tests/foo.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_me(self):
+      self.assertTrue(True)
+dir: tests/scripts
+file: tests/scripts/__init__.py
+import os
+from sst import loader as sloader
+
+
+def discover(loader):
+    return loader.discoverTests(
+        os.path.dirname(__file__),
+        file_loader_class=sloader.ScriptLoader,
+        dir_loader_class=sloader.ScriptDirLoader)
+file: tests/scripts/script.py
+raise AssertionError('Loading only, executing fails')
+''')
+        test_loader = loader.TestLoader()
+        suite = test_loader.discoverTests('tests')
+        self.assertEqual(2, suite.countTestCases())
+
+    def test_regular_below_scripts(self):
+        tests.write_tree_from_desc('''dir: tests
+file: tests/__init__.py
+dir: tests/regular
+file: tests/regular/__init__.py
+import os
+from sst import loader as sloader
+
+
+def discover(loader):
+    return loader.discoverTests(
+        os.path.dirname(__file__),
+        file_loader_class=sloader.ModuleLoader,
+        dir_loader_class=sloader.PackageLoader)
+file: tests/regular/foo.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_me(self):
+      self.assertTrue(True)
+file: tests/script.py
+raise AssertionError('Loading only, executing fails')
+''')
+        test_loader = loader.TestLoader()
+        suite = test_loader.discoverTests(
+            'tests',
+            file_loader_class=loader.ScriptLoader,
+            dir_loader_class=loader.ScriptDirLoader)
+        self.assertEqual(2, suite.countTestCases())
 
 
 class TestTestLoaderPattern(ImportingLocalFilesTest):
@@ -539,5 +599,3 @@ class Test(unittest.TestCase):
         e = self.assertRaises(ImportError,
                               test_loader.discover, 'tests', '*.py')
         self.assertEqual(e.message, 'No module named tests')
-
-

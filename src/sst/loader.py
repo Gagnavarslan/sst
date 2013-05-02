@@ -173,7 +173,7 @@ class PackageLoader(DirLoader):
         discover = getattr(package, 'discover', None)
         if discover is not None:
             # Since the user defined it, the package knows better
-            return discover(self)
+            return discover(self.test_loader)
         # Can we use the load_tests protocol ?
         load_tests = getattr(package, 'load_tests', None)
         if load_tests is not None:
