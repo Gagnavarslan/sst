@@ -37,7 +37,7 @@ class SSTStringTestCase(case.SSTScriptTestCase):
     xserver_headless = True
 
     def __init__(self, code='pass'):
-        super(SSTStringTestCase, self).__init__('ingored_dir', 'ignored_name')
+        super(SSTStringTestCase, self).__init__('ignored_dir', 'ignored_name')
         self.script_code = code
 
     def setUp(self):
