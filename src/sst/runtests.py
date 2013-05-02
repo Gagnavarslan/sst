@@ -38,6 +38,18 @@ from sst import (
     config,
 )
 
+# Maintaining compatibility until we deprecate the followings
+BrowserFactory = browsers.BrowserFactory
+RemoteBrowserFactory = browsers.RemoteBrowserFactory
+ChromeFactory = browsers.ChromeFactory
+IeFactory = browsers.IeFactory
+PhantomJSFactory = browsers.PhantomJSFactory
+OperaFactory = browsers.OperaFactory
+FirefoxFactory = browsers.FirefoxFactory
+browser_factories = browsers.browser_factories
+SSTTestCase = case.SSTTestCase
+SSTScriptTestCase = case.SSTScriptTestCase
+
 
 __all__ = ['runtests']
 
