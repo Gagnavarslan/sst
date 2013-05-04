@@ -70,7 +70,7 @@ class OutputTestCase(testtools.TestCase):
         self.console_output = self.out.getvalue()
         regex_expected = \
             r'test_inner_pass ' + \
-            r'\(sst.tests.test_output.InnerPassTestCase\) ...' + \
+            r'\(sst.tests.test_output_streams.InnerPassTestCase\) ...' + \
             r'\nOK \([0-9]*.[0-9]{3} secs\)\n\n'
         self.assertRegexpMatches(self.console_output, regex_expected)
 
@@ -81,7 +81,7 @@ class OutputTestCase(testtools.TestCase):
         self.console_output = self.out.getvalue()
         regex_expected = \
             r'test_inner_fail ' + \
-            '\(sst.tests.test_output.InnerFailTestCase\) ...' + \
+            '\(sst.tests.test_output_streams.InnerFailTestCase\) ...' + \
             r'\nFAIL\n\n'
         self.assertRegexpMatches(self.console_output, regex_expected)
 
@@ -92,7 +92,7 @@ class OutputTestCase(testtools.TestCase):
         self.console_output = self.out.getvalue()
         regex_expected = \
             r'test_inner_error ' + \
-            '\(sst.tests.test_output.InnerErrorTestCase\) ...' + \
+            '\(sst.tests.test_output_streams.InnerErrorTestCase\) ...' + \
             r'\nERROR\n\n'
         self.assertRegexpMatches(self.console_output, regex_expected)
 
