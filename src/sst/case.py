@@ -85,8 +85,9 @@ class SSTTestCase(testtools.TestCase):
 
     def shortDescription(self):
         # testools wrongly defines this as returning self.id(). Since we're not
-        # using the short description (who is ?), we revert to the default
-        # behavior so runners and results don't get mad.
+        # using the short description (aka the first line of the test
+        # docstring) (who is ? should we ?), we revert to the default behavior
+        # so runners and results don't get mad.
         return None
 
     def start_browser(self):

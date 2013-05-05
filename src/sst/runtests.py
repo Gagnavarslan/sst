@@ -17,9 +17,7 @@
 #   limitations under the License.
 #
 
-import ast
 import logging
-import fnmatch
 import htmlrunner
 import junitxmlrunner
 import os
@@ -33,9 +31,10 @@ import testtools.content
 
 from sst import (
     actions,
-    case,
     browsers,
+    case,
     config,
+    loader,
 )
 
 # Maintaining compatibility until we deprecate the followings
@@ -56,6 +55,10 @@ __all__ = ['runtests']
 logger = logging.getLogger('SST')
 
 
+# MISSINGTEST: 'shared' relationship with test_dir, auto-added to sys.path or
+# not -- vila 2013-05-05
+# MISSINGTEST: 'results' dir, created in current dir unconditionally conflicts
+# with claim that 'shared' can be found somewhere up -- vila 2013-05-05
 def runtests(test_names, test_dir='.', collect_only=False,
              browser_factory=None,
              report_format='console',
@@ -63,37 +66,43 @@ def runtests(test_names, test_dir='.', collect_only=False,
              debug=False,
              extended=False):
 
+    config.results_directory = os.path.abspath('results')
+    actions._make_results_dir()
+
     if test_dir == 'selftests':
         # XXXX horrible hardcoding
         # selftests should be a command instead
         package_dir = os.path.dirname(__file__)
-        test_dir = os.path.join(package_dir, 'selftests')
-
-    if not os.path.isdir(test_dir):
-        msg = 'Specified directory %r does not exist' % test_dir
-        print msg
-        sys.exit(1)
+        os.chdir(os.path.dirname(package_dir))
+        # FIXME: This should be clarified and de-duplicated from the 'else'
+        # clause below. -- vila 2013-05-05
+        test_dir = os.path.join('.', 'sst', 'selftests')
+        shared_directory = find_shared_directory(test_dir, shared_directory)
+        config.shared_directory = shared_directory
+        sys.path.append(shared_directory)
+    else:
+        if not os.path.isdir(test_dir):
+            msg = 'Specified directory %r does not exist' % test_dir
+            print msg
+            sys.exit(1)
+        shared_directory = find_shared_directory(test_dir, shared_directory)
+        config.shared_directory = shared_directory
+        sys.path.append(shared_directory)
 
     if browser_factory is None:
         # TODO: We could raise an error instead as providing a default value
         # makes little sense here -- vila 2013-04-11
         browser_factory = browsers.FirefoxFactory()
 
-    shared_directory = find_shared_directory(test_dir, shared_directory)
-    config.shared_directory = shared_directory
-    sys.path.append(shared_directory)
-
-    config.results_directory = _get_full_path('results')
-
     test_names = set(test_names)
 
-    suites = get_suites(test_names, test_dir, shared_directory, collect_only,
-                        browser_factory,
-                        screenshots_on, debug,
-                        extended=extended,
-                        )
-
-    alltests = unittest.TestSuite(suites)
+    test_loader = loader.TestLoader(browser_factory, screenshots_on,
+                                    debug, extended)
+    alltests = test_loader.suiteClass()
+    alltests.addTests(
+        test_loader.discoverTests(test_dir,
+                                  file_loader_class=loader.ScriptLoader,
+                                  dir_loader_class=loader.ScriptDirLoader))
 
     print ''
     print '  %s test cases loaded\n' % alltests.countTestCases()
@@ -111,7 +120,6 @@ def runtests(test_names, test_dir='.', collect_only=False,
             print t.id()
         sys.exit(0)
 
-    actions._make_results_dir()
     if report_format == 'xml':
         fp = file(os.path.join(config.results_directory, 'results.xml'), 'wb')
         # XXX failfast not supported in XMLTestRunner
@@ -168,7 +176,7 @@ def find_shared_directory(test_dir, shared_directory):
     anyway. -- vila 2013-04-26
     """
     if shared_directory is not None:
-        return _get_full_path(shared_directory)
+        return os.path.abspath(shared_directory)
 
     cwd = os.getcwd()
     default_shared = os.path.join(test_dir, 'shared')
@@ -183,115 +191,4 @@ def find_shared_directory(test_dir, shared_directory):
                     break
                 relpath = os.path.dirname(relpath)
 
-    return _get_full_path(shared_directory)
-
-
-def get_suites(test_names, test_dir, shared_dir, collect_only,
-               browser_factory,
-               screenshots_on, debug,
-               extended=False
-               ):
-    return [
-        get_suite(
-            test_names, root, collect_only,
-            browser_factory,
-            screenshots_on, debug,
-            extended=extended,
-        )
-        for root, _, _ in os.walk(test_dir, followlinks=True)
-        if os.path.abspath(root) != shared_dir and
-        not os.path.abspath(root).startswith(shared_dir + os.path.sep)
-        and not os.path.split(root)[1].startswith('_')
-    ]
-
-
-def find_cases(test_names, test_dir):
-    found = set()
-    dir_list = os.listdir(test_dir)
-    filtered_dir_list = set()
-    if not test_names:
-        test_names = ['*', ]
-    for name_pattern in test_names:
-        if not name_pattern.endswith('.py'):
-            name_pattern += '.py'
-        matches = fnmatch.filter(dir_list, name_pattern)
-        if matches:
-            for match in matches:
-                if os.path.isfile(os.path.join(test_dir, match)):
-                    filtered_dir_list.add(match)
-    for entry in filtered_dir_list:
-        # conditions for ignoring files
-        if not entry.endswith('.py'):
-            continue
-        if entry.startswith('_'):
-            continue
-        found.add(entry)
-
-    return found
-
-
-def get_suite(test_names, test_dir, collect_only,
-              browser_factory,
-              screenshots_on, debug,
-              extended=False):
-
-    suite = unittest.TestSuite()
-
-    for test_case in find_cases(test_names, test_dir):
-        csv_path = os.path.join(test_dir, test_case.replace('.py', '.csv'))
-        if os.path.isfile(csv_path):
-            # reading the csv file now
-            for row in case.get_data(csv_path):
-                # row is a dictionary of variables
-                suite.addTest(
-                    get_case(test_dir, test_case, browser_factory,
-                             screenshots_on,
-                             row,
-                             debug=debug, extended=extended))
-        else:
-            suite.addTest(
-                get_case(test_dir, test_case, browser_factory, screenshots_on,
-                         debug=debug, extended=extended))
-
-    return suite
-
-
-def _has_classes(test_dir, entry):
-    """Scan Python source file and check for a class definition."""
-    # FIXME: This is not enough, a script can very well define a class that
-    # doesn't inherit from unittest.TestCase -- vila 2012-04-26
-    with open(os.path.join(test_dir, entry)) as f:
-        source = f.read() + '\n'
-    found_classes = []
-
-    def visit_class_def(node):
-        found_classes.append(True)
-
-    node_visitor = ast.NodeVisitor()
-    node_visitor.visit_ClassDef = visit_class_def
-    node_visitor.visit(ast.parse(source))
-    return bool(found_classes)
-
-
-def get_case(test_dir, entry, browser_factory, screenshots_on,
-             context=None, debug=False, extended=False):
-    # our naming convention for tests requires that script-based tests must
-    # not begin with "test_*."  SSTTestCase class-based or other
-    # unittest.TestCase based source files must begin with "test_*".
-    # we also scan the source file to see if it has class definitions,
-    # since script base cases normally don't, but TestCase class-based
-    # tests always will.
-    if entry.startswith('test_') and _has_classes(test_dir, entry):
-        # load just the individual file's tests
-        this_test = unittest.defaultTestLoader.discover(
-            test_dir, pattern=entry, top_level_dir=test_dir)
-    else:  # this is for script-based test
-        this_test = case.SSTScriptTestCase(test_dir, entry, context)
-
-        this_test.browser_factory = browser_factory
-
-        this_test.screenshots_on = screenshots_on
-        this_test.debug_post_mortem = debug
-        this_test.extended_report = extended
-
-    return this_test
+    return os.path.abspath(shared_directory)

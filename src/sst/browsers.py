@@ -51,7 +51,7 @@ class BrowserFactory(object):
         return self.webdriver_class()
 
 
-# FIXME: Missing tests -- vila 2013-04-11
+# MISSINGTEST: Exercise this class -- vila 2013-04-11
 class RemoteBrowserFactory(BrowserFactory):
 
     webdriver_class = webdriver.Remote
@@ -65,25 +65,25 @@ class RemoteBrowserFactory(BrowserFactory):
         return self.webdriver_class(self.capabilities, self.remote_url)
 
 
-# FIXME: Missing tests -- vila 2013-04-11
+# MISSINGTEST: Exercise this class -- vila 2013-04-11
 class ChromeFactory(BrowserFactory):
 
     webdriver_class = webdriver.Chrome
 
 
-# FIXME: Missing tests -- vila 2013-04-11
+# MISSINGTEST: Exercise this class (requires windows) -- vila 2013-04-11
 class IeFactory(BrowserFactory):
 
     webdriver_class = webdriver.Ie
 
 
-# FIXME: Missing tests -- vila 2013-04-11
+# MISSINGTEST: Exercise this class -- vila 2013-04-11
 class PhantomJSFactory(BrowserFactory):
 
     webdriver_class = webdriver.PhantomJS
 
 
-# FIXME: Missing tests -- vila 2013-04-11
+# MISSINGTEST: Exercise this class -- vila 2013-04-11
 class OperaFactory(BrowserFactory):
 
     webdriver_class = webdriver.Opera
@@ -111,7 +111,7 @@ class FirefoxFactory(BrowserFactory):
         return self.webdriver_class(self.profile)
 
 
-# FIXME: Missing tests -- vila 2013-04-11
+# MISSINGTEST: Exercise this class -- vila 2013-04-11
 browser_factories = {
     'Chrome': ChromeFactory,
     'Firefox': FirefoxFactory,

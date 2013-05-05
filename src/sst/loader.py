@@ -151,9 +151,30 @@ class ScriptDirLoader(DirLoader):
 
     def __init__(self, test_loader, matcher=None):
         if matcher is None:
-            # Excludes the 'shared' directory
-            matcher = NameMatcher(excludes=matches_for_regexp('^shared$'))
+            # Excludes the 'shared' directory and the "private" directories
+            regexp = '^shared$|^_'
+            matcher = NameMatcher(excludes=matches_for_regexp(regexp))
         super(ScriptDirLoader, self).__init__(test_loader, matcher=matcher)
+
+    def discover_path(self, directory, name):
+        # MISSINGTEST: The behavior is unclear when a module cannot be imported
+        # because sys.path is incomplete. This makes it hard for the user to
+        # understand it should update sys.path -- vila 2013-05-05
+        path = os.path.join(directory, name)
+        if (os.path.isdir(path) and os.path.isfile(
+                os.path.join(path, '__init__.py'))):
+            # Hold on, we need to respect users wishes here (if it has some)
+            loader = PackageLoader(self.test_loader)
+            try:
+                return loader.discover(directory, name)
+            except ImportError:
+                # FIXME: Nah, didn't work, should we report it to the user ?
+                # (yes see MISSINGTEST above) How ? (By re-raising with a
+                # proper message: if there is an __init__.py file here, it
+                # should be importable, that's what we should explain to the
+                # user) vila 2013-05-04
+                pass
+        return super(ScriptDirLoader, self).discover_path(directory, name)
 
 
 class PackageLoader(DirLoader):
@@ -173,7 +194,7 @@ class PackageLoader(DirLoader):
         discover = getattr(package, 'discover', None)
         if discover is not None:
             # Since the user defined it, the package knows better
-            return discover(self.test_loader)
+            return discover(self.test_loader, directory, name)
         # Can we use the load_tests protocol ?
         load_tests = getattr(package, 'load_tests', None)
         if load_tests is not None:
@@ -241,6 +262,27 @@ class TestLoader(unittest.TestLoader):
             return dir_loader.discover(*os.path.split(start_dir))
         finally:
             self.dirLoaderClass, self.fileLoaderClass = orig
+
+    def discoverTestsFromPackage(self, package, path, file_loader_class=None,
+                                 dir_loader_class=None):
+        suite = self.suiteClass()
+        # MISSINGTEST: tests defined in __init__.py are loaded
+        suite.addTests(self.loadTestsFromModule(package))
+        names = os.listdir(path)
+        names.remove('__init__.py')
+        if file_loader_class is None:
+            file_loader_class = self.fileLoaderClass
+        if dir_loader_class is None:
+            dir_loader_class = self.dirLoaderClass
+        orig = self.dirLoaderClass, self.fileLoaderClass
+        try:
+            self.dirLoaderClass = dir_loader_class
+            self.fileLoaderClass = file_loader_class
+            dir_loader = self.dirLoaderClass(self)
+            suite.addTests(dir_loader.discover_names(path, names))
+        finally:
+            self.dirLoaderClass, self.fileLoaderClass = orig
+        return suite
 
     def importFromPath(self, path):
         path = os.path.normpath(path)

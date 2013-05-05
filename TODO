@@ -1,0 +1,47 @@
+* run all tests
+
+  sst test
+
+* run acceptance tests
+
+  sst test -s tests.acceptance
+
+* run unit tests
+
+  sst test -x tests.acceptance
+
+* run tests matching
+
+  sst test html_runner
+
+* Before the switch to sst.loader:
+
+unit: Ran 83 tests in 7.016s
+acceptance: Ran 65 tests in 167.919s
+
+* sort all names during loading, all tests after (by id)
+
+* Unify dir and file loader ? Single place to match
+
+* match by either basename or path
+
+* filter by test ids 
+
+* scan the test id until it's not a python identifier to prune during
+   loading
+
+* provide simple helpers for the most common cases:
+
+This will probably trigger a refactor around:
+- whether dir and file loaders should be unified,
+- whether dif file loaders need to be passed to discoverTests*,
+- tests should be sorted by ids (for the test files, classes and methods),
+- whether filtering should be applied to base names, paths or both.
+
+** ignore this tree
+
+** sst scripts here
+
+** importable tests here
+
+* _get_fullpath could probably be removed now.

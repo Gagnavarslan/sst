@@ -235,7 +235,7 @@ def _make_results_dir():
     try:
         os.makedirs(config.results_directory)
     except OSError:
-        # FIXME: We should only catch the EEXIST exception -- vila 2013-04-29
+        # FIXME: We should only catch the EEXIST errno -- vila 2013-04-29
         pass  # already exists
 
 
