@@ -10,28 +10,11 @@
 
   sst test -x tests.acceptance
 
-* run tests matching
-
-  sst test html_runner
-
-* Before the switch to sst.loader:
-
-unit: Ran 83 tests in 7.016s
-acceptance: Ran 65 tests in 167.919s
-
-* After switch to sst.loader:
-
-unit: Ran 86 tests in 7.028s (but 6 errors related to find_test_cases not
-   existing anymore)
-acceptance: Ran 65 tests in 168.892s
-
 * sort all names during loading, all tests after (by id)
 
 * Unify dir and file loader ? Single place to match
 
 * match by either basename or path
-
-* filter by test ids 
 
 * scan the test id until it's not a python identifier to prune during
    loading
@@ -49,8 +32,6 @@ This will probably trigger a refactor around:
 ** sst scripts here
 
 ** importable tests here
-
-* _get_fullpath could probably be removed now.
 
 * some test_loader tests are too big, this screams for betetr helpers so
    they can be simplified.

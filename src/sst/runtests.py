@@ -75,20 +75,15 @@ def runtests(test_names, test_dir='.', collect_only=False,
         # selftests should be a command instead
         package_dir = os.path.dirname(__file__)
         os.chdir(os.path.dirname(package_dir))
-        # FIXME: This should be clarified and de-duplicated from the 'else'
-        # clause below. -- vila 2013-05-05
         test_dir = os.path.join('.', 'sst', 'selftests')
-        shared_directory = find_shared_directory(test_dir, shared_directory)
-        config.shared_directory = shared_directory
-        sys.path.append(shared_directory)
     else:
         if not os.path.isdir(test_dir):
             msg = 'Specified directory %r does not exist' % test_dir
             print msg
             sys.exit(1)
-        shared_directory = find_shared_directory(test_dir, shared_directory)
-        config.shared_directory = shared_directory
-        sys.path.append(shared_directory)
+    shared_directory = find_shared_directory(test_dir, shared_directory)
+    config.shared_directory = shared_directory
+    sys.path.append(shared_directory)
 
     if browser_factory is None:
         # TODO: We could raise an error instead as providing a default value
@@ -148,10 +143,6 @@ def runtests(test_names, test_dir='.', collect_only=False,
     finally:
         # XXX should warn on cases that were specified but not found
         pass
-
-
-def _get_full_path(relpath):
-    return os.path.abspath(relpath)
 
 
 def find_shared_directory(test_dir, shared_directory):
