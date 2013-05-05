@@ -19,8 +19,6 @@
 
 
 import os
-import re
-import sys
 import unittest
 from cStringIO import StringIO
 
@@ -82,54 +80,54 @@ class ConsoleOutputTestCase(testtools.TestCase):
         suite = _make_pass_test_suite()
         suite.run(self.text_result)
         self.console_output = self.out.getvalue()
-        regex_expected = \
-            r'test_inner_pass ' + \
-            r'\(sst.tests.test_results_output.InnerPassTestCase\) ...' + \
+        regex = \
+            r'test_inner_pass ' \
+            r'\(sst.tests.test_results_output.InnerPassTestCase\) ...' \
             r'\nOK \([0-9]*.[0-9]{3} secs\)\n\n'
-        self.assertRegexpMatches(self.console_output, regex_expected)
+        self.assertRegexpMatches(self.console_output, regex)
 
     def test_text_output_fail(self):
         suite = _make_fail_test_suite()
         suite.run(self.text_result)
         self.console_output = self.out.getvalue()
-        regex_expected = \
-            r'test_inner_fail ' + \
-            '\(sst.tests.test_results_output.InnerFailTestCase\) ...' + \
+        regex = \
+            r'test_inner_fail ' \
+            r'\(sst.tests.test_results_output.InnerFailTestCase\) ...' \
             r'\nFAIL\n\n'
-        self.assertRegexpMatches(self.console_output, regex_expected)
+        self.assertRegexpMatches(self.console_output, regex)
 
     def test_text_output_error(self):
         suite = _make_error_test_suite()
         suite.run(self.text_result)
         self.console_output = self.out.getvalue()
-        regex_expected = \
-            r'test_inner_error ' + \
-            '\(sst.tests.test_results_output.InnerErrorTestCase\) ...' + \
+        regex = \
+            r'test_inner_error ' \
+            r'\(sst.tests.test_results_output.InnerErrorTestCase\) ...' \
             r'\nERROR\n\n'
-        self.assertRegexpMatches(self.console_output, regex_expected)
+        self.assertRegexpMatches(self.console_output, regex)
 
     def test_text_output_skip(self):
         suite = _make_skip_test_suite()
         suite.run(self.text_result)
         self.console_output = self.out.getvalue()
-        regex_expected = \
-            r'test_inner_skip ' + \
-            '\(sst.tests.test_results_output.InnerSkipTestCase\) ...' + \
+        regex = \
+            r'test_inner_skip ' \
+            r'\(sst.tests.test_results_output.InnerSkipTestCase\) ...' \
             r'\nSkipped \'skip me\'\n\n'
-        self.assertRegexpMatches(self.console_output, regex_expected)
+        self.assertRegexpMatches(self.console_output, regex)
 
 
 class XmlOutputTestCase(testtools.TestCase):
 
-    def setUp(self):    
+    def setUp(self):
         super(XmlOutputTestCase, self).setUp()
         tests.set_cwd_to_tmp(self)
         self.results_file = 'results.xml'
         self.xml_stream = file(self.results_file, 'wb')
         self.xml_result = junitxml.JUnitXmlResult(self.xml_stream)
-        
+
     def test_xml_output_pass(self):
-        suite = _make_pass_test_suite()       
+        suite = _make_pass_test_suite()
         suite.run(self.xml_result)
         self.xml_result.stopTestRun()
         self.xml_stream.close()
@@ -137,7 +135,12 @@ class XmlOutputTestCase(testtools.TestCase):
         with open(self.results_file) as f:
             content = f.read()
         self.assertGreater(len(content), 0)
-        regex = r'<testsuite errors="0" failures="0" name="" tests="1" .*'
+        regex = \
+            r'<testsuite errors="0" failures="0" name="" tests="1" ' \
+            r'time=".*">\n' \
+            r'<testcase ' \
+            r'classname="sst.tests.test_results_output.InnerPassTestCase" ' \
+            r'name="test_inner_pass" time="[0-9]*.[0-9]{3}"'
         self.assertRegexpMatches(content, regex)
 
     def test_xml_output_fail(self):
@@ -149,10 +152,12 @@ class XmlOutputTestCase(testtools.TestCase):
         with open(self.results_file) as f:
             content = f.read()
         self.assertGreater(len(content), 0)
-        #regex = r'<testsuite errors="0" failures="1" name="" tests="1" .*'
-        regex = r'<testsuite errors="0" failures="1" name="" tests="1" time=".*">\n' + \
-        r'<testcase classname="sst.tests.test_results_output.' + \
-        r'InnerFailTestCase" name="test_inner_fail" time="[0-9]*.[0-9]{3}"'
+        regex = \
+            r'<testsuite errors="0" failures="1" name="" tests="1" ' \
+            r'time=".*">\n' \
+            r'<testcase ' \
+            r'classname="sst.tests.test_results_output.InnerFailTestCase" ' \
+            r'name="test_inner_fail" time="[0-9]*.[0-9]{3}"'
         self.assertRegexpMatches(content, regex)
 
     def test_xml_output_error(self):
@@ -164,7 +169,12 @@ class XmlOutputTestCase(testtools.TestCase):
         with open(self.results_file) as f:
             content = f.read()
         self.assertGreater(len(content), 0)
-        regex = r'<testsuite errors="1" failures="0" name="" tests="1" .*'
+        regex = \
+            r'<testsuite errors="1" failures="0" name="" tests="1" ' \
+            r'time=".*">\n' \
+            r'<testcase ' \
+            r'classname="sst.tests.test_results_output.InnerErrorTestCase" ' \
+            r'name="test_inner_error" time="[0-9]*.[0-9]{3}"'
         self.assertRegexpMatches(content, regex)
 
     def test_xml_output_skip(self):
@@ -176,8 +186,10 @@ class XmlOutputTestCase(testtools.TestCase):
         with open(self.results_file) as f:
             content = f.read()
         self.assertGreater(len(content), 0)
-        regex = r'<testsuite errors="0" failures="0" name="" tests="1" time=".*">\n' + \
-        r'<testcase classname="sst.tests.test_results_output.' + \
-        r'InnerSkipTestCase" name="test_inner_skip" time="[0-9]*.[0-9]{3}"' + \
-        '>\n<skipped>skip me</skipped>\n</testcase>\n</testsuite>'
+        regex = \
+            r'<testsuite errors="0" failures="0" name="" tests="1" ' \
+            r'time=".*">\n<testcase classname="sst.tests.' \
+            r'test_results_output.InnerSkipTestCase" ' \
+            r'name="test_inner_skip" time="[0-9]*.[0-9]{3}"' \
+            r'>\n<skipped>skip me</skipped>\n</testcase>\n</testsuite>'
         self.assertRegexpMatches(content, regex)
