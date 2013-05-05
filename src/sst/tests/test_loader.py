@@ -577,6 +577,60 @@ raise AssertionError('Loading only, executing fails')
         self.assertIs(sys.modules['t.regular.foo'].Test, test_case.__class__)
         self.assertEqual('t.regular.foo.Test.test_me', test_case.id())
 
+    def test_regular_and_scripts_mixed(self):
+        def regular(dir_name, name, suffix=None):
+            if suffix is None:
+                suffix = ''
+            return '''
+file: {dir_name}/{name}{suffix}
+from sst import case
+
+class Test_{name}(case.SSTTestCase):
+    def test_{name}(self):
+        pass
+'''.format(**locals())
+
+        tests.write_tree_from_desc('''dir: tests
+file: tests/__init__.py
+import os
+from sst import loader as sloader
+
+
+def discover(loader, directory, name):
+    return loader.discoverTestsFromPackage(__package__,
+        os.path.join(directory, name),
+        file_loader_class=sloader.ModuleLoader,
+        dir_loader_class=sloader.PackageLoader)
+''')
+        tests.write_tree_from_desc(regular('tests', 'test_real', '.py'))
+        tests.write_tree_from_desc(regular('tests', 'test_real1', '.py'))
+        tests.write_tree_from_desc(regular('tests', 'test_real2', '.py'))
+        # Leading '_' => ignored
+        tests.write_tree_from_desc(regular('tests', '_hidden', '.py'))
+        # Not a python file => ignored
+        tests.write_tree_from_desc(regular('tests', 'not-python'))
+        # Some empty files
+        tests.write_tree_from_desc('''
+file: script1.py
+file: script2.py
+file: not_a_test
+# '.p' is intentional, not a typoed '.py'
+file: test_not_a_test.p
+_hidden_too.py
+''')
+        test_loader = loader.TestLoader()
+        suite = test_loader.discoverTests(
+            '.',
+            file_loader_class=loader.ScriptLoader,
+            dir_loader_class=loader.ScriptDirLoader)
+        self.assertEqual(5, suite.countTestCases())
+        self.assertEqual(['sst.case.SSTScriptTestCase.script2',
+                          'sst.case.SSTScriptTestCase.script1',
+                          'tests.test_real2.Test_test_real2.test_test_real2',
+                          'tests.test_real1.Test_test_real1.test_test_real1',
+                          'tests.test_real.Test_test_real.test_test_real'],
+                         [t.id() for t in testtools.iterate_tests(suite)])
+
 
 class TestTestLoaderPattern(ImportingLocalFilesTest):
 

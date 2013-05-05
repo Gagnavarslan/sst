@@ -82,8 +82,9 @@ class ModuleLoader(FileLoader):
 
     def __init__(self, test_loader, matcher=None):
         if matcher is None:
-            # Default to python source files
-            matcher = NameMatcher(includes=matches_for_regexp('.*\.py$'))
+            # Default to python source files, excluding private ones
+            matcher = NameMatcher(includes=matches_for_regexp('.*\.py$'),
+                                  excludes=matches_for_regexp('^_'))
         super(ModuleLoader, self).__init__(test_loader, matcher=matcher)
 
     def discover(self, directory, name):

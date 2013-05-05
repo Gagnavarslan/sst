@@ -33,24 +33,48 @@ class TestWriteTree(testtools.TestCase):
         tests.write_tree_from_desc('')
         self.assertEqual([], os.listdir('.'))
 
-    def test_empty_file(self):
+    def test_single_line_without_return(self):
+        self.assertEqual([], os.listdir('.'))
+        tests.write_tree_from_desc('file: foo')
+        self.assertEqual(['foo'], os.listdir('.'))
+        self.assertEqual('', file('foo').read())
+
+    def test_leading_line_is_ignored(self):
+        self.assertEqual([], os.listdir('.'))
+        tests.write_tree_from_desc('tagada\nfile: foo')
+        self.assertEqual(['foo'], os.listdir('.'))
+        self.assertEqual('', file('foo').read())
+
+    def test_orphan_line_is_ignored(self):
+        self.assertEqual([], os.listdir('.'))
+        tests.write_tree_from_desc('''
+dir: foo
+orphan line
+file: foo/bar.py
+baz
+''')
+        self.assertEqual(['foo'], os.listdir('.'))
+        self.assertEqual(['bar.py'], os.listdir('foo'))
+        self.assertEqual('baz\n', file('foo/bar.py').read())
+
+    def test_empty_file_content(self):
         tests.write_tree_from_desc('''file: foo''')
         self.assertEqual('', file('foo').read())
 
-    def test_simple_file(self):
+    def test_simple_file_content(self):
         tests.write_tree_from_desc('''file: foo
 tagada
 ''')
         self.assertEqual('tagada\n', file('foo').read())
 
-    def test_file_in_a_dir(self):
+    def test_file_content_in_a_dir(self):
         tests.write_tree_from_desc('''dir: dir
 file: dir/foo
 bar
 ''')
         self.assertEqual('bar\n', file('dir/foo').read())
 
-    def test_simple_symlink(self):
+    def test_simple_symlink_creation(self):
         tests.write_tree_from_desc('''file: foo
 tagada
 link: foo bar
@@ -58,13 +82,12 @@ link: foo bar
         self.assertEqual('tagada\n', file('foo').read())
         self.assertEqual('tagada\n', file('bar').read())
 
-    def test_broken_symlink(self):
+    def test_broken_symlink_creation(self):
         tests.write_tree_from_desc('''link: foo bar
 ''')
         self.assertEqual('foo', os.readlink('bar'))
 
-    def test_invalid_symlink(self):
-        # An exception is raised on invalid symlink descriptions
+    def test_invalid_symlink_description_raises(self):
         e = self.assertRaises(ValueError,
                               tests.write_tree_from_desc, '''link: foo
 ''')
