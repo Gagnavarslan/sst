@@ -323,3 +323,18 @@ class TestLoader(unittest.TestLoader):
         test.extended_report = self.extended_report
 
         return test
+
+
+def filter_suite(condition, suite):
+    filtered_suite = suite.__class__()
+    for test in suite:
+        if issubclass(test.__class__, unittest.TestSuite):
+            # We received a suite, we'll filter a suite
+            filtered = filter_suite(condition, test)
+            if filtered.countTestCases():
+                # Keep only non-empty suites
+                filtered_suite.addTest(filtered)
+        elif condition(test.id()):
+            # The test is kept
+            filtered_suite.addTest(test)
+    return filtered_suite

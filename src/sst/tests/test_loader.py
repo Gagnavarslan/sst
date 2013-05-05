@@ -38,6 +38,7 @@ below therefore use 't' as the main directory because:
 - it's unlikely to be imported by the module.
 
 """
+import re
 import sys
 import testtools
 import unittest
@@ -701,3 +702,56 @@ class Test(unittest.TestCase):
         e = self.assertRaises(ImportError,
                               test_loader.discover, 't', '*.py')
         self.assertEqual(e.message, 'No module named t')
+
+
+class TestFilterTests(testtools.TestCase):
+
+    def create_tests(self, names):
+        suite = unittest.TestSuite()
+
+        def test_id(name):
+            return lambda: name
+
+        for name in names:
+            # We need an existing method to create a test. Arbitrarily, we use
+            # id(), that souldn't fail ;) We won't run the test anyway.
+            test = unittest.TestCase(methodName='id')
+            # We can't define the lambda here or 'name' stay bound to the
+            # variable instead of the value, use a proxy to capture the value.
+            test.id = test_id(name)
+            suite.addTest(test)
+        return suite
+
+    def assertFiltered(self, expected, condition, actual):
+        filtered = loader.filter_suite(condition, self.create_tests(actual))
+        self.assertEqual(expected,
+                         [t.id() for t in testtools.iterate_tests(filtered)])
+
+    def test_filter_none(self):
+        test_names = ['foo', 'bar']
+        self.assertFiltered(test_names, lambda tid: True, test_names)
+
+    def test_filter_all(self):
+        test_names = ['foo', 'bar']
+        self.assertFiltered([], lambda tid: False, test_names)
+
+    def test_filter_start(self):
+        self.assertFiltered(['foo', 'footix'],
+                            lambda tid: tid.startswith('foo'),
+                            ['foo', 'footix', 'bar', 'baz', 'fo'])
+
+    def test_filter_in(self):
+        self.assertFiltered(['bar', 'baz'],
+                            lambda tid: tid in ('bar', 'baz'),
+                            ['foo', 'footix', 'bar', 'baz', 'fo'])
+
+    def test_filter_single(self):
+        self.assertFiltered(['bar'],
+                            lambda tid: tid == 'bar',
+                            ['foo', 'bar', 'baz'])
+
+    def test_filter_regexp(self):
+        ba = re.compile('ba')
+        self.assertFiltered(['bar', 'baz', 'foobar'],
+                            lambda tid: bool(ba.search(tid)),
+                            ['foo', 'bar', 'baz', 'foobar', 'qux'])

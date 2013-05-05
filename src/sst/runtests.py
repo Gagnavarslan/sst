@@ -17,6 +17,7 @@
 #   limitations under the License.
 #
 
+import fnmatch
 import logging
 import htmlrunner
 import junitxmlrunner
@@ -94,8 +95,6 @@ def runtests(test_names, test_dir='.', collect_only=False,
         # makes little sense here -- vila 2013-04-11
         browser_factory = browsers.FirefoxFactory()
 
-    test_names = set(test_names)
-
     test_loader = loader.TestLoader(browser_factory, screenshots_on,
                                     debug, extended)
     alltests = test_loader.suiteClass()
@@ -103,6 +102,14 @@ def runtests(test_names, test_dir='.', collect_only=False,
         test_loader.discoverTests(test_dir,
                                   file_loader_class=loader.ScriptLoader,
                                   dir_loader_class=loader.ScriptDirLoader))
+
+    def filter_test_names(name):
+        for pattern in test_names:
+            if fnmatch.fnmatchcase(name, pattern):
+                return True
+        return False
+
+    alltests = loader.filter_suite(filter_test_names, alltests)
 
     print ''
     print '  %s test cases loaded\n' % alltests.countTestCases()
