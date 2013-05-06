@@ -88,7 +88,7 @@ class ConsoleOutputTestCase(testtools.TestCase):
             r'\(sst.tests.test_results_output.InnerPassTestCase\) ...' \
             r'\nOK \([0-9]*.[0-9]{3} secs\)\n\n'
         self.execute_test(suite, regex)
-        
+
     def test_text_output_fail(self):
         suite = _make_fail_test_suite()
         regex = \
@@ -123,7 +123,7 @@ class XmlOutputTestCase(testtools.TestCase):
         self.xml_stream = file(self.results_file, 'wb')
         self.xml_result = junitxml.JUnitXmlResult(self.xml_stream)
         self.addCleanup(os.remove, 'results.xml')
-    
+
     def execute_test(self, suite, regex):
         suite.run(self.xml_result)
         self.xml_result.stopTestRun()
