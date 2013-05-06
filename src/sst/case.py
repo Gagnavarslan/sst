@@ -163,8 +163,7 @@ class SSTScriptTestCase(SSTTestCase):
         # Since we use run_test_script to encapsulate the call to the
         # compiled code, we need to override __str__ to get a proper name
         # reported.
-        return "%s (%s.%s)" % (self.id(), self.__class__.__module__,
-                               self.__class__.__name__)
+        return "%s" % (self.id(),)
 
     def setUp(self):
         self._compile_script()
