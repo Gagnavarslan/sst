@@ -334,7 +334,7 @@ def filter_suite(condition, suite):
             if filtered.countTestCases():
                 # Keep only non-empty suites
                 filtered_suite.addTest(filtered)
-        elif condition(test.id()):
+        elif condition(test):
             # The test is kept
             filtered_suite.addTest(test)
     return filtered_suite

@@ -704,7 +704,7 @@ class Test(unittest.TestCase):
         self.assertEqual(e.message, 'No module named t')
 
 
-class TestFilterTests(testtools.TestCase):
+class TestFilterTestsById(testtools.TestCase):
 
     def create_tests(self, names):
         suite = unittest.TestSuite()
@@ -729,29 +729,29 @@ class TestFilterTests(testtools.TestCase):
 
     def test_filter_none(self):
         test_names = ['foo', 'bar']
-        self.assertFiltered(test_names, lambda tid: True, test_names)
+        self.assertFiltered(test_names, lambda t: True, test_names)
 
     def test_filter_all(self):
         test_names = ['foo', 'bar']
-        self.assertFiltered([], lambda tid: False, test_names)
+        self.assertFiltered([], lambda t: False, test_names)
 
     def test_filter_start(self):
         self.assertFiltered(['foo', 'footix'],
-                            lambda tid: tid.startswith('foo'),
+                            lambda t: t.id().startswith('foo'),
                             ['foo', 'footix', 'bar', 'baz', 'fo'])
 
     def test_filter_in(self):
         self.assertFiltered(['bar', 'baz'],
-                            lambda tid: tid in ('bar', 'baz'),
+                            lambda t: t.id() in ('bar', 'baz'),
                             ['foo', 'footix', 'bar', 'baz', 'fo'])
 
     def test_filter_single(self):
         self.assertFiltered(['bar'],
-                            lambda tid: tid == 'bar',
+                            lambda t: t.id() == 'bar',
                             ['foo', 'bar', 'baz'])
 
     def test_filter_regexp(self):
         ba = re.compile('ba')
         self.assertFiltered(['bar', 'baz', 'foobar'],
-                            lambda tid: bool(ba.search(tid)),
+                            lambda t: bool(ba.search(t.id())),
                             ['foo', 'bar', 'baz', 'foobar', 'qux'])
