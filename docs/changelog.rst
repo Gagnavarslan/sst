@@ -10,13 +10,14 @@ Official Releases:
 ------------------
 
 version **0.2.4** (Not yet released)
-*******************************
+************************************
 
 * added ``get_text`` action
 * made it clearer that ``assert_text`` and ``assert_text_contains`` will check
   the value instead of the text for text field elements.
 * return the result of the condition checked by ``wait_for`` and
   ``wait_for_and_refresh``.
+* start documenting the debian/ubuntu packaging process.
 
 version **0.2.3** (2013 Apr 17)
 *******************************
