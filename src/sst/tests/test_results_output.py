@@ -86,7 +86,7 @@ class ConsoleOutputTestCase(testtools.TestCase):
         regex = \
             r'test_inner_pass ' \
             r'\(sst.tests.test_results_output.InnerPassTestCase\) ...' \
-            r'\nOK \([0-9]*.[0-9]{3} secs\)\n\n'
+            r'\nOK \([0-9]*.[0-9]{3} secs\)\n'
         self.execute_test(suite, regex)
 
     def test_text_output_fail(self):
@@ -94,7 +94,7 @@ class ConsoleOutputTestCase(testtools.TestCase):
         regex = \
             r'test_inner_fail ' \
             r'\(sst.tests.test_results_output.InnerFailTestCase\) ...' \
-            r'\nFAIL\n\n'
+            r'\nFAIL\n'
         self.execute_test(suite, regex)
 
     def test_text_output_error(self):
@@ -102,7 +102,7 @@ class ConsoleOutputTestCase(testtools.TestCase):
         regex = \
             r'test_inner_error ' \
             r'\(sst.tests.test_results_output.InnerErrorTestCase\) ...' \
-            r'\nERROR\n\n'
+            r'\nERROR\n'
         self.execute_test(suite, regex)
 
     def test_text_output_skip(self):
@@ -110,7 +110,7 @@ class ConsoleOutputTestCase(testtools.TestCase):
         regex = \
             r'test_inner_skip ' \
             r'\(sst.tests.test_results_output.InnerSkipTestCase\) ...' \
-            r'\nSkipped \'skip me\'\n\n'
+            r'\nSkipped \'skip me\'\n'
         self.execute_test(suite, regex)
 
 

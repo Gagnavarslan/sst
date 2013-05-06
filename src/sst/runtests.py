@@ -310,12 +310,15 @@ class TextTestResult(testtools.testresult.TextTestResult):
         super(TextTestResult, self).addFailure(test, err, details)
 
     def addSkip(self, test, reason=None, details=None):
-        self.stream.write('Skipped {0!r}\n'.format(reason))
+        if reason is None:
+            self.stream.write('Skipped\n')
+        else:
+            self.stream.write('Skipped %r\n' % reason)
         super(TextTestResult, self).addSkip(test, reason, details)
 
     def addSuccess(self, test, details=None):
         elapsed_time = default_timer() - self.start_time
-        self.stream.write('OK (%.3f secs)\n' % elapsed_time)
+        self.stream.write('OK (%.3f secs)' % elapsed_time)
         super(TextTestResult, self).addSuccess(test, details)
 
     def addUnexpectedSuccess(self, test, details=None):
@@ -527,10 +530,11 @@ class SSTScriptTestCase(SSTTestCase):
     script_dir = '.'
     script_name = None
 
-    def __init__(self, testMethod, context_row=None):
+    def __init__(self, test_method, context_row=None):
         super(SSTScriptTestCase, self).__init__('run_test_script')
+        self.test_method = test_method
         self.id = lambda: '%s.%s.%s' % (self.__class__.__module__,
-                                        self.__class__.__name__, testMethod)
+                                        self.__class__.__name__, test_method)
         if context_row is None:
             context_row = {}
         self.context = context_row
@@ -539,8 +543,7 @@ class SSTScriptTestCase(SSTTestCase):
         # Since we use run_test_script to encapsulate the call to the
         # compiled code, we need to override __str__ to get a proper name
         # reported.
-        return "%s (%s.%s)" % (self.id(), self.__class__.__module__,
-                               self.__class__.__name__)
+        return "%s (%s)" % (self.test_method, self.id())
 
     def shortDescription(self):
         # The description should be first line of the test method's docstring.
