@@ -524,16 +524,9 @@ raise AssertionError('Loading only, executing fails')
         self.assertEqual(2, suite.countTestCases())
         # Check which kind of tests have been discovered or we may miss regular
         # test cases seen as scripts.
-        iter_tests = iter(suite)
-        script_test_case = iter_tests.next()
-        self.assertIs(case.SSTScriptTestCase, script_test_case.__class__)
-        self.assertEqual('t/scripts/script.py', script_test_case.script_path)
-        inner_suite = iter_tests.next()
-        self.assertIs(unittest.TestSuite, inner_suite.__class__)
-        iter_inner_suite = iter(inner_suite)
-        test_case = iter_inner_suite.next()
-        self.assertEqual(sys.modules['t.foo'].Test, test_case.__class__)
-        self.assertEqual('t.foo.Test.test_me', test_case.id())
+        self.assertEqual(['t.foo.Test.test_me',
+                          't.scripts.script'],
+                         [t.id() for t in testtools.iterate_tests(suite)])
 
     def test_regular_below_scripts(self):
         tests.write_tree_from_desc('''dir: t
@@ -567,16 +560,9 @@ raise AssertionError('Loading only, executing fails')
         self.assertEqual(2, suite.countTestCases())
         # Check which kind of tests have been discovered or we may miss regular
         # test cases seen as scripts.
-        iter_tests = iter(suite)
-        script_test_case = iter_tests.next()
-        self.assertIs(case.SSTScriptTestCase, script_test_case.__class__)
-        self.assertEqual('t/script.py', script_test_case.script_path)
-        inner_suite = iter_tests.next()
-        self.assertIs(unittest.TestSuite, inner_suite.__class__)
-        iter_inner_suite = iter(inner_suite)
-        test_case = iter_inner_suite.next()
-        self.assertIs(sys.modules['t.regular.foo'].Test, test_case.__class__)
-        self.assertEqual('t.regular.foo.Test.test_me', test_case.id())
+        self.assertEqual(['t.regular.foo.Test.test_me',
+                          't.script'],
+                         [t.id() for t in testtools.iterate_tests(suite)])
 
     def test_regular_and_scripts_mixed(self):
         def regular(dir_name, name, suffix=None):
@@ -624,12 +610,11 @@ _hidden_too.py
             '.',
             file_loader_class=loader.ScriptLoader,
             dir_loader_class=loader.ScriptDirLoader)
-        self.assertEqual(5, suite.countTestCases())
-        self.assertEqual(['sst.case.SSTScriptTestCase.script2',
-                          'sst.case.SSTScriptTestCase.script1',
-                          'tests.test_real2.Test_test_real2.test_test_real2',
+        self.assertEqual(['script1',
+                          'script2',
+                          'tests.test_real.Test_test_real.test_test_real',
                           'tests.test_real1.Test_test_real1.test_test_real1',
-                          'tests.test_real.Test_test_real.test_test_real'],
+                          'tests.test_real2.Test_test_real2.test_test_real2'],
                          [t.id() for t in testtools.iterate_tests(suite)])
 
 

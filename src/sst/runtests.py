@@ -99,6 +99,8 @@ def runtests(test_names, test_dir='.', collect_only=False,
                                   dir_loader_class=loader.ScriptDirLoader))
 
     def filter_test_names(name):
+        if not test_names:
+            return True
         for pattern in test_names:
             if fnmatch.fnmatchcase(name, pattern):
                 return True

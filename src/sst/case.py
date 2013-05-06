@@ -151,14 +151,10 @@ class SSTScriptTestCase(SSTTestCase):
         self.script_path = os.path.join(self.script_dir, self.script_name)
 
         # pythonify the script path into a python path
-# The following will give better test ids.
-#        rel = os.path.relpath(script_dir, os.getcwd())
-#
-#        self.id = lambda: '%s.%s' % (rel.replace(os.sep, '.'),
-#                                    script_name.replace('.py', ''))
-        self.id = lambda: '%s.%s.%s' % (self.__class__.__module__,
-                                        self.__class__.__name__,
-                                        script_name[:-3])  # drop .py
+        test_id = self.script_path.replace('.py', '')
+        if test_id.startswith('./'):
+            test_id = test_id[2:]
+        self.id = lambda: '%s' % (test_id.replace(os.sep, '.'))
         if context_row is None:
             context_row = {}
         self.context = context_row

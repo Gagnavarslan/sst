@@ -10,8 +10,6 @@
 
   sst test -x tests.acceptance
 
-* sort all names during loading, all tests after (by id)
-
 * Unify dir and file loader ? Single place to match
 
 * match by either basename or path

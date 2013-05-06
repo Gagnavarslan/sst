@@ -17,6 +17,7 @@
 #   limitations under the License.
 #
 import fnmatch
+import functools
 import os
 import re
 import sys
@@ -126,6 +127,7 @@ class DirLoader(object):
             return None
         path = os.path.join(directory, name)
         names = os.listdir(path)
+        names = self.test_loader.sortNames(names)
         return self.discover_names(path, names)
 
     def discover_names(self, directory, names):
@@ -208,6 +210,7 @@ class PackageLoader(DirLoader):
 
         names = os.listdir(path)
         names.remove('__init__.py')
+        names = self.test_loader.sortNames(names)
         return self.discover_names(path, names)
 
 
@@ -271,6 +274,7 @@ class TestLoader(unittest.TestLoader):
         suite.addTests(self.loadTestsFromModule(package))
         names = os.listdir(path)
         names.remove('__init__.py')
+        names = self.sortNames(names)
         if file_loader_class is None:
             file_loader_class = self.fileLoaderClass
         if dir_loader_class is None:
@@ -284,6 +288,16 @@ class TestLoader(unittest.TestLoader):
         finally:
             self.dirLoaderClass, self.fileLoaderClass = orig
         return suite
+
+    def sortNames(self, names):
+        """Return 'names' sorted as defined by sortTestMethodsUsing.
+
+        It's a little abuse of sort*TestMethods*Using as we're sorting file
+        names (or even module python paths) but it allows providing a
+        consistent order for the whole suite.
+        """
+        return sorted(names,
+                      key=functools.cmp_to_key(self.sortTestMethodsUsing))
 
     def importFromPath(self, path):
         path = os.path.normpath(path)
