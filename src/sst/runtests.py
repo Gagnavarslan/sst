@@ -170,7 +170,7 @@ def find_shared_directory(test_dir, shared_directory):
     IMHO the above is only needed because we don't allow:
     sst-run --start with tests.foo
 
-    So I plan to remove the support for searching shared upwards in favor of
+    So I plan to remove the support for searching 'shared' upwards in favor of
     allowing running a test subset and go with a sane layout and import
     behavior. No test fail if this feature is removed so it's not supported
     anyway. -- vila 2013-04-26
