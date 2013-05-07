@@ -83,34 +83,38 @@ class ConsoleOutputTestCase(testtools.TestCase):
 
     def test_text_output_pass(self):
         suite = _make_pass_test_suite()
-        regex = \
-            r'test_inner_pass ' \
-            r'\(sst.tests.test_results_output.InnerPassTestCase\) ...' \
+        regex = (
+            r'test_inner_pass '
+            r'\(sst.tests.test_results_output.InnerPassTestCase\) ...'
             r'\nOK \([0-9]*.[0-9]{3} secs\)\n'
+        )
         self.assert_output(suite, regex)
 
     def test_text_output_fail(self):
         suite = _make_fail_test_suite()
-        regex = \
-            r'test_inner_fail ' \
-            r'\(sst.tests.test_results_output.InnerFailTestCase\) ...' \
+        regex = (
+            r'test_inner_fail '
+            r'\(sst.tests.test_results_output.InnerFailTestCase\) ...'
             r'\nFAIL\n'
+        )
         self.assert_output(suite, regex)
 
     def test_text_output_error(self):
         suite = _make_error_test_suite()
-        regex = \
-            r'test_inner_error ' \
-            r'\(sst.tests.test_results_output.InnerErrorTestCase\) ...' \
+        regex = (
+            r'test_inner_error '
+            r'\(sst.tests.test_results_output.InnerErrorTestCase\) ...'
             r'\nERROR\n'
+        )
         self.assert_output(suite, regex)
 
     def test_text_output_skip(self):
         suite = _make_skip_test_suite()
-        regex = \
-            r'test_inner_skip ' \
-            r'\(sst.tests.test_results_output.InnerSkipTestCase\) ...' \
+        regex = (
+            r'test_inner_skip '
+            r'\(sst.tests.test_results_output.InnerSkipTestCase\) ...'
             r'\nSkipped \'skip me\'\n'
+        )
         self.assert_output(suite, regex)
 
 
@@ -135,40 +139,44 @@ class XmlOutputTestCase(testtools.TestCase):
 
     def test_xml_output_pass(self):
         suite = _make_pass_test_suite()
-        regex = \
-            r'<testsuite errors="0" failures="0" name="" tests="1" ' \
-            r'time=".*">\n' \
-            r'<testcase ' \
-            r'classname="sst.tests.test_results_output.InnerPassTestCase" ' \
+        regex = (
+            r'<testsuite errors="0" failures="0" name="" tests="1" '
+            r'time=".*">\n'
+            r'<testcase '
+            r'classname="sst.tests.test_results_output.InnerPassTestCase" '
             r'name="test_inner_pass" time="[0-9]*.[0-9]{3}"'
+        )
         self.assert_output(suite, regex)
 
     def test_xml_output_fail(self):
         suite = _make_fail_test_suite()
-        regex = \
-            r'<testsuite errors="0" failures="1" name="" tests="1" ' \
-            r'time=".*">\n' \
-            r'<testcase ' \
-            r'classname="sst.tests.test_results_output.InnerFailTestCase" ' \
+        regex = (
+            r'<testsuite errors="0" failures="1" name="" tests="1" '
+            r'time=".*">\n'
+            r'<testcase '
+            r'classname="sst.tests.test_results_output.InnerFailTestCase" '
             r'name="test_inner_fail" time="[0-9]*.[0-9]{3}"'
+        )
         self.assert_output(suite, regex)
 
     def test_xml_output_error(self):
         suite = _make_error_test_suite()
-        regex = \
-            r'<testsuite errors="1" failures="0" name="" tests="1" ' \
-            r'time=".*">\n' \
-            r'<testcase ' \
-            r'classname="sst.tests.test_results_output.InnerErrorTestCase" ' \
+        regex = (
+            r'<testsuite errors="1" failures="0" name="" tests="1" '
+            r'time=".*">\n'
+            r'<testcase '
+            r'classname="sst.tests.test_results_output.InnerErrorTestCase" '
             r'name="test_inner_error" time="[0-9]*.[0-9]{3}"'
+        )
         self.assert_output(suite, regex)
 
     def test_xml_output_skip(self):
         suite = _make_skip_test_suite()
-        regex = \
-            r'<testsuite errors="0" failures="0" name="" tests="1" ' \
-            r'time=".*">\n<testcase classname="sst.tests.' \
-            r'test_results_output.InnerSkipTestCase" ' \
-            r'name="test_inner_skip" time="[0-9]*.[0-9]{3}"' \
+        regex = (
+            r'<testsuite errors="0" failures="0" name="" tests="1" '
+            r'time=".*">\n<testcase classname="sst.tests.'
+            r'test_results_output.InnerSkipTestCase" '
+            r'name="test_inner_skip" time="[0-9]*.[0-9]{3}"'
             r'>\n<skipped>skip me</skipped>\n</testcase>\n</testsuite>'
+        )
         self.assert_output(suite, regex)
