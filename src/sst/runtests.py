@@ -65,7 +65,9 @@ def runtests(test_names, test_dir='.', collect_only=False,
              report_format='console',
              shared_directory=None, screenshots_on=False, failfast=False,
              debug=False,
-             extended=False):
+             extended=False,
+             includes=None,
+             excludes=None):
 
     config.results_directory = os.path.abspath('results')
     actions._make_results_dir()
@@ -108,6 +110,25 @@ def runtests(test_names, test_dir='.', collect_only=False,
 
     alltests = loader.filter_suite(filter_test_names, alltests)
 
+    if includes:
+        def starts_with_one_of(test):
+            # A test is kept if its id matches one of the 'includes' prefixes
+            tid = test.id()
+            for inc in includes:
+                if tid.startswith(inc):
+                    return True
+            return False
+        alltests = loader.filter_suite(starts_with_one_of, alltests)
+    if excludes:
+        def starts_with_none_of(test):
+            # A test is kept if its id matches none of the 'excludes' prefixes
+            tid = test.id()
+            for ex in excludes:
+                if tid.startswith(ex):
+                    return False
+            return True
+        alltests = loader.filter_suite(starts_with_none_of, alltests)
+
     print ''
     print '  %s test cases loaded\n' % alltests.countTestCases()
     print '--------------------------------------------------------------'
@@ -120,9 +141,9 @@ def runtests(test_names, test_dir='.', collect_only=False,
         print 'Collect-Only Enabled, Not Running Tests...\n'
         print 'Tests Collected:'
         print '-' * 16
-        for t in sorted(testtools.testsuite.iterate_tests(alltests)):
+        for t in testtools.testsuite.iterate_tests(alltests):
             print t.id()
-        sys.exit(0)
+        return
 
     if report_format == 'xml':
         fp = file(os.path.join(config.results_directory, 'results.xml'), 'wb')
