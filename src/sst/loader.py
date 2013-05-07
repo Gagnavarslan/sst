@@ -214,6 +214,35 @@ class PackageLoader(DirLoader):
         return self.discover_names(path, names)
 
 
+class Loaders(object):
+    """A context manager for loading tests from a tree.
+
+    This is mainly used when walking a tree a requiring a different set of
+    loaders for a subtree.
+    """
+
+    def __init__(self, test_loader, file_loader_class, dir_loader_class):
+        self.test_loader = test_loader
+        if file_loader_class is None:
+            file_loader_class = test_loader.fileLoaderClass
+        if dir_loader_class is None:
+            dir_loader_class = test_loader.dirLoaderClass
+        self.file_loader_class = file_loader_class
+        self.dir_loader_class = dir_loader_class
+
+    def __enter__(self):
+        self.preserved = (self.test_loader.fileLoaderClass,
+                          self.test_loader.dirLoaderClass)
+        self.test_loader.fileLoaderClass = self.file_loader_class
+        self.test_loader.dirLoaderClass = self.dir_loader_class
+        return self.test_loader
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        (self.test_loader.fileLoaderClass,
+         self.test_loader.dirLoaderClass) = self.preserved
+        return False
+
+
 class TestLoader(unittest.TestLoader):
     """Load test from an sst tree.
 
@@ -254,18 +283,9 @@ class TestLoader(unittest.TestLoader):
 
     def discoverTests(self, start_dir, file_loader_class=None,
                       dir_loader_class=None):
-        if file_loader_class is None:
-            file_loader_class = self.fileLoaderClass
-        if dir_loader_class is None:
-            dir_loader_class = self.dirLoaderClass
-        orig = self.dirLoaderClass, self.fileLoaderClass
-        try:
-            self.dirLoaderClass = dir_loader_class
-            self.fileLoaderClass = file_loader_class
+        with Loaders(self, file_loader_class, dir_loader_class):
             dir_loader = self.dirLoaderClass(self)
             return dir_loader.discover(*os.path.split(start_dir))
-        finally:
-            self.dirLoaderClass, self.fileLoaderClass = orig
 
     def discoverTestsFromPackage(self, package, path, file_loader_class=None,
                                  dir_loader_class=None):
@@ -275,18 +295,9 @@ class TestLoader(unittest.TestLoader):
         names = os.listdir(path)
         names.remove('__init__.py')
         names = self.sortNames(names)
-        if file_loader_class is None:
-            file_loader_class = self.fileLoaderClass
-        if dir_loader_class is None:
-            dir_loader_class = self.dirLoaderClass
-        orig = self.dirLoaderClass, self.fileLoaderClass
-        try:
-            self.dirLoaderClass = dir_loader_class
-            self.fileLoaderClass = file_loader_class
+        with Loaders(self, file_loader_class, dir_loader_class):
             dir_loader = self.dirLoaderClass(self)
             suite.addTests(dir_loader.discover_names(path, names))
-        finally:
-            self.dirLoaderClass, self.fileLoaderClass = orig
         return suite
 
     def sortNames(self, names):
