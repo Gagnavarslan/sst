@@ -44,7 +44,6 @@ import testtools
 import unittest
 
 from sst import (
-    case,
     loader,
     tests,
 )
