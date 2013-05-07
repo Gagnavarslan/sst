@@ -136,7 +136,7 @@ class XmlOutputTestCase(testtools.TestCase):
         self.assertIn(self.results_file, os.listdir(self.test_base_dir))
         with open(self.results_file) as f:
             content = f.read()
-        self.assertGreater(len(content), 0)
+        self.assertRegexpMatches(content, regex)
 
     def test_xml_output_pass(self):
         suite = _make_pass_test_suite()
