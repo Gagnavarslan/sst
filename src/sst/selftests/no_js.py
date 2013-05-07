@@ -1,3 +1,4 @@
+import sst
 import sst.actions
 from sst import config
 
@@ -7,6 +8,7 @@ if config.browser_type != 'firefox':
 
 JAVASCRIPT_DISABLED = True
 
+sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/nojs/')
 
 sst.actions.assert_text('test', "Before JS")

@@ -1,3 +1,4 @@
+import sst
 import sst.actions
 from sst import config
 
@@ -6,6 +7,7 @@ from sst import config
 if config.browser_type == 'chrome':
     sst.actions.skip()
 
+sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/')
 
 u = u'abcdéשאלק'

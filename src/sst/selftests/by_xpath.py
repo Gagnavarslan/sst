@@ -1,3 +1,4 @@
+import sst
 import sst.actions
 
 # xpath locator tests
@@ -5,6 +6,7 @@ import sst.actions
 # see: http://seleniumhq.org/docs/appendix_locating_techniques.html
 
 
+sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/')
 
 sst.actions.get_element_by_xpath("//p[contains(@class, 'unique_class')]")

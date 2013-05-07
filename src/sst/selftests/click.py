@@ -1,6 +1,8 @@
+import sst
 import sst.actions
 
 
+sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/')
 
 # checks that clicking works at the element level as well

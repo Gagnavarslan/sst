@@ -1,3 +1,4 @@
+import sst
 import sst.actions
 from time import time
 
@@ -27,6 +28,7 @@ def get_condition(result=True, wait=0, raises=False,
         return False
     return condition
 
+sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/')
 sst.actions.set_wait_timeout(0.1)
 
