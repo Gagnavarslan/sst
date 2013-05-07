@@ -19,8 +19,10 @@
 import os
 import shutil
 import socket
+import sys
 import tempfile
 
+import testtools
 from sst import case
 
 
@@ -36,6 +38,19 @@ class SSTBrowserLessTestCase(case.SSTTestCase):
         pass
 
 
+class ImportingLocalFilesTest(testtools.TestCase):
+    """Class for tests requiring import of locally generated files.
+
+    This setup the tests working dir in a newly created temp dir and restore
+    sys.modules and sys.path at the end of the test.
+    """
+    def setUp(self):
+        super(ImportingLocalFilesTest, self).setUp()
+        set_cwd_to_tmp(self)
+        protect_imports(self)
+        sys.path.insert(0, self.test_base_dir)
+
+
 def set_cwd_to_tmp(test):
     """Create a temp dir an cd into it for the test duration.
 
@@ -46,6 +61,27 @@ def set_cwd_to_tmp(test):
     current_dir = os.getcwdu()
     test.addCleanup(os.chdir, current_dir)
     os.chdir(test.test_base_dir)
+
+
+def protect_imports(test):
+    """Protect sys.modules and sys.path for the test duration.
+
+    This is useful to test imports which modifies sys.modules or requires
+    modifying sys.path.
+    """
+    # Protect sys.modules and sys.path to be able to test imports
+    test.patch(sys, 'path', list(sys.path))
+    orig_modules = sys.modules.copy()
+
+    def cleanup_modules():
+        # Remove all added modules
+        added = [m for m in sys.modules.keys() if m not in orig_modules]
+        if added:
+            for m in added:
+                del sys.modules[m]
+        # Restore deleted or modified modules
+        sys.modules.update(orig_modules)
+    test.addCleanup(cleanup_modules)
 
 
 def check_devserver_port_used(port):

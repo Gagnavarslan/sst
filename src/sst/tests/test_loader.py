@@ -27,8 +27,8 @@ The isolation is provided via two means:
 - the file hierarchies are created in a temporary directory added to sys.path
   so test can just import from their current directory,
 
-- protect_imports will remove the loaded modules from sys.modules and restore
-  sys.path.
+- tests.protect_imports will remove the loaded modules from sys.modules and
+  restore sys.path.
 
 Because the tests themselves shares this module name space, care must be taken
 by tests to not use module names already used in the module. Most of tests
@@ -39,7 +39,6 @@ below therefore use 't' as the main directory because:
 
 """
 import re
-import sys
 import testtools
 import unittest
 
@@ -115,104 +114,7 @@ class TestFileLoader(testtools.TestCase):
         self.assertIs(None, suite)
 
 
-def protect_imports(test):
-    """Protect sys.modules and sys.path for the test duration.
-
-    This is useful to test imports which modifies sys.modules or requires
-    modifying sys.path.
-    """
-    # Protect sys.modules and sys.path to be able to test imports
-    test.patch(sys, 'path', list(sys.path))
-    orig_modules = sys.modules.copy()
-
-    def cleanup_modules():
-        # Remove all added modules
-        added = [m for m in sys.modules.keys() if m not in orig_modules]
-        if added:
-            for m in added:
-                del sys.modules[m]
-        # Restore deleted or modified modules
-        sys.modules.update(orig_modules)
-    test.addCleanup(cleanup_modules)
-
-
-class TestProtectImports(testtools.TestCase):
-
-    def setUp(self):
-        super(TestProtectImports, self).setUp()
-        protect_imports(self)
-
-    def run_successful_test(self, test):
-        result = testtools.TestResult()
-        test.run(result)
-        self.assertTrue(result.wasSuccessful())
-
-    def test_add_module(self):
-        self.assertIs(None, sys.modules.get('foo', None))
-
-        class Test(testtools.TestCase):
-
-            def test_it(self):
-                protect_imports(self)
-                sys.modules['foo'] = 'bar'
-
-        self.run_successful_test(Test('test_it'))
-        self.assertIs(None, sys.modules.get('foo', None))
-
-    def test_remove_module(self):
-        self.assertIs(None, sys.modules.get('I_dont_exist', None))
-        sys.modules['I_dont_exist'] = 'bar'
-
-        class Test(testtools.TestCase):
-
-            def test_it(self):
-                protect_imports(self)
-                self.assertEqual('bar', sys.modules['I_dont_exist'])
-                del sys.modules['I_dont_exist']
-        self.run_successful_test(Test('test_it'))
-        self.assertEqual('bar', sys.modules['I_dont_exist'])
-
-    def test_modify_module(self):
-        self.assertIs(None, sys.modules.get('I_dont_exist', None))
-        sys.modules['I_dont_exist'] = 'bar'
-
-        class Test(testtools.TestCase):
-
-            def test_it(self):
-                protect_imports(self)
-                self.assertEqual('bar', sys.modules['I_dont_exist'])
-                sys.modules['I_dont_exist'] = 'qux'
-        self.run_successful_test(Test('test_it'))
-        self.assertEqual('bar', sys.modules['I_dont_exist'])
-
-    def test_sys_path_restored(self):
-        tests.set_cwd_to_tmp(self)
-        inserted = self.test_base_dir
-        self.assertFalse(inserted in sys.path)
-
-        class Test(testtools.TestCase):
-
-            def test_it(self):
-                protect_imports(self)
-                sys.path.insert(0, inserted)
-        self.run_successful_test(Test('test_it'))
-        self.assertFalse(inserted in sys.path)
-
-
-class ImportingLocalFilesTest(testtools.TestCase):
-    """Class for tests requiring import of locally generated files.
-
-    This setup the tests working dir in a newly created temp dir and restore
-    sys.modules and sys.path at the end of the test.
-    """
-    def setUp(self):
-        super(ImportingLocalFilesTest, self).setUp()
-        tests.set_cwd_to_tmp(self)
-        protect_imports(self)
-        sys.path.insert(0, self.test_base_dir)
-
-
-class TestModuleLoader(ImportingLocalFilesTest):
+class TestModuleLoader(tests.ImportingLocalFilesTest):
 
     def get_test_loader(self):
         return loader.TestLoader()
@@ -251,7 +153,7 @@ class Test(unittest.TestCase):
         self.assertEqual(1, suite.countTestCases())
 
 
-class TestDirLoaderDiscoverPath(ImportingLocalFilesTest):
+class TestDirLoaderDiscoverPath(tests.ImportingLocalFilesTest):
 
     def get_test_loader(self):
         test_loader = loader.TestLoader()
@@ -344,7 +246,7 @@ class Test(unittest.TestCase):
         self.assertEqual(1, suite.countTestCases())
 
 
-class TestPackageLoader(ImportingLocalFilesTest):
+class TestPackageLoader(tests.ImportingLocalFilesTest):
 
     def get_test_loader(self):
         test_loader = loader.TestLoader()
@@ -406,7 +308,7 @@ class TestLoadScript(testtools.TestCase):
         self.assertEqual(0, suite.countTestCases())
 
 
-class TestScriptLoader(ImportingLocalFilesTest):
+class TestScriptLoader(tests.ImportingLocalFilesTest):
 
     def get_test_loader(self):
         return loader.TestLoader()
@@ -432,7 +334,7 @@ file: t/_private.py
         self.assertIs(None, suite)
 
 
-class TesScriptDirLoader(ImportingLocalFilesTest):
+class TesScriptDirLoader(tests.ImportingLocalFilesTest):
 
     def test_shared(self):
         tests.write_tree_from_desc('''dir: t
@@ -466,7 +368,7 @@ Don't look at me !
         self.assertEqual(1, suite.countTestCases())
 
 
-class TestTestLoader(ImportingLocalFilesTest):
+class TestTestLoader(tests.ImportingLocalFilesTest):
 
     def test_simple_file_in_a_dir(self):
         tests.write_tree_from_desc('''dir: t
@@ -617,7 +519,7 @@ _hidden_too.py
                          [t.id() for t in testtools.iterate_tests(suite)])
 
 
-class TestTestLoaderPattern(ImportingLocalFilesTest):
+class TestTestLoaderPattern(tests.ImportingLocalFilesTest):
 
     def test_default_pattern(self):
         tests.write_tree_from_desc('''dir: t
@@ -660,7 +562,7 @@ class TestTestLoaderTopLevelDir(testtools.TestCase):
         super(TestTestLoaderTopLevelDir, self).setUp()
         # We build trees rooted in test_base_dir from which we will import
         tests.set_cwd_to_tmp(self)
-        protect_imports(self)
+        tests.protect_imports(self)
 
     def _create_foo_in_tests(self):
         tests.write_tree_from_desc('''dir: t
