@@ -59,6 +59,12 @@ class NameMatcher(object):
 
 
 class FileLoader(object):
+    """Load tests from a file.
+
+    This is an abstract class allowing daughter classes to enforce constraints
+    including the ability to load tests from files that cannot be imported.
+
+    """
 
     def __init__(self, test_loader, matcher=None):
         """Load tests from a file."""
@@ -80,6 +86,11 @@ class FileLoader(object):
 
 
 class ModuleLoader(FileLoader):
+    """Load tests from a python module.
+
+    This handles base name matching and loading tests defined in an importable
+    python module.
+    """
 
     def __init__(self, test_loader, matcher=None):
         if matcher is None:
@@ -96,6 +107,10 @@ class ModuleLoader(FileLoader):
 
 
 class ScriptLoader(FileLoader):
+    """Load tests from an sst script.
+
+    This handles base name matching and loading tests defined in an sst script.
+    """
 
     def __init__(self, test_loader, matcher=None):
         if matcher is None:
@@ -111,6 +126,12 @@ class ScriptLoader(FileLoader):
 
 
 class DirLoader(object):
+    """Load tests from a tree.
+
+    This is an abstract class allowing daughter classes to enforce constraints
+    including the ability to load tests from files and directories that cannot
+    be imported.
+    """
 
     def __init__(self, test_loader, matcher=None):
         """Load tests from a directory."""
@@ -145,12 +166,18 @@ class DirLoader(object):
             loader = self.test_loader.fileLoaderClass(self.test_loader)
         elif os.path.isdir(path):
             loader = self.test_loader.dirLoaderClass(self.test_loader)
-        if loader:
+        if loader is not None:
             return loader.discover(directory, name)
         return None
 
 
 class ScriptDirLoader(DirLoader):
+    """Load tests for a tree containing scrits.
+
+    Scripts can be organized in a tree where directories are not python
+    packages. Since scripts are not imported, they don't require the
+    directories containing them to be packages.
+    """
 
     def __init__(self, test_loader, matcher=None):
         if matcher is None:
@@ -181,6 +208,10 @@ class ScriptDirLoader(DirLoader):
 
 
 class PackageLoader(DirLoader):
+    """Load tests for a package.
+
+    A package provides a way for the user to specify how tests are loaded.
+    """
 
     def discover(self, directory, name):
         if not self.matches(name):
@@ -250,6 +281,13 @@ class TestLoader(unittest.TestLoader):
     right sst specific attributes (browser, error handling, reporting).
 
     This also allows test case based modules to be loaded when appropriate.
+
+    This also provide ways for packages to define the test loading as they see
+    fit.
+
+    Sorting happens on base names inside a directory while walking the tree and
+    on test classes and test method names when loading a module. Those sortings
+    combined provide a test suite where test ids are sorted.
     """
 
     dirLoaderClass = PackageLoader
