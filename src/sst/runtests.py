@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2011-2013 Canonical Ltd.
+#   Copyright (c) 2011,2012,2013 Canonical Ltd.
 #
 #   This file is part of: SST (selenium-simple-test)
 #   https://launchpad.net/selenium-simple-test
@@ -18,25 +18,24 @@
 #
 
 import ast
-import logging
 import fnmatch
-import htmlrunner
-import junitxmlrunner
+import junitxml
+import logging
 import os
 import pdb
 import sys
 import traceback
 
+from timeit import default_timer
 from unittest import (
     defaultTestLoader,
     TestSuite,
-    TextTestRunner,
 )
 
 from selenium import webdriver
 import testtools
 import testtools.content
-
+import testtools.testresult
 from sst import (
     actions,
     config,
@@ -111,27 +110,25 @@ def runtests(test_names, test_dir='.', collect_only=False,
 
     if report_format == 'xml':
         _make_results_dir()
-        fp = file(os.path.join(config.results_directory, 'results.xml'), 'wb')
-        # XXX failfast not supported in XMLTestRunner
-        runner = junitxmlrunner.XMLTestRunner(output=fp, verbosity=2)
-
-    elif report_format == 'html':
-        _make_results_dir()
-        fp = file(os.path.join(config.results_directory, 'results.html'), 'wb')
-        runner = htmlrunner.HTMLTestRunner(
-            stream=fp, title='SST Test Report', verbosity=2, failfast=failfast
+        results_file = os.path.join(config.results_directory, 'results.xml')
+        xml_stream = file(results_file, 'wb')
+        result = testtools.testresult.MultiTestResult(
+            TextTestResult(sys.stdout, failfast=failfast),
+            junitxml.JUnitXmlResult(xml_stream),
         )
-
+        result.failfast = failfast
     else:
-        runner = TextTestRunner(verbosity=2, failfast=failfast)
+        result = TextTestResult(sys.stdout, failfast=failfast)
 
+    result.startTestRun()
     try:
-        runner.run(alltests)
+        alltests.run(result)
     except KeyboardInterrupt:
         print >> sys.stderr, 'Test run interrupted'
     finally:
         # XXX should warn on cases that were specified but not found
         pass
+    result.stopTestRun()
 
 
 def _get_full_path(path):
@@ -275,6 +272,58 @@ def use_xvfb_server(test, xvfb=None):
     xvfb.start()
     test.addCleanup(xvfb.stop)
     return xvfb
+
+
+class TextTestResult(testtools.testresult.TextTestResult):
+    """A TestResult which outputs activity to a text stream.
+
+    TODO: add the verbosity parameter.
+    """
+
+    def __init__(self, stream, failfast=False):
+        super(TextTestResult, self).__init__(stream, failfast)
+
+    def startTestRun(self):
+        super(TextTestResult, self).startTestRun()
+
+    def startTest(self, test):
+        self.stream.write(str(test))
+        self.stream.write(' ...\n')
+        self.start_time = default_timer()
+        super(TextTestResult, self).startTest(test)
+
+    def stopTest(self, test):
+        self.stream.write('\n')
+        self.stream.flush()
+        super(TextTestResult, self).stopTest(test)
+
+    def addExpectedFailure(self, test, err=None, details=None):
+        self.stream.write('Expected Failure\n')
+        super(TextTestResult, self).addExpectedFailure(test, err, details)
+
+    def addError(self, test, err=None, details=None):
+        self.stream.write('ERROR\n')
+        super(TextTestResult, self).addError(test, err, details)
+
+    def addFailure(self, test, err=None, details=None):
+        self.stream.write('FAIL\n')
+        super(TextTestResult, self).addFailure(test, err, details)
+
+    def addSkip(self, test, reason=None, details=None):
+        if reason is None:
+            self.stream.write('Skipped\n')
+        else:
+            self.stream.write('Skipped %r\n' % reason)
+        super(TextTestResult, self).addSkip(test, reason, details)
+
+    def addSuccess(self, test, details=None):
+        elapsed_time = default_timer() - self.start_time
+        self.stream.write('OK (%.3f secs)' % elapsed_time)
+        super(TextTestResult, self).addSuccess(test, details)
+
+    def addUnexpectedSuccess(self, test, details=None):
+        self.stream.write('Unexpected Success\n')
+        super(TextTestResult, self).addUnexpectedSuccess(test, details)
 
 
 class BrowserFactory(object):
@@ -425,7 +474,7 @@ class SSTTestCase(testtools.TestCase):
             self.addOnException(self.report_extensively)
 
     def start_browser(self):
-        logger.debug('\nStarting browser')
+        logger.debug('Starting browser')
         self.browser_factory.setup_for_test(self)
         self.browser = self.browser_factory.browser()
         logger.debug('Browser started: %s' % (self.browser.name))
@@ -481,10 +530,11 @@ class SSTScriptTestCase(SSTTestCase):
     script_dir = '.'
     script_name = None
 
-    def __init__(self, testMethod, context_row=None):
+    def __init__(self, test_method, context_row=None):
         super(SSTScriptTestCase, self).__init__('run_test_script')
+        self.test_method = test_method
         self.id = lambda: '%s.%s.%s' % (self.__class__.__module__,
-                                        self.__class__.__name__, testMethod)
+                                        self.__class__.__name__, test_method)
         if context_row is None:
             context_row = {}
         self.context = context_row
@@ -493,8 +543,7 @@ class SSTScriptTestCase(SSTTestCase):
         # Since we use run_test_script to encapsulate the call to the
         # compiled code, we need to override __str__ to get a proper name
         # reported.
-        return "%s (%s.%s)" % (self.id(), self.__class__.__module__,
-                               self.__class__.__name__)
+        return "%s (%s)" % (self.test_method, self.id())
 
     def shortDescription(self):
         # The description should be first line of the test method's docstring.
