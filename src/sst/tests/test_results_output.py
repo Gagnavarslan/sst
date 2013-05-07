@@ -130,6 +130,7 @@ class XmlOutputTestCase(testtools.TestCase):
 
     def assert_output(self, suite, regex):
         suite.run(self.xml_result)
+        # need this to signal junitxml or no results get written
         self.xml_result.stopTestRun()
         self.xml_stream.close()
         self.assertIn(self.results_file, os.listdir(self.test_base_dir))
