@@ -21,7 +21,8 @@ sst.actions.set_base_url('localhost:%s' % sst.DEVSERVER_PORT)
 assert sst.actions.get_base_url() == 'http://localhost:%s' % sst.DEVSERVER_PORT
 
 sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
-assert sst.actions.get_base_url() == 'http://localhost:%s/' % sst.DEVSERVER_PORT
+assert (sst.actions.get_base_url()
+        == 'http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/')
 
 # assert_url adds the base url for relative urls
@@ -36,7 +37,7 @@ sst.actions.fails(sst.actions.assert_url, '/begin/')
 sst.actions.assert_url('http://localhost:%s' % sst.DEVSERVER_PORT)
 
 sst.actions.reset_base_url()
-assert sst.actions.get_base_url() == None
+assert sst.actions.get_base_url() is None
 sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/')
 sst.actions.assert_url('http://localhost:%s/' % sst.DEVSERVER_PORT)

@@ -246,6 +246,8 @@ def sleep(secs):
 def _fix_url(url):
     parsed = urlparse(url)
     if not parsed.scheme:
+        if BASE_URL is None:
+            _raise('BASE_URL is not set, did you call set_base_url ?')
         url = urljoin(BASE_URL, url)
     return url
 

@@ -100,3 +100,11 @@ class TestElementToString(testtools.TestCase):
             identifier=None, text=None, value=None, outer_html='<p></p>')
         self.assertEqual(
             actions._element_to_string(element), '<p></p>')
+
+
+class TestBaseUrl(testtools.TestCase):
+
+    def test_go_to(self):
+        e = self.assertRaises(AssertionError, actions.go_to, '/')
+        self.assertEqual('BASE_URL is not set, did you call set_base_url ?',
+                         e.message)
