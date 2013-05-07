@@ -76,7 +76,7 @@ class ConsoleOutputTestCase(testtools.TestCase):
         self.out = StringIO()
         self.text_result = runtests.TextTestResult(self.out)
 
-    def execute_test(self, suite, regex):
+    def assert_output(self, suite, regex):
         suite.run(self.text_result)
         self.console_output = self.out.getvalue()
         self.assertRegexpMatches(self.console_output, regex)
@@ -87,7 +87,7 @@ class ConsoleOutputTestCase(testtools.TestCase):
             r'test_inner_pass ' \
             r'\(sst.tests.test_results_output.InnerPassTestCase\) ...' \
             r'\nOK \([0-9]*.[0-9]{3} secs\)\n'
-        self.execute_test(suite, regex)
+        self.assert_output(suite, regex)
 
     def test_text_output_fail(self):
         suite = _make_fail_test_suite()
@@ -95,7 +95,7 @@ class ConsoleOutputTestCase(testtools.TestCase):
             r'test_inner_fail ' \
             r'\(sst.tests.test_results_output.InnerFailTestCase\) ...' \
             r'\nFAIL\n'
-        self.execute_test(suite, regex)
+        self.assert_output(suite, regex)
 
     def test_text_output_error(self):
         suite = _make_error_test_suite()
@@ -103,7 +103,7 @@ class ConsoleOutputTestCase(testtools.TestCase):
             r'test_inner_error ' \
             r'\(sst.tests.test_results_output.InnerErrorTestCase\) ...' \
             r'\nERROR\n'
-        self.execute_test(suite, regex)
+        self.assert_output(suite, regex)
 
     def test_text_output_skip(self):
         suite = _make_skip_test_suite()
@@ -111,7 +111,7 @@ class ConsoleOutputTestCase(testtools.TestCase):
             r'test_inner_skip ' \
             r'\(sst.tests.test_results_output.InnerSkipTestCase\) ...' \
             r'\nSkipped \'skip me\'\n'
-        self.execute_test(suite, regex)
+        self.assert_output(suite, regex)
 
 
 class XmlOutputTestCase(testtools.TestCase):
@@ -124,7 +124,7 @@ class XmlOutputTestCase(testtools.TestCase):
         self.xml_result = junitxml.JUnitXmlResult(self.xml_stream)
         self.addCleanup(os.remove, 'results.xml')
 
-    def execute_test(self, suite, regex):
+    def assert_output(self, suite, regex):
         suite.run(self.xml_result)
         self.xml_result.stopTestRun()
         self.xml_stream.close()
@@ -141,7 +141,7 @@ class XmlOutputTestCase(testtools.TestCase):
             r'<testcase ' \
             r'classname="sst.tests.test_results_output.InnerPassTestCase" ' \
             r'name="test_inner_pass" time="[0-9]*.[0-9]{3}"'
-        self.execute_test(suite, regex)
+        self.assert_output(suite, regex)
 
     def test_xml_output_fail(self):
         suite = _make_fail_test_suite()
@@ -151,7 +151,7 @@ class XmlOutputTestCase(testtools.TestCase):
             r'<testcase ' \
             r'classname="sst.tests.test_results_output.InnerFailTestCase" ' \
             r'name="test_inner_fail" time="[0-9]*.[0-9]{3}"'
-        self.execute_test(suite, regex)
+        self.assert_output(suite, regex)
 
     def test_xml_output_error(self):
         suite = _make_error_test_suite()
@@ -161,7 +161,7 @@ class XmlOutputTestCase(testtools.TestCase):
             r'<testcase ' \
             r'classname="sst.tests.test_results_output.InnerErrorTestCase" ' \
             r'name="test_inner_error" time="[0-9]*.[0-9]{3}"'
-        self.execute_test(suite, regex)
+        self.assert_output(suite, regex)
 
     def test_xml_output_skip(self):
         suite = _make_skip_test_suite()
@@ -171,4 +171,4 @@ class XmlOutputTestCase(testtools.TestCase):
             r'test_results_output.InnerSkipTestCase" ' \
             r'name="test_inner_skip" time="[0-9]*.[0-9]{3}"' \
             r'>\n<skipped>skip me</skipped>\n</testcase>\n</testsuite>'
-        self.execute_test(suite, regex)
+        self.assert_output(suite, regex)
