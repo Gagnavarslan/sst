@@ -3,7 +3,7 @@
 # Continuous Integration script for SST
 #
 #  Options:
-#    --bootstrap, --flake8, --unit, ---acceptance=BROWSER
+#    --bootstrap, --flake8, --unit, --acceptance BROWSER
 #
 #  Example:
 #    bootstrap environment, run static checks, run unit tests, run
@@ -11,13 +11,13 @@
 #
 #    $ ./ci.sh --bootstrap --flake8 --unit --acceptance
 #
-#    * BROWSER options are "Firefox/Chrome/PhantomJS.  Default is "Firefox".
+#    * BROWSER options are Firefox/Chrome/PhantomJS/etc.  Default is "Firefox".
 #
 #  Instructions:
-#   1. ensure you have Xvfb, Firefox or Chrome/Chromium installed
+#   1. ensure you have Xvfb, Firefox or other supported browser installed
 #   2. $ bzr branch lp:selenium-simple-test
 #   3. cd selenium-simple-test
-#   4. run this this script
+#   4. run this script
 #
 
 

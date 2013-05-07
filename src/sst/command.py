@@ -55,11 +55,11 @@ def get_common_options():
                       help='directory of test case files')
     parser.add_option('-r', dest='report_format',
                       default='console',
-                      help='results report format (html, xml, console)')
+                      help='valid report types: xml)')
     parser.add_option('-b', dest='browser_type',
                       default='Firefox',
                       help=('select webdriver (Firefox, Chrome, '
-                            'Opera, PhantomJS, etc)'))
+                            'PhantomJS, etc)'))
     parser.add_option('-j', dest='javascript_disabled',
                       default=False, action='store_true',
                       help='disable javascript in browser')
@@ -90,11 +90,11 @@ def get_common_options():
                       'to flags')
     parser.add_option('--extended-tracebacks', dest='extended_tracebacks',
                       action='store_true', default=False,
-                      help='Add extra information (page source) to failure '
+                      help='add extra information (page source) to failure'
                       'reports')
     parser.add_option('--collect-only', dest='collect_only',
                       action='store_true', default=False,
-                      help='Collect/print cases without running tests')
+                      help='collect/print cases without running tests')
     return parser
 
 
@@ -103,10 +103,10 @@ def get_run_options():
     parser.add_option('--test',
                       dest='run_tests', action='store_true',
                       default=False,
-                      help='run selftests')
+                      help='run selftests (acceptance tests using django)')
     parser.add_option('-x', dest='xserver_headless',
                       default=False, action='store_true',
-                      help='run browser in headless xserver')
+                      help='run browser in headless xserver (Xvfb)')
     return parser
 
 

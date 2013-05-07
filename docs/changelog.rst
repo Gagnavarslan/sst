@@ -20,6 +20,9 @@ version **0.2.4** (Not yet released)
 * start documenting the debian/ubuntu packaging process.
 * requires ``set_base_url`` to be called and displaying a suitable error
   message otherwise.
+* removed HTML results reports.
+* switched to `junitxml` dependency for XML report generation.
+
 
 version **0.2.3** (2013 Apr 17)
 *******************************
