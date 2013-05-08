@@ -133,9 +133,9 @@ def retry_on_exception(exception, retries=None):
             tries = 0
             max_time = time.time() + _TIMEOUT
 
-            retry = lambda: (
-                (retries is None and time.time() < max_time) or
-                (retries is not None and tries <= retries))
+            def retry():
+                return ((retries is None and time.time() < max_time) or
+                        (retries is not None and tries <= retries))
 
             while(retry()):
                 tries = tries + 1
