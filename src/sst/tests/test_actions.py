@@ -19,9 +19,11 @@
 
 from cStringIO import StringIO
 import logging
+import random
 
 import mock
 import testtools
+import time
 
 from selenium.common import exceptions
 from selenium.webdriver.remote import webelement
@@ -58,6 +60,39 @@ class TestRetryOnException(testtools.TestCase):
             'Retrying after catching: ',
             self.out.getvalue())
 
+    def test_retry_on_exception_sleeps_poll_time(self):
+        @actions.retry_on_exception(TestException, retries=1)
+        def protected_raiser():
+            return self.raise_exception(times=1)
+
+        poll_time = random.random()
+        actions.set_wait_timeout(10, poll_time)
+        with mock.patch('time.sleep') as mock_sleep:
+            protected_raiser()
+
+        mock_sleep.assert_called_once_with(poll_time)
+
+    def test_retry_on_exception_fails_with_max_retries(self):
+        max_retries = 1
+
+        @actions.retry_on_exception(TestException, retries=max_retries)
+        def protected_raiser():
+            return self.raise_exception(times=max_retries+1)
+
+        self.assertRaises(TestException, protected_raiser)
+
+    def test_retry_on_exception_fails_with_max_timeout(self):
+        timeout = 0.5
+
+        @actions.retry_on_exception(TestException)
+        def protected_raiser():
+            # It will have time to retry only once.
+            time.sleep(timeout + 0.01)
+            return self.raise_exception(times=2)
+
+        actions.set_wait_timeout(timeout)
+        self.assertRaises(TestException, protected_raiser)
+
     def test_retry_on_exception_only_once(self):
         """retry once on TestException."""
         @actions.retry_on_exception(TestException, retries=1)
@@ -65,13 +100,6 @@ class TestRetryOnException(testtools.TestCase):
             return self.raise_exception(times=1)
 
         self.assertRaisesOnlyOnce('success', protected_raiser)
-
-    def test_retry_on_exception_fails_with_max_retries(self):
-        @actions.retry_on_exception(TestException, retries=1)
-        def protected_raiser():
-            return self.raise_exception(times=2)
-
-        self.assertRaises(TestException, protected_raiser)
 
     def test_wait_for_retries_on_stale_element(self):
         self.assertRaisesOnlyOnce(
