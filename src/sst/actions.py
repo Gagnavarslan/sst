@@ -44,6 +44,7 @@ import re
 import time
 
 from datetime import datetime
+from functools import wraps
 from pdb import set_trace as debug
 from urlparse import urljoin, urlparse
 
@@ -81,7 +82,7 @@ __all__ = [
     'get_elements', 'get_elements_by_css', 'get_elements_by_xpath',
     'get_link_url', 'get_page_source', 'get_text', 'get_wait_timeout',
     'get_window_size', 'go_back', 'go_to', 'refresh', 'reset_base_url',
-    'retry_on_stale_element', 'run_test', 'save_page_source', 'set_base_url',
+    'retry_on_exception', 'run_test', 'save_page_source', 'set_base_url',
     'set_checkbox_value', 'set_dropdown_value', 'set_radio_value',
     'set_wait_timeout', 'set_window_size', 'simulate_keys', 'skip', 'sleep',
     'switch_to_frame', 'switch_to_window',
@@ -117,24 +118,38 @@ def _raise(msg):
     raise AssertionError(msg)
 
 
-def retry_on_stale_element(func):
-    """Decorate ``func`` so StaleElementReferenceException triggers a retry.
+def retry_on_exception(exception, retries=None):
+    """Decorate ``func`` so an ``exception`` triggers a retry.
 
-    ``func`` is retried only once.
+    If ``retries`` is None, ``func`` is retried until the time out set by
+    ``set_wait_timeout`` expires. Otherwise, it will be retried the especified
+    number of times. Default is None.
 
-    selenium sometimes raises StaleElementReferenceException which leads to
-    spurious failures. In those cases, using this decorator will retry the
-    function once and avoid the spurious failure. This is a work-around until
-    selenium is properly fixed and should not be abused (or there is a
-    significant risk to hide bugs in the user scripts).
     """
-    def wrapped(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except StaleElementReferenceException as e:
-            logger.warning('Retrying after catching: %r' % e)
-            return func(*args, **kwargs)
-    return wrapped
+    def middle(func):
+
+        @wraps(func)
+        def inner(*args, **kwargs):
+            tries = 0
+            max_time = time.time() + _TIMEOUT
+
+            retry = lambda: (
+                (retries is None and time.time() < max_time) or
+                (retries is not None and tries <= retries))
+
+            while(retry()):
+                tries = tries + 1
+                try:
+                    return func(*args, **kwargs)
+                except exception as e:
+                    logger.warning('Retrying after catching: %r' % e)
+                time.sleep(_POLL)
+            else:
+                raise e
+
+        return inner
+
+    return middle
 
 
 def set_base_url(url):
@@ -711,7 +726,12 @@ def _wait_for(condition, refresh_page, timeout, poll, *args, **kwargs):
     return result
 
 
-@retry_on_stale_element
+# Selenium sometimes raises StaleElementReferenceException which leads to
+# spurious failures. In those cases, using this decorator will retry the
+# function once and avoid the spurious failure. This is a work-around until
+# selenium is properly fixed and should not be abused (or there is a
+# significant risk to hide bugs in the user scripts).
+@retry_on_exception(StaleElementReferenceException, retries=1)
 def wait_for(condition, *args, **kwargs):
     """
     Wait for an action to pass. Useful for checking the results of actions
