@@ -19,28 +19,35 @@
 
 from cStringIO import StringIO
 import logging
+import random
 
 import mock
 import testtools
+import time
 
+from selenium.common import exceptions
 from selenium.webdriver.remote import webelement
 from sst import actions
 
 
-class TestRetryOnStale(testtools.TestCase):
+class TestException(Exception):
+    pass
+
+
+class TestRetryOnException(testtools.TestCase):
 
     def setUp(self):
-        super(TestRetryOnStale, self).setUp()
+        super(TestRetryOnException, self).setUp()
         self.out = StringIO()
         # Capture output from retry_on_stale_element calls
         logger = logging.getLogger('SST')
         logger.addHandler(logging.StreamHandler(self.out))
         self.nb_calls = 0
 
-    def raise_stale_element(self):
+    def raise_exception(self, exception=TestException, times=1):
         self.nb_calls += 1
-        if self.nb_calls == 1:
-            raise actions.StaleElementReferenceException('whatever')
+        if self.nb_calls <= times:
+            raise exception()
         return 'success'
 
     def assertRaisesOnlyOnce(self, expected, func, *args):
@@ -50,20 +57,54 @@ class TestRetryOnStale(testtools.TestCase):
         self.assertEqual(2, self.nb_calls)
         # And we get some feedback about the exception
         self.assertIn(
-            'Retrying after catching: StaleElementReferenceException()',
+            'Retrying after catching: ',
             self.out.getvalue())
 
-    def test_retry_on_stale_only_once(self):
-        """retry once on StaleElementReferenceException."""
-        @actions.retry_on_stale_element
+    def test_retry_on_exception_sleeps_poll_time(self):
+        @actions.retry_on_exception(TestException, retries=1)
         def protected_raiser():
-            return self.raise_stale_element()
+            return self.raise_exception(times=1)
+
+        poll_time = random.random()
+        actions.set_wait_timeout(10, poll_time)
+        with mock.patch('time.sleep') as mock_sleep:
+            protected_raiser()
+
+        mock_sleep.assert_called_once_with(poll_time)
+
+    def test_retry_on_exception_fails_with_max_retries(self):
+        max_retries = 1
+
+        @actions.retry_on_exception(TestException, retries=max_retries)
+        def protected_raiser():
+            return self.raise_exception(times=max_retries+1)
+
+        self.assertRaises(TestException, protected_raiser)
+
+    def test_retry_on_exception_fails_with_max_timeout(self):
+        timeout = 0.5
+
+        @actions.retry_on_exception(TestException)
+        def protected_raiser():
+            # It will have time to retry only once.
+            time.sleep(timeout + 0.01)
+            return self.raise_exception(times=2)
+
+        actions.set_wait_timeout(timeout)
+        self.assertRaises(TestException, protected_raiser)
+
+    def test_retry_on_exception_only_once(self):
+        """retry once on TestException."""
+        @actions.retry_on_exception(TestException, retries=1)
+        def protected_raiser():
+            return self.raise_exception(times=1)
 
         self.assertRaisesOnlyOnce('success', protected_raiser)
 
-    def test_wait_for_retries(self):
-        self.assertRaisesOnlyOnce('success', actions.wait_for,
-                                  self.raise_stale_element)
+    def test_wait_for_retries_on_stale_element(self):
+        self.assertRaisesOnlyOnce(
+            'success', actions.wait_for, self.raise_exception,
+            exceptions.StaleElementReferenceException, 1)
 
 
 class TestElementToString(testtools.TestCase):

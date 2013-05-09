@@ -41,7 +41,7 @@ SST consists of:
  * headless (xvfb) mode
  * screenshots on errors
 
-Test output can be displayed to the console, saved as an HTML report, or
+Test output is displayed to the console and optionally saved as 
 JUnit-compatible XML for compatibility with CI systems.
 
 
@@ -126,20 +126,21 @@ Options::
 
   -h, --help                show this help message and exit
   -d DIR_NAME               directory of test case files
-  -r REPORT_FORMAT          results report format (html, xml, console)
-  -b BROWSER_TYPE           select webdriver (Firefox, Chrome, Ie, etc)
+  -r REPORT_FORMAT          report type: xml
+  -b BROWSER_TYPE           select webdriver (Firefox, Chrome, PhantomJS, etc)
   -j                        disable javascript in browser
   -m SHARED_MODULES         directory for shared modules
   -q                        output less debugging info during test run
   -V                        print version info and exit
   -s                        save screenshots on failures
-  -x                        run browser in headless xserver
+  -x                        run browser in headless xserver (Xvfb)
   --failfast                stop test execution after first failure
   --debug                   drop into debugger on test fail or error
-  --with-flags=FLAGS        comma separated list of flags to run tests with
+  --with-flags=WITH_FLAGS   comma separated list of flags to run tests with
   --disable-flag-skips      run all tests, disable skipping tests due to flags
-  --extended-tracebacks     Add extra information (page source) to failure reports
-  --test                    run selftests
+  --extended-tracebacks     add extra information (page source) to failure reports
+  --collect-only            collect/print cases without running tests
+  --test                    run selftests (acceptance tests with django server)
 
 
 --------------------
@@ -184,9 +185,9 @@ allows you to put Python packages/modules directly in your test directories
 if you want. A better option is to use the shared directory.
 
 
----------------------------------
-Using sst in unittest test suites
----------------------------------
+-------------------------------------
+    Using sst in unittest test suites
+-------------------------------------
 
 sst uses unittest test cases internally to wrap the execution of the script
 and taking care of starting and stopping the browser. If you prefer to
@@ -269,7 +270,7 @@ information::
     Disabling Javascript
 ------------------------
 
-If you need to disable Javascript for an individual test you can do it by
+If you need to disable Javascript for an individual test, you can do it by
 putting the following at the start of the test::
 
     JAVASCRIPT_DISABLED = True
@@ -294,16 +295,16 @@ putting the following at the start of the test::
     (ENV)$ pip install -r requirements.txt
     (ENV)$ ./sst-run -d examples
     
-* (optional) Install `nose` and run SST's internal unit tests::
+* (optional) Install test dependencies and run SST's internal unit tests::
 
-    (ENV)$ pip install nose
+    (ENV)$ pip install mock nose pep8
     (ENV)$ nosetests --match ^test_.* --exclude="ENV|testproject|selftests"
 
 * (optional) Install `django` and run SST's internal test application with
   acceptance tests
 
     (ENV)$ pip install django
-    (ENV)$ ./sst-run --test x
+    (ENV)$ ./sst-run --test -x
 
 * `Launchpad Project <https://launchpad.net/selenium-simple-test>`_
 

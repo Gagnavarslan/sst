@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2011-2013 Canonical Ltd.
+#   Copyright (c) 2011,2012,2013 Canonical Ltd.
 #
 #   This file is part of: SST (selenium-simple-test)
 #   https://launchpad.net/selenium-simple-test
@@ -18,18 +18,18 @@
 #
 
 import fnmatch
+import junitxml
 import logging
-import htmlrunner
-import junitxmlrunner
 import os
 import sys
+from timeit import default_timer
 import unittest
 import unittest.loader
 
 
 import testtools
 import testtools.content
-
+import testtools.testresult
 from sst import (
     actions,
     browsers,
@@ -146,26 +146,25 @@ def runtests(test_names, test_dir='.', collect_only=False,
         return
 
     if report_format == 'xml':
-        fp = file(os.path.join(config.results_directory, 'results.xml'), 'wb')
-        # XXX failfast not supported in XMLTestRunner
-        runner = junitxmlrunner.XMLTestRunner(output=fp, verbosity=2)
-
-    elif report_format == 'html':
-        fp = file(os.path.join(config.results_directory, 'results.html'), 'wb')
-        runner = htmlrunner.HTMLTestRunner(
-            stream=fp, title='SST Test Report', verbosity=2, failfast=failfast
+        results_file = os.path.join(config.results_directory, 'results.xml')
+        xml_stream = file(results_file, 'wb')
+        result = testtools.testresult.MultiTestResult(
+            TextTestResult(sys.stdout, failfast=failfast),
+            junitxml.JUnitXmlResult(xml_stream),
         )
-
+        result.failfast = failfast
     else:
-        runner = unittest.TextTestRunner(verbosity=2, failfast=failfast)
+        result = TextTestResult(sys.stdout, failfast=failfast)
 
+    result.startTestRun()
     try:
-        runner.run(alltests)
+        alltests.run(result)
     except KeyboardInterrupt:
         print >> sys.stderr, 'Test run interrupted'
     finally:
         # XXX should warn on cases that were specified but not found
         pass
+    result.stopTestRun()
 
 
 def find_shared_directory(test_dir, shared_directory):
@@ -213,3 +212,55 @@ def find_shared_directory(test_dir, shared_directory):
                 relpath = os.path.dirname(relpath)
 
     return os.path.abspath(shared_directory)
+
+
+class TextTestResult(testtools.testresult.TextTestResult):
+    """A TestResult which outputs activity to a text stream.
+
+    TODO: add the verbosity parameter.
+    """
+
+    def __init__(self, stream, failfast=False):
+        super(TextTestResult, self).__init__(stream, failfast)
+
+    def startTestRun(self):
+        super(TextTestResult, self).startTestRun()
+
+    def startTest(self, test):
+        self.stream.write(str(test))
+        self.stream.write(' ...\n')
+        self.start_time = default_timer()
+        super(TextTestResult, self).startTest(test)
+
+    def stopTest(self, test):
+        self.stream.write('\n')
+        self.stream.flush()
+        super(TextTestResult, self).stopTest(test)
+
+    def addExpectedFailure(self, test, err=None, details=None):
+        self.stream.write('Expected Failure\n')
+        super(TextTestResult, self).addExpectedFailure(test, err, details)
+
+    def addError(self, test, err=None, details=None):
+        self.stream.write('ERROR\n')
+        super(TextTestResult, self).addError(test, err, details)
+
+    def addFailure(self, test, err=None, details=None):
+        self.stream.write('FAIL\n')
+        super(TextTestResult, self).addFailure(test, err, details)
+
+    def addSkip(self, test, reason=None, details=None):
+        if reason is None:
+            self.stream.write('Skipped\n')
+        else:
+            self.stream.write('Skipped %r\n' % reason)
+        super(TextTestResult, self).addSkip(test, reason, details)
+
+    def addSuccess(self, test, details=None):
+        elapsed_time = default_timer() - self.start_time
+        self.stream.write('OK (%.3f secs)' % elapsed_time)
+        super(TextTestResult, self).addSuccess(test, details)
+
+    def addUnexpectedSuccess(self, test, details=None):
+        self.stream.write('Unexpected Success\n')
+        super(TextTestResult, self).addUnexpectedSuccess(test, details)
