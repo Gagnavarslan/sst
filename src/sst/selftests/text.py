@@ -1,7 +1,9 @@
+import sst
 import sst.actions
 
 # tests for assert_text, text_contains
 
+sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/')
 
 title = sst.actions.get_element(tag='title')

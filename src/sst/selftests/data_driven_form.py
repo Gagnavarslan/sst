@@ -1,5 +1,5 @@
+import sst
 import sst.actions
-
 
 # vars from data_driven_form.csv are available in namespace
 assert('textfield1' in dir())
@@ -18,6 +18,7 @@ assert(len(list_field) > 1)
 assert((list_field[0] == 1) or (list_field[0] == 'a'))
 assert isinstance(should_pass, bool)
 
+sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/')
 sst.actions.assert_title('The Page Title')
 

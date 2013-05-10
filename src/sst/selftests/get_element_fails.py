@@ -1,8 +1,10 @@
+import sst
 import sst.actions
 
 """ negative (fails) tests for object identification """
 
 
+sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/')
 sst.actions.assert_title('The Page Title')
 

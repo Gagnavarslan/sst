@@ -18,6 +18,8 @@ version **0.2.4** (Not yet released)
 * return the result of the condition checked by ``wait_for`` and
   ``wait_for_and_refresh``.
 * start documenting the debian/ubuntu packaging process.
+* requires ``set_base_url`` to be called and displaying a suitable error
+  message otherwise.
 * removed HTML results reports.
 * switched to `junitxml` dependency for XML report generation.
 * refactored ``retry_on_stale_element`` to make a new more generic
