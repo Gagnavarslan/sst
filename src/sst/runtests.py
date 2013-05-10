@@ -26,7 +26,6 @@ import pdb
 import sys
 import traceback
 
-from timeit import default_timer
 from unittest import (
     defaultTestLoader,
     TestSuite,
@@ -40,6 +39,7 @@ from sst import (
     actions,
     config,
     context,
+    result,
     xvfbdisplay,
 )
 from .actions import (
@@ -112,23 +112,23 @@ def runtests(test_names, test_dir='.', collect_only=False,
         _make_results_dir()
         results_file = os.path.join(config.results_directory, 'results.xml')
         xml_stream = file(results_file, 'wb')
-        result = testtools.testresult.MultiTestResult(
-            TextTestResult(sys.stdout, failfast=failfast),
+        res = testtools.testresult.MultiTestResult(
+            result.TextTestResult(sys.stdout, failfast=failfast),
             junitxml.JUnitXmlResult(xml_stream),
         )
         result.failfast = failfast
     else:
-        result = TextTestResult(sys.stdout, failfast=failfast)
+        res = result.TextTestResult(sys.stdout, failfast=failfast)
 
-    result.startTestRun()
+    res.startTestRun()
     try:
-        alltests.run(result)
+        alltests.run(res)
     except KeyboardInterrupt:
         print >> sys.stderr, 'Test run interrupted'
     finally:
         # XXX should warn on cases that were specified but not found
         pass
-    result.stopTestRun()
+    res.stopTestRun()
 
 
 def _get_full_path(path):
@@ -272,58 +272,6 @@ def use_xvfb_server(test, xvfb=None):
     xvfb.start()
     test.addCleanup(xvfb.stop)
     return xvfb
-
-
-class TextTestResult(testtools.testresult.TextTestResult):
-    """A TestResult which outputs activity to a text stream.
-
-    TODO: add the verbosity parameter.
-    """
-
-    def __init__(self, stream, failfast=False):
-        super(TextTestResult, self).__init__(stream, failfast)
-
-    def startTestRun(self):
-        super(TextTestResult, self).startTestRun()
-
-    def startTest(self, test):
-        self.stream.write(str(test))
-        self.stream.write(' ...\n')
-        self.start_time = default_timer()
-        super(TextTestResult, self).startTest(test)
-
-    def stopTest(self, test):
-        self.stream.write('\n')
-        self.stream.flush()
-        super(TextTestResult, self).stopTest(test)
-
-    def addExpectedFailure(self, test, err=None, details=None):
-        self.stream.write('Expected Failure\n')
-        super(TextTestResult, self).addExpectedFailure(test, err, details)
-
-    def addError(self, test, err=None, details=None):
-        self.stream.write('ERROR\n')
-        super(TextTestResult, self).addError(test, err, details)
-
-    def addFailure(self, test, err=None, details=None):
-        self.stream.write('FAIL\n')
-        super(TextTestResult, self).addFailure(test, err, details)
-
-    def addSkip(self, test, reason=None, details=None):
-        if reason is None:
-            self.stream.write('Skipped\n')
-        else:
-            self.stream.write('Skipped %r\n' % reason)
-        super(TextTestResult, self).addSkip(test, reason, details)
-
-    def addSuccess(self, test, details=None):
-        elapsed_time = default_timer() - self.start_time
-        self.stream.write('OK (%.3f secs)' % elapsed_time)
-        super(TextTestResult, self).addSuccess(test, details)
-
-    def addUnexpectedSuccess(self, test, details=None):
-        self.stream.write('Unexpected Success\n')
-        super(TextTestResult, self).addUnexpectedSuccess(test, details)
 
 
 class BrowserFactory(object):
