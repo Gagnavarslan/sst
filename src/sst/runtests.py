@@ -118,7 +118,7 @@ def runtests(test_names, test_dir='.', collect_only=False,
             text_result,
             junitxml.JUnitXmlResult(xml_stream),
         )
-        result.failfast = failfast
+        res.failfast = failfast
     else:
         res = text_result
 
