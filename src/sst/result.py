@@ -24,10 +24,7 @@ from testtools import testresult
 
 
 class TextTestResult(testresult.TextTestResult):
-    """A TestResult which outputs activity to a text stream.
-
-    TODO: add the verbosity parameter.
-    """
+    """A TestResult which outputs activity to a text stream."""
 
     def __init__(self, stream, failfast=False, verbosity=1, timer=None):
         super(TextTestResult, self).__init__(stream, failfast)
