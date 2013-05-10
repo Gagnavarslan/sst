@@ -22,20 +22,17 @@ import junitxml
 import logging
 import os
 import sys
-from timeit import default_timer
-import unittest
-import unittest.loader
 
 
 import testtools
 import testtools.content
-import testtools.testresult
 from sst import (
     actions,
     browsers,
     case,
     config,
     loader,
+    result,
 )
 
 # Maintaining compatibility until we deprecate the followings
@@ -145,26 +142,28 @@ def runtests(test_names, test_dir='.', collect_only=False,
             print t.id()
         return
 
+    text_result = result.TextTestResult(sys.stdout, failfast=failfast,
+                                        verbosity=2)
     if report_format == 'xml':
         results_file = os.path.join(config.results_directory, 'results.xml')
         xml_stream = file(results_file, 'wb')
-        result = testtools.testresult.MultiTestResult(
-            TextTestResult(sys.stdout, failfast=failfast),
+        res = testtools.testresult.MultiTestResult(
+            text_result,
             junitxml.JUnitXmlResult(xml_stream),
         )
-        result.failfast = failfast
+        res.failfast = failfast
     else:
-        result = TextTestResult(sys.stdout, failfast=failfast)
+        res = text_result
 
-    result.startTestRun()
+    res.startTestRun()
     try:
-        alltests.run(result)
+        alltests.run(res)
     except KeyboardInterrupt:
         print >> sys.stderr, 'Test run interrupted'
     finally:
         # XXX should warn on cases that were specified but not found
         pass
-    result.stopTestRun()
+    res.stopTestRun()
 
 
 def find_shared_directory(test_dir, shared_directory):
@@ -212,55 +211,3 @@ def find_shared_directory(test_dir, shared_directory):
                 relpath = os.path.dirname(relpath)
 
     return os.path.abspath(shared_directory)
-
-
-class TextTestResult(testtools.testresult.TextTestResult):
-    """A TestResult which outputs activity to a text stream.
-
-    TODO: add the verbosity parameter.
-    """
-
-    def __init__(self, stream, failfast=False):
-        super(TextTestResult, self).__init__(stream, failfast)
-
-    def startTestRun(self):
-        super(TextTestResult, self).startTestRun()
-
-    def startTest(self, test):
-        self.stream.write(str(test))
-        self.stream.write(' ...\n')
-        self.start_time = default_timer()
-        super(TextTestResult, self).startTest(test)
-
-    def stopTest(self, test):
-        self.stream.write('\n')
-        self.stream.flush()
-        super(TextTestResult, self).stopTest(test)
-
-    def addExpectedFailure(self, test, err=None, details=None):
-        self.stream.write('Expected Failure\n')
-        super(TextTestResult, self).addExpectedFailure(test, err, details)
-
-    def addError(self, test, err=None, details=None):
-        self.stream.write('ERROR\n')
-        super(TextTestResult, self).addError(test, err, details)
-
-    def addFailure(self, test, err=None, details=None):
-        self.stream.write('FAIL\n')
-        super(TextTestResult, self).addFailure(test, err, details)
-
-    def addSkip(self, test, reason=None, details=None):
-        if reason is None:
-            self.stream.write('Skipped\n')
-        else:
-            self.stream.write('Skipped %r\n' % reason)
-        super(TextTestResult, self).addSkip(test, reason, details)
-
-    def addSuccess(self, test, details=None):
-        elapsed_time = default_timer() - self.start_time
-        self.stream.write('OK (%.3f secs)' % elapsed_time)
-        super(TextTestResult, self).addSuccess(test, details)
-
-    def addUnexpectedSuccess(self, test, details=None):
-        self.stream.write('Unexpected Success\n')
-        super(TextTestResult, self).addUnexpectedSuccess(test, details)
