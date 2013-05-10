@@ -108,17 +108,19 @@ def runtests(test_names, test_dir='.', collect_only=False,
             print t.id()
         sys.exit(0)
 
+    text_result = result.TextTestResult(sys.stdout, failfast=failfast,
+                                        verbosity=2)
     if report_format == 'xml':
         _make_results_dir()
         results_file = os.path.join(config.results_directory, 'results.xml')
         xml_stream = file(results_file, 'wb')
         res = testtools.testresult.MultiTestResult(
-            result.TextTestResult(sys.stdout, failfast=failfast),
+            text_result,
             junitxml.JUnitXmlResult(xml_stream),
         )
         result.failfast = failfast
     else:
-        res = result.TextTestResult(sys.stdout, failfast=failfast)
+        res = text_result
 
     res.startTestRun()
     try:

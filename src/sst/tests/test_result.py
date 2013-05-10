@@ -18,8 +18,8 @@
 #
 
 
-import os
 from cStringIO import StringIO
+import sys
 
 import junitxml
 import testtools
@@ -74,6 +74,43 @@ class TestConsoleOutput(testtools.TestCase):
         test = get_case(kind)
         out = StringIO()
         res = result.TextTestResult(out, timer=lambda: 0.0)
+        test.run(res)
+        self.assertEquals(expected, res.stream.getvalue())
+
+    def test_pass_output(self):
+        self.assertOutput('.', 'pass')
+
+    def test_fail_output(self):
+        self.assertOutput('F', 'fail')
+
+    def test_error_output(self):
+        self.assertOutput('E', 'error')
+
+    def test_skip_output(self):
+        self.assertOutput('s', 'skip')
+
+    def test_skip_reason_output(self):
+        self.assertOutput('s', 'skip_reason')
+
+    def test_expected_failure_output(self):
+        self.assertOutput('x', 'expected_failure')
+
+    def test_unexpected_success_output(self):
+        self.assertOutput('u', 'unexpected_success')
+
+
+class TestVerboseConsoleOutput(testtools.TestCase):
+
+    def setUp(self):
+        super(TestVerboseConsoleOutput, self).setUp()
+        tests.set_cwd_to_tmp(self)
+
+    def assertOutput(self, expected, kind):
+        # We don't care about timing here so we always return 0 which
+        # simplifies matching the expected result
+        test = get_case(kind)
+        out = StringIO()
+        res = result.TextTestResult(out, verbosity=2, timer=lambda: 0.0)
         test.run(res)
         self.assertEquals(expected, res.stream.getvalue())
 
@@ -153,8 +190,7 @@ class TestXmlOutput(testtools.TestCase):
         # To allow easier reading for template, we format some known values
         kwargs.update(dict(classname='%s.%s' % (test.__class__.__module__,
                                                 test.__class__.__name__),
-                           name=test._testMethodName,
-                           filename=__file__))
+                           name=test._testMethodName))
         expected = template.format(**kwargs)
         self.assertEquals(expected, res._stream.getvalue())
 
@@ -167,7 +203,12 @@ class TestXmlOutput(testtools.TestCase):
                           'pass')
 
     def test_fail_output(self):
-        more = dict(exc_type='testtools.testresult.real._StringException')
+        # Getting the file name right is tricky, depending on whether the
+        # module was just recompiled or not __file__ can be either .py or .pyc
+        # but when it appears in an exception, the .py is always used.
+        filename = __file__.replace('.pyc', '.py').replace('.pyo', '.py')
+        more = dict(exc_type='testtools.testresult.real._StringException',
+                    filename=filename)
         self.assertOutput('''\
 <testsuite errors="0" failures="1" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
@@ -184,7 +225,12 @@ AssertionError: False is not true
                           more)
 
     def test_error_output(self):
-        more = dict(exc_type='testtools.testresult.real._StringException')
+        # Getting the file name right is tricky, depending on whether the
+        # module was just recompiled or not __file__ can be either .py or .pyc
+        # but when it appears in an exception, the .py is always used.
+        filename = __file__.replace('.pyc', '.py').replace('.pyo', '.py')
+        more = dict(exc_type='testtools.testresult.real._StringException',
+                    filename=filename)
         self.assertOutput('''\
 <testsuite errors="1" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
