@@ -23,9 +23,10 @@ from cStringIO import StringIO
 
 import testtools
 
+
+import sst
+from sst import tests
 from sst.scripts import run
-from sst.tests import check_devserver_port_used
-from sst import DEVSERVER_PORT
 
 
 class TestDjangoDevServer(testtools.TestCase):
@@ -35,18 +36,19 @@ class TestDjangoDevServer(testtools.TestCase):
         # capture test output so we don't pollute the test runs
         self.out = StringIO()
         self.patch(sys, 'stdout', self.out)
+        tests.set_cwd_to_tmp(self)
 
     def test_django_start(self):
-        self.addCleanup(run.kill_django, DEVSERVER_PORT)
-        proc = run.run_django(DEVSERVER_PORT)
+        self.addCleanup(run.kill_django, sst.DEVSERVER_PORT)
+        proc = run.run_django(sst.DEVSERVER_PORT)
         self.assertIsNotNone(proc)
 
     def test_django_devserver_port_used(self):
-        used = check_devserver_port_used(DEVSERVER_PORT)
+        used = tests.check_devserver_port_used(sst.DEVSERVER_PORT)
         self.assertFalse(used)
 
-        self.addCleanup(run.kill_django, DEVSERVER_PORT)
-        run.run_django(DEVSERVER_PORT)
+        self.addCleanup(run.kill_django, sst.DEVSERVER_PORT)
+        run.run_django(sst.DEVSERVER_PORT)
 
-        used = check_devserver_port_used(DEVSERVER_PORT)
+        used = tests.check_devserver_port_used(sst.DEVSERVER_PORT)
         self.assertTrue(used)
