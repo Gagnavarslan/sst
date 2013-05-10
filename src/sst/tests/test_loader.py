@@ -408,14 +408,16 @@ class Test(unittest.TestCase):
 dir: t/scripts
 file: t/scripts/__init__.py
 import os
-from sst import loader as sloader
+import sys
+from sst import loader
 
 
-def discover(loader, directory, name):
-    return loader.discoverTestsFromPackage(__package__,
+def discover(test_loader, directory, name):
+    return test_loader.discoverTestsFromPackage(
+        sys.modules[__package__],
         os.path.join(directory, name),
-        file_loader_class=sloader.ScriptLoader,
-        dir_loader_class=sloader.ScriptDirLoader)
+        file_loader_class=loader.ScriptLoader,
+        dir_loader_class=loader.ScriptDirLoader)
 
 file: t/scripts/script.py
 raise AssertionError('Loading only, executing fails')
@@ -435,14 +437,23 @@ file: t/__init__.py
 dir: t/regular
 file: t/regular/__init__.py
 import os
-from sst import loader as sloader
+import sys
+from sst import loader
+import unittest
 
 
-def discover(loader, directory, name):
-    return loader.discoverTestsFromPackage(__package__,
+def discover(test_loader, directory, name):
+    return test_loader.discoverTestsFromPackage(
+        sys.modules[__package__],
         os.path.join(directory, name),
-        file_loader_class=sloader.ModuleLoader,
-        dir_loader_class=sloader.PackageLoader)
+        file_loader_class=loader.ModuleLoader,
+        dir_loader_class=loader.PackageLoader)
+
+
+class Test(unittest.TestCase):
+
+    def test_in_init(self):
+      self.assertTrue(True)
 file: t/regular/foo.py
 import unittest
 
@@ -458,10 +469,10 @@ raise AssertionError('Loading only, executing fails')
             't',
             file_loader_class=loader.ScriptLoader,
             dir_loader_class=loader.ScriptDirLoader)
-        self.assertEqual(2, suite.countTestCases())
         # Check which kind of tests have been discovered or we may miss regular
         # test cases seen as scripts.
-        self.assertEqual(['t.regular.foo.Test.test_me',
+        self.assertEqual(['t.regular.Test.test_in_init',
+                          't.regular.foo.Test.test_me',
                           't.script'],
                          [t.id() for t in testtools.iterate_tests(suite)])
 
@@ -480,15 +491,17 @@ class Test_{name}(case.SSTTestCase):
 
         tests.write_tree_from_desc('''dir: tests
 file: tests/__init__.py
+import sys
 import os
-from sst import loader as sloader
+from sst import loader
 
 
-def discover(loader, directory, name):
-    return loader.discoverTestsFromPackage(__package__,
+def discover(test_loader, directory, name):
+    return test_loader.discoverTestsFromPackage(
+        sys.modules[__package__],
         os.path.join(directory, name),
-        file_loader_class=sloader.ModuleLoader,
-        dir_loader_class=sloader.PackageLoader)
+        file_loader_class=loader.ModuleLoader,
+        dir_loader_class=loader.PackageLoader)
 ''')
         tests.write_tree_from_desc(regular('tests', 'test_real', '.py'))
         tests.write_tree_from_desc(regular('tests', 'test_real1', '.py'))

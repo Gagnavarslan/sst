@@ -328,7 +328,6 @@ class TestLoader(unittest.TestLoader):
     def discoverTestsFromPackage(self, package, path, file_loader_class=None,
                                  dir_loader_class=None):
         suite = self.suiteClass()
-        # MISSINGTEST: tests defined in __init__.py are loaded
         suite.addTests(self.loadTestsFromModule(package))
         names = os.listdir(path)
         names.remove('__init__.py')
