@@ -1,3 +1,4 @@
+import sst
 import sst.actions
 
 
@@ -5,6 +6,7 @@ import sst.actions
 # we will include it with common textfield use
 
 
+sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/')
 
 sst.actions.assert_textfield('text_1')

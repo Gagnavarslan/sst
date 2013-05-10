@@ -17,6 +17,7 @@
 
 import os
 
+import sst
 import sst.actions
 
 
@@ -24,6 +25,7 @@ def is_png(data):
     return (data[:8] == '\211PNG\r\n\032\n'and (data[12:16] == 'IHDR'))
 
 
+sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/page_to_save')
 screenshot_path = sst.actions.take_screenshot()
 assert os.path.isfile(screenshot_path)

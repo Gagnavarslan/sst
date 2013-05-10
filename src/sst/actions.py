@@ -59,10 +59,7 @@ from selenium.common.exceptions import (
     WebDriverException,
 )
 
-from sst import (
-    config,
-    DEVSERVER_PORT,
-)
+from sst import config
 
 __all__ = [
     'accept_alert', 'add_cleanup', 'assert_attribute', 'assert_button',
@@ -94,8 +91,7 @@ __all__ = [
 _check_flags = True
 _test = None
 
-BASE_URL = 'http://localhost:%s/' % DEVSERVER_PORT
-__DEFAULT_BASE_URL__ = BASE_URL
+BASE_URL = None
 
 logger = logging.getLogger('SST')
 
@@ -171,7 +167,7 @@ def reset_base_url():
     Restore the base url to the default. This is called automatically for
     you when a test script completes."""
     global BASE_URL
-    BASE_URL = __DEFAULT_BASE_URL__
+    BASE_URL = None
 
 
 def end_test():
@@ -265,6 +261,8 @@ def sleep(secs):
 def _fix_url(url):
     parsed = urlparse(url)
     if not parsed.scheme:
+        if BASE_URL is None:
+            _raise('BASE_URL is not set, did you call set_base_url ?')
         url = urljoin(BASE_URL, url)
     return url
 

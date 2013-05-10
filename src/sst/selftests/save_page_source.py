@@ -18,9 +18,11 @@
 
 import codecs
 
+import sst
 import sst.actions
 
 
+sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/page_to_save')
 page_source_path = sst.actions.save_page_source()
 with codecs.open(page_source_path, 'r', encoding='utf-8') as page_source_file:

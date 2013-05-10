@@ -1,3 +1,4 @@
+import sst
 import sst.actions
 
 # check original window size
@@ -22,6 +23,7 @@ sst.actions.assert_equal(w, width)
 sst.actions.assert_equal(h, height)
 
 # load content so we can clock a popup
+sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/')
 
 # switch to new window/tab and resize it
