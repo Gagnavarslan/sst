@@ -17,7 +17,6 @@
 #   limitations under the License.
 #
 
-import fnmatch
 import junitxml
 import logging
 import os
@@ -31,6 +30,7 @@ from sst import (
     browsers,
     case,
     config,
+    filters,
     loader,
     result,
 )
@@ -97,34 +97,9 @@ def runtests(test_names, test_dir='.', collect_only=False,
                                   file_loader_class=loader.ScriptLoader,
                                   dir_loader_class=loader.ScriptDirLoader))
 
-    def filter_test_names(name):
-        if not test_names:
-            return True
-        for pattern in test_names:
-            if fnmatch.fnmatchcase(name, pattern):
-                return True
-        return False
-
-    alltests = loader.filter_suite(filter_test_names, alltests)
-
-    if includes:
-        def starts_with_one_of(test):
-            # A test is kept if its id matches one of the 'includes' prefixes
-            tid = test.id()
-            for inc in includes:
-                if tid.startswith(inc):
-                    return True
-            return False
-        alltests = loader.filter_suite(starts_with_one_of, alltests)
-    if excludes:
-        def starts_with_none_of(test):
-            # A test is kept if its id matches none of the 'excludes' prefixes
-            tid = test.id()
-            for ex in excludes:
-                if tid.startswith(ex):
-                    return False
-            return True
-        alltests = loader.filter_suite(starts_with_none_of, alltests)
+    alltests = filters.filter_by_patterns(test_names, alltests)
+    alltests = filters.include_prefixes(includes, alltests)
+    alltests = filters.exclude_prefixes(excludes, alltests)
 
     print ''
     print '  %s test cases loaded\n' % alltests.countTestCases()
