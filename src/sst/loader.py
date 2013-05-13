@@ -16,6 +16,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
+import contextlib
 import fnmatch
 import functools
 import os
@@ -245,33 +246,25 @@ class PackageLoader(DirLoader):
         return self.discover_names(path, names)
 
 
-class Loaders(object):
+@contextlib.contextmanager
+def Loaders(test_loader, file_loader_class, dir_loader_class):
     """A context manager for loading tests from a tree.
 
     This is mainly used when walking a tree a requiring a different set of
     loaders for a subtree.
     """
-
-    def __init__(self, test_loader, file_loader_class, dir_loader_class):
-        self.test_loader = test_loader
-        if file_loader_class is None:
-            file_loader_class = test_loader.fileLoaderClass
-        if dir_loader_class is None:
-            dir_loader_class = test_loader.dirLoaderClass
-        self.file_loader_class = file_loader_class
-        self.dir_loader_class = dir_loader_class
-
-    def __enter__(self):
-        self.preserved = (self.test_loader.fileLoaderClass,
-                          self.test_loader.dirLoaderClass)
-        self.test_loader.fileLoaderClass = self.file_loader_class
-        self.test_loader.dirLoaderClass = self.dir_loader_class
-        return self.test_loader
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        (self.test_loader.fileLoaderClass,
-         self.test_loader.dirLoaderClass) = self.preserved
-        return False
+    if file_loader_class is None:
+        file_loader_class = test_loader.fileLoaderClass
+    if dir_loader_class is None:
+        dir_loader_class = test_loader.dirLoaderClass
+    orig = (test_loader.fileLoaderClass, test_loader.dirLoaderClass)
+    try:
+        test_loader.fileLoaderClass = file_loader_class
+        test_loader.dirLoaderClass = dir_loader_class
+        # 'test_loader' will now use the specified file/dir loader classes
+        yield
+    finally:
+        (test_loader.fileLoaderClass, test_loader.dirLoaderClass) = orig
 
 
 class TestLoader(unittest.TestLoader):
