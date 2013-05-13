@@ -1,4 +1,4 @@
-from _module import foo
+import _module
 
 # the current test directory should be added to sys.path
-assert foo == 3
+assert _module.foo == 3
