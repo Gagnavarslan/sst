@@ -4,22 +4,11 @@
 
 * run acceptance tests
 
-  sst test -s tests.acceptance
+  sst test -i tests.acceptance
 
 * run unit tests
 
-  sst test -x tests.acceptance
-
-* provide simple helpers for the most common cases:
-
-This will probably trigger a refactor around:
-- whether dir file loaders need to be passed to discoverTests*,
-
-** ignore this tree
-
-** sst scripts here
-
-** importable tests here
+  sst test -e tests.acceptance
 
 * some test_loader tests are too big, this screams for better helpers so
    they can be simplified.

@@ -405,18 +405,9 @@ class Test(unittest.TestCase):
       self.assertTrue(True)
 dir: t/scripts
 file: t/scripts/__init__.py
-import os
-import sys
 from sst import loader
 
-
-def discover(test_loader, directory, name):
-    return test_loader.discoverTestsFromPackage(
-        sys.modules[__package__],
-        os.path.join(directory, name),
-        file_loader_class=loader.ScriptLoader,
-        dir_loader_class=loader.ScriptDirLoader)
-
+discover = loader.discoverTestScripts
 file: t/scripts/script.py
 raise AssertionError('Loading only, executing fails')
 ''')
@@ -434,19 +425,10 @@ raise AssertionError('Loading only, executing fails')
 file: t/__init__.py
 dir: t/regular
 file: t/regular/__init__.py
-import os
-import sys
 from sst import loader
 import unittest
 
-
-def discover(test_loader, directory, name):
-    return test_loader.discoverTestsFromPackage(
-        sys.modules[__package__],
-        os.path.join(directory, name),
-        file_loader_class=loader.ModuleLoader,
-        dir_loader_class=loader.PackageLoader)
-
+discover = loader.discoverRegularTests
 
 class Test(unittest.TestCase):
 
@@ -489,17 +471,9 @@ class Test_{name}(case.SSTTestCase):
 
         tests.write_tree_from_desc('''dir: tests
 file: tests/__init__.py
-import sys
-import os
 from sst import loader
 
-
-def discover(test_loader, directory, name):
-    return test_loader.discoverTestsFromPackage(
-        sys.modules[__package__],
-        os.path.join(directory, name),
-        file_loader_class=loader.ModuleLoader,
-        dir_loader_class=loader.PackageLoader)
+discover = loader.discoverRegularTests
 ''')
         tests.write_tree_from_desc(regular('tests', 'test_real', '.py'))
         tests.write_tree_from_desc(regular('tests', 'test_real1', '.py'))

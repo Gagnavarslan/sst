@@ -229,7 +229,8 @@ class PackageLoader(DirLoader):
         discover = getattr(package, 'discover', None)
         if discover is not None:
             # Since the user defined it, the package knows better
-            return discover(self.test_loader, directory, name)
+            return discover(self.test_loader, package,
+                            os.path.join(directory, name))
         # Can we use the load_tests protocol ?
         load_tests = getattr(package, 'load_tests', None)
         if load_tests is not None:
@@ -378,3 +379,32 @@ class TestLoader(unittest.TestLoader):
         test.extended_report = self.extended_report
 
         return test
+
+
+def discoverTestScripts(test_loader, package, directory):
+    """``discover`` helper to load sst scripts.
+
+    This can be used in a __init__.py file while walking a regular tests tree.
+    """
+    return test_loader.discoverTestsFromPackage(
+        package, directory,
+        file_loader_class=ScriptLoader, dir_loader_class=ScriptDirLoader)
+
+
+def discoverRegularTests(test_loader, package, directory):
+    """``discover`` helper to load regular python files defining tests.
+
+    This can be used in a __init__.py file while walking an sst tests tree.
+    """
+    return test_loader.discoverTestsFromPackage(
+        package, directory,
+        file_loader_class=ModuleLoader, dir_loader_class=PackageLoader)
+
+
+def discoverNoTests(test_loader, *args, **kwargs):
+    """Returns an empty test suite.
+
+    This can be used in a __init__.py file to prune the test loading for a
+    given subtree.
+    """
+    return test_loader.suiteClass()
