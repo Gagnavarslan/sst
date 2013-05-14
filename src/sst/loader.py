@@ -172,7 +172,7 @@ class DirLoader(object):
 
 
 class ScriptDirLoader(DirLoader):
-    """Load tests for a tree containing scrits.
+    """Load tests for a tree containing scripts.
 
     Scripts can be organized in a tree where directories are not python
     packages. Since scripts are not imported, they don't require the
@@ -233,9 +233,9 @@ class PackageLoader(DirLoader):
         # Can we use the load_tests protocol ?
         load_tests = getattr(package, 'load_tests', None)
         if load_tests is not None:
-            # FIXME: This swallows exceptions raise the by the user defined
-            # 'load_test'. We may want to give awy to expose them instead (with
-            # or without stopping the test loading) -- vila 2013-04-27
+            # FIXME: This swallows exceptions raised the by the user defined
+            # 'load_test'. We may want to give a way to expose them instead
+            # (with or without stopping the test loading) -- vila 2013-04-27
             return self.test_loader.loadTestsFromModule(package)
         # Anything else with that ?
         # Nothing for now, thanks
@@ -268,14 +268,14 @@ def Loaders(test_loader, file_loader_class, dir_loader_class):
 
 
 class TestLoader(unittest.TestLoader):
-    """Load test from an sst tree.
+    """Load tests from an sst tree.
 
     This loader is able to load sst scripts and create test cases with the
     right sst specific attributes (browser, error handling, reporting).
 
     This also allows test case based modules to be loaded when appropriate.
 
-    This also provide ways for packages to define the test loading as they see
+    This also provides ways for packages to define the test loading as they see
     fit.
 
     Sorting happens on base names inside a directory while walking the tree and
