@@ -24,27 +24,28 @@ import testtools
 from sst import filters
 
 
-def create_named_tests(names):
+def create_tests_from_ids(ids):
     suite = unittest.TestSuite()
 
     def test_id(name):
         return lambda: name
 
-    for name in names:
+    for tid in ids:
         # We need an existing method to create a test. Arbitrarily, we use
         # id(), that souldn't fail ;) We won't run the test anyway.
         test = unittest.TestCase(methodName='id')
         # We can't define the lambda here or 'name' stay bound to the
         # variable instead of the value, use a proxy to capture the value.
-        test.id = test_id(name)
+        test.id = test_id(tid)
         suite.addTest(test)
     return suite
 
 
 class TestFilterTestsById(testtools.TestCase):
 
-    def assertFiltered(self, expected, condition, actual):
-        filtered = filters.filter_suite(condition, create_named_tests(actual))
+    def assertFiltered(self, expected, condition, ids):
+        """Check that ``condition`` filters tests created from ``ids``."""
+        filtered = filters.filter_suite(condition, create_tests_from_ids(ids))
         self.assertEqual(expected,
                          [t.id() for t in testtools.iterate_tests(filtered)])
 
@@ -80,9 +81,10 @@ class TestFilterTestsById(testtools.TestCase):
 
 class TestFilterTestsByPatterns(testtools.TestCase):
 
-    def assertFiltered(self, expected, patterns, actual):
+    def assertFiltered(self, expected, patterns, ids):
+        """Check that ``patterns`` filters tests created from ``ids``."""
         filtered = filters.filter_by_patterns(patterns,
-                                              create_named_tests(actual))
+                                              create_tests_from_ids(ids))
         self.assertEqual(expected,
                          [t.id() for t in testtools.iterate_tests(filtered)])
 
@@ -100,9 +102,10 @@ class TestFilterTestsByPatterns(testtools.TestCase):
 
 class TestFilterTestsByIncludedPrefixes(testtools.TestCase):
 
-    def assertFiltered(self, expected, prefixes, actual):
+    def assertFiltered(self, expected, prefixes, ids):
+        """Check that ``prefixes`` filters tests created from ``ids``."""
         filtered = filters.include_prefixes(prefixes,
-                                            create_named_tests(actual))
+                                            create_tests_from_ids(ids))
         self.assertEqual(expected,
                          [t.id() for t in testtools.iterate_tests(filtered)])
 
@@ -120,9 +123,10 @@ class TestFilterTestsByIncludedPrefixes(testtools.TestCase):
 
 class TestFilterTestsByExcludedPrefixes(testtools.TestCase):
 
-    def assertFiltered(self, expected, prefixes, actual):
+    def assertFiltered(self, expected, prefixes, ids):
+        """Check that ``prefixes`` filters tests created from ``ids``."""
         filtered = filters.exclude_prefixes(prefixes,
-                                            create_named_tests(actual))
+                                            create_tests_from_ids(ids))
         self.assertEqual(expected,
                          [t.id() for t in testtools.iterate_tests(filtered)])
 

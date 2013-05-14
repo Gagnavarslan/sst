@@ -25,8 +25,8 @@ from sst import command
 class TestArgParsing(testtools.TestCase):
 
     def parse_args(self, provided_args):
-        # command.get_opts_run and friends relies on optparse defaulting so
-        # sys.argv[1:]. To omply with that, we add a dummy first arg to
+        # command.get_opts_run and friends relies on optparse defaulting to
+        # sys.argv[1:]. To comply with that, we add a dummy first arg to
         # represent the script name and remove it from the returned args.
         opts, remaining_args = command.get_opts_run(
             ['dummy-for-tests'] + provided_args)

@@ -30,7 +30,7 @@ The isolation is provided via two means:
 - tests.protect_imports will remove the loaded modules from sys.modules and
   restore sys.path.
 
-Because the tests themselves shares this module name space, care must be taken
+Because the tests themselves share this module name space, care must be taken
 by tests to not use module names already used in the module. Most of tests
 below therefore use 't' as the main directory because:
 - we use python not lisp so using 't' is ok ;)
@@ -295,9 +295,11 @@ class TestLoadScript(testtools.TestCase):
     def test_load_simple_script_with_csv(self):
         self.create_script('foo.py', "pass")
         with open('foo.csv', 'w') as f:
-            f.write("'foo'^'bar'\n")
-            f.write('1^baz\n')
-            f.write('2^qux\n')
+            f.write('''\
+'foo'^'bar'
+1^baz
+2^qux
+''')
         suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
         self.assertEqual(2, suite.countTestCases())
 
