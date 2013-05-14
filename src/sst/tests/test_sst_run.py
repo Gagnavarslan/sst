@@ -24,7 +24,7 @@ import shutil
 import testtools
 
 from sst import (
-    case,
+    cases,
     config,
     tests,
 )
@@ -34,7 +34,7 @@ class TestSSTScriptTestCase(testtools.TestCase):
 
     def setUp(self):
         super(TestSSTScriptTestCase, self).setUp()
-        self.test = case.SSTScriptTestCase('dir', 'foo.py')
+        self.test = cases.SSTScriptTestCase('dir', 'foo.py')
 
     def test_id(self):
         """The test id mentions the python class path and the test name."""

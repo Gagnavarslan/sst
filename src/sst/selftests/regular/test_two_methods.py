@@ -1,7 +1,7 @@
-from sst import case
+from sst import cases
 
 
-class TestBoth(case.SSTTestCase):
+class TestBoth(cases.SSTTestCase):
 
     def test_one(self):
         assert True

@@ -28,7 +28,7 @@ import testtools.content
 from sst import (
     actions,
     browsers,
-    case,
+    cases,
     config,
     filters,
     loader,
@@ -44,8 +44,8 @@ PhantomJSFactory = browsers.PhantomJSFactory
 OperaFactory = browsers.OperaFactory
 FirefoxFactory = browsers.FirefoxFactory
 browser_factories = browsers.browser_factories
-SSTTestCase = case.SSTTestCase
-SSTScriptTestCase = case.SSTScriptTestCase
+SSTTestCase = cases.SSTTestCase
+SSTScriptTestCase = cases.SSTScriptTestCase
 
 
 __all__ = ['runtests']

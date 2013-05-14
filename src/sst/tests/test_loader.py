@@ -462,9 +462,9 @@ raise AssertionError('Loading only, executing fails')
                 suffix = ''
             return '''
 file: {dir_name}/{name}{suffix}
-from sst import case
+from sst import cases
 
-class Test_{name}(case.SSTTestCase):
+class Test_{name}(cases.SSTTestCase):
     def test_{name}(self):
         pass
 '''.format(**locals())

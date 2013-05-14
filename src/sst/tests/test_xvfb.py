@@ -26,7 +26,7 @@ import testtools
 
 
 from sst import (
-    case,
+    cases,
     xvfbdisplay,
 )
 
@@ -49,7 +49,7 @@ class TestXvfb(testtools.TestCase):
         self.assertEquals(orig, os.environ['DISPLAY'])
 
 
-class Headless(case.SSTTestCase):
+class Headless(cases.SSTTestCase):
     """A specialized test class for tests around xvfb."""
 
     # We don't use a browser here so disable its use to speed the tests

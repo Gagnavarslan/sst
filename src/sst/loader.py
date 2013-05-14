@@ -25,7 +25,7 @@ import sys
 import unittest
 import unittest.loader
 
-from sst import case
+from sst import cases
 
 
 def matches_for_regexp(regexp):
@@ -356,7 +356,7 @@ class TestLoader(unittest.TestLoader):
         # script specific test parametrization
         csv_path = path.replace('.py', '.csv')
         if os.path.isfile(csv_path):
-            for row in case.get_data(csv_path):
+            for row in cases.get_data(csv_path):
                 # row is a dictionary of variables that will magically appear
                 # as globals in the script.
                 test = self.loadTestFromScript(dir_name, script_name, row)
@@ -367,7 +367,7 @@ class TestLoader(unittest.TestLoader):
         return suite
 
     def loadTestFromScript(self, dir_name, script_name, context=None):
-        test = case.SSTScriptTestCase(dir_name, script_name, context)
+        test = cases.SSTScriptTestCase(dir_name, script_name, context)
 
         # FIXME: We shouldn't have to set test attributes manually, something
         # smells wrong here. -- vila 2013-04-26

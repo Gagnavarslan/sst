@@ -23,10 +23,10 @@ import sys
 import tempfile
 
 import testtools
-from sst import case
+from sst import cases
 
 
-class SSTBrowserLessTestCase(case.SSTTestCase):
+class SSTBrowserLessTestCase(cases.SSTTestCase):
     """A specialized test class for tests that don't need a browser."""
 
     # We don't use a browser here so disable its use to speed the tests
