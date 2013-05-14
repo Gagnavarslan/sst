@@ -111,7 +111,9 @@ def main():
 
 def run_django(port):
     """Start django server for running local self-tests."""
-    manage_file = './src/testproject/manage.py'
+    here = os.path.abspath(os.path.dirname(__file__))
+    manage_file = os.path.abspath(
+        os.path.join(here, '../../testproject/manage.py'))
     url = 'http://localhost:%s/' % port
 
     if not os.path.isfile(manage_file):
@@ -124,6 +126,9 @@ def run_django(port):
     if django is None:
         print 'Error: can not find django module.'
         print 'you must have django installed to run the test project.'
+        # FIXME: Using sys.exit() makes it hard to test in isolation. Moreover
+        # this error path is not covered by a test. Both points may be related
+        # ;) -- vila 2013-05-10
         sys.exit(1)
     proc = subprocess.Popen([manage_file, 'runserver', port],
                             stderr=open(os.devnull, 'w'),
