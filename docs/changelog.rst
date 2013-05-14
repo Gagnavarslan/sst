@@ -22,6 +22,7 @@ version **0.2.4** (Not yet released)
   message otherwise.
 * removed HTML results reports.
 * switched to `junitxml` dependency for XML report generation.
+* skipped tests are now properly included in ``results.xml``.
 * refactored ``retry_on_stale_element`` to make a new more generic
   ``retry_on_exception``.
 
