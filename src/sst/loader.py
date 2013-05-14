@@ -64,7 +64,6 @@ class FileLoader(object):
 
     This is an abstract class allowing daughter classes to enforce constraints
     including the ability to load tests from files that cannot be imported.
-
     """
 
     def __init__(self, test_loader, matcher=None):
