@@ -187,11 +187,6 @@ class SSTScriptTestCase(SSTTestCase):
 
     def _compile_script(self):
         self.script_path = os.path.join(self.script_dir, self.script_name)
-        # TODO: Adding script_dir to sys.path only makes sense if we want to
-        # allow scripts to import from their own dir. Do we really need that ?
-        # -- vila 2013-04-26
-        sys.path.append(self.script_dir)
-        self.addCleanup(sys.path.remove, self.script_dir)
         with open(self.script_path) as f:
             source = f.read() + '\n'
         self.code = compile(source, self.script_path, 'exec')
