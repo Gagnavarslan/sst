@@ -19,7 +19,6 @@
 
 
 from cStringIO import StringIO
-import sys
 
 import junitxml
 import testtools
@@ -213,7 +212,7 @@ class TestXmlOutput(testtools.TestCase):
 <testsuite errors="0" failures="1" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
 <failure type="{exc_type}">_StringException: Traceback (most recent call last):
-  File "{filename}", line 42, in {name}
+  File "{filename}", line 41, in {name}
     self.assertTrue(False)
 AssertionError: False is not true
 
@@ -234,7 +233,7 @@ AssertionError: False is not true
 <testsuite errors="1" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
 <error type="{exc_type}">_StringException: Traceback (most recent call last):
-  File "{filename}", line 45, in {name}
+  File "{filename}", line 44, in {name}
     raise SyntaxError
 SyntaxError: None
 
