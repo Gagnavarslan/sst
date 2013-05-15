@@ -27,16 +27,18 @@ import testtools
 from testtools import matchers
 
 from sst import (
-    runtests,
+    cases,
     tests,
 )
 
 
-class SSTStringTestCase(runtests.SSTScriptTestCase):
+class SSTStringTestCase(cases.SSTScriptTestCase):
 
-    script_name = 'test_foo'
-    script_code = 'pass'
     xserver_headless = True
+
+    def __init__(self, code='pass'):
+        super(SSTStringTestCase, self).__init__('ignored_dir', 'ignored_name')
+        self.script_code = code
 
     def setUp(self):
         # We don't need to compile the script because we have already define

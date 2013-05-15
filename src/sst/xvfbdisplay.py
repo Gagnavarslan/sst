@@ -85,6 +85,21 @@ class Xvfb(object):
         os.environ['DISPLAY'] = ':%s' % display_num
 
 
+def use_xvfb_server(test, xvfb=None):
+    """Setup an xvfb server for a given test.
+
+    :param xvfb: An Xvfb object to use. If none is supplied, default values are
+        used to build it.
+
+    :returns: The xvfb server used so tests can use the built one.
+    """
+    if xvfb is None:
+        xvfb = Xvfb()
+    xvfb.start()
+    test.addCleanup(xvfb.stop)
+    return xvfb
+
+
 if __name__ == '__main__':
     # example:
 

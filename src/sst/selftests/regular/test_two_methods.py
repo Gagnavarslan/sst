@@ -1,7 +1,7 @@
-from sst import runtests
+from sst import cases
 
 
-class TestBoth(runtests.SSTTestCase):
+class TestBoth(cases.SSTTestCase):
 
     def test_one(self):
         assert True

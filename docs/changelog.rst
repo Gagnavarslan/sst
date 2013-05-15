@@ -25,6 +25,7 @@ version **0.2.4** (Not yet released)
 * skipped tests are now properly included in ``results.xml``.
 * refactored ``retry_on_stale_element`` to make a new more generic
   ``retry_on_exception``.
+* the script directory is not added to sys.path implicitly anymore.
 
 
 version **0.2.3** (2013 Apr 17)

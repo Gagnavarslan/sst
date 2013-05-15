@@ -24,8 +24,8 @@ import shutil
 import testtools
 
 from sst import (
+    cases,
     config,
-    runtests,
     tests,
 )
 
@@ -34,14 +34,14 @@ class TestSSTScriptTestCase(testtools.TestCase):
 
     def setUp(self):
         super(TestSSTScriptTestCase, self).setUp()
-        self.test = runtests.SSTScriptTestCase('foo')
+        self.test = cases.SSTScriptTestCase('dir', 'foo.py')
 
     def test_id(self):
         """The test id mentions the python class path and the test name."""
         # FIXME: This is a minimal test to cover http://pad.lv/1087606, it
         # would be better to check a results.xml file but we don't have the
         # test infrastructure for that (yet) -- vila 2012-12-07
-        self.assertEqual('sst.runtests.SSTScriptTestCase.foo', self.test.id())
+        self.assertEqual('dir.foo', self.test.id())
 
 
 class TestSSTTestCase(testtools.TestCase):
@@ -68,7 +68,6 @@ class TestSSTTestCase(testtools.TestCase):
         self.assertFalse(test.screenshots_on)
         self.assertEqual(test.wait_poll, 0.1)
         self.assertEqual(test.wait_timeout, 10)
-        self.assertIsNone(test.shortDescription())
         self.assertEqual(test.id(), 'sst.tests.SSTBrowserLessTestCase.run')
 
     def test_config(self):
@@ -77,5 +76,4 @@ class TestSSTTestCase(testtools.TestCase):
         self.assertEqual(config.cache, {})
         self.assertEqual(config.flags, [])
         self.assertFalse(config.javascript_disabled)
-        self.assertEqual(os.path.split(config.results_directory)[-1],
-                         'results')
+        self.assertEqual(os.path.basename(config.results_directory), 'results')

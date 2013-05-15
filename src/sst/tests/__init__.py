@@ -19,12 +19,14 @@
 import os
 import shutil
 import socket
+import sys
 import tempfile
 
-from sst import runtests
+import testtools
+from sst import cases
 
 
-class SSTBrowserLessTestCase(runtests.SSTTestCase):
+class SSTBrowserLessTestCase(cases.SSTTestCase):
     """A specialized test class for tests that don't need a browser."""
 
     # We don't use a browser here so disable its use to speed the tests
@@ -34,6 +36,19 @@ class SSTBrowserLessTestCase(runtests.SSTTestCase):
 
     def stop_browser(self):
         pass
+
+
+class ImportingLocalFilesTest(testtools.TestCase):
+    """Class for tests requiring import of locally generated files.
+
+    This setup the tests working dir in a newly created temp dir and restore
+    sys.modules and sys.path at the end of the test.
+    """
+    def setUp(self):
+        super(ImportingLocalFilesTest, self).setUp()
+        set_cwd_to_tmp(self)
+        protect_imports(self)
+        sys.path.insert(0, self.test_base_dir)
 
 
 def set_cwd_to_tmp(test):
@@ -46,6 +61,27 @@ def set_cwd_to_tmp(test):
     current_dir = os.getcwdu()
     test.addCleanup(os.chdir, current_dir)
     os.chdir(test.test_base_dir)
+
+
+def protect_imports(test):
+    """Protect sys.modules and sys.path for the test duration.
+
+    This is useful to test imports which modifies sys.modules or requires
+    modifying sys.path.
+    """
+    # Protect sys.modules and sys.path to be able to test imports
+    test.patch(sys, 'path', list(sys.path))
+    orig_modules = sys.modules.copy()
+
+    def cleanup_modules():
+        # Remove all added modules
+        added = [m for m in sys.modules.keys() if m not in orig_modules]
+        if added:
+            for m in added:
+                del sys.modules[m]
+        # Restore deleted or modified modules
+        sys.modules.update(orig_modules)
+    test.addCleanup(cleanup_modules)
 
 
 def check_devserver_port_used(port):
@@ -61,3 +97,51 @@ def check_devserver_port_used(port):
     finally:
         sock.close()
     return used
+
+
+def write_tree_from_desc(description):
+    """Write a tree described in a textual form to disk.
+
+    The textual form describes the file contents separated by file/dir names.
+
+    'file: <file name>' on a single line starts a file description. The file
+    name must be the relative path from the tree root.
+
+    'dir: <dir name>' on a single line starts a dir description.
+
+    'link: <link source> <link name>' on a single line describes a symlink to
+    <link source> named <link name>. The source may not exist, spaces are not
+    allowed.
+
+    :param description: A text where files and directories contents is
+        described in a textual form separated by file/dir names.
+    """
+    cur_file = None
+    for line in description.splitlines():
+        if line.startswith('file: '):
+            # A new file begins
+            if cur_file:
+                cur_file.close()
+            cur_file = open(line[len('file: '):], 'w')
+            continue
+        if line.startswith('dir:'):
+            # A new dir begins
+            if cur_file:
+                cur_file.close()
+                cur_file = None
+            os.mkdir(line[len('dir: '):])
+            continue
+        if line.startswith('link: '):
+            # We don't support spaces in names
+            link_desc = line[len('link: '):]
+            try:
+                source, link = link_desc.split()
+            except ValueError:
+                raise ValueError('Invalid link description: %s' % (link_desc,))
+            os.symlink(source, link)
+            continue
+        if cur_file is not None:  # If no file is declared, nothing is written
+            # splitlines() removed the \n, let's add it again
+            cur_file.write(line + '\n')
+    if cur_file:
+        cur_file.close()

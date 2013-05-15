@@ -1,0 +1,39 @@
+* run all tests
+
+  sst test
+
+* run acceptance tests
+
+  sst test -i tests.acceptance
+
+* run unit tests
+
+  sst test -e tests.acceptance
+
+* some test_loader tests are too big, this screams for better helpers so
+   they can be simplified.
+
+* fix the remaining grey areas in the design
+
+There are a few points that smell funny in the current implementation
+including:
+
+- abusing sortTestMethodsUsing
+
+- having to call sortNames in several places
+
+This is probably caused by some less than ideal split of responsability
+between TestLoader and the {File|Dir}Loader classes.
+
+The key points that need to be handled are:
+
+- whether directories are packages or not and as such require to be imported
+
+- if they are imported, respect user overriding
+
+- allowing the user to specify some matching on the base names encountered
+   while walking the tree (or a sub tree). This should remain separate for
+   files and directories (the rules are different).
+
+- how the sub tree is iterated
+

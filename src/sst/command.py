@@ -28,6 +28,7 @@ import optparse
 import sst
 from sst import (
     actions,
+    browsers,
     config,
     runtests,
 )
@@ -95,6 +96,13 @@ def get_common_options():
     parser.add_option('--collect-only', dest='collect_only',
                       action='store_true', default=False,
                       help='collect/print cases without running tests')
+    parser.add_option('-i', '--include', dest='includes',
+                      action='append',
+                      help='all tests starting with this prefix will be run')
+    parser.add_option(
+        '-e', '--exclude', dest='excludes',
+        action='append',
+        help='all tests starting with this prefix will not be run')
     return parser
 
 
@@ -132,17 +140,17 @@ def get_remote_options():
     return parser
 
 
-def get_opts_run():
-    return get_opts(get_run_options)
+def get_opts_run(args=None):
+    return get_opts(get_run_options, args)
 
 
-def get_opts_remote():
-    return get_opts(get_remote_options)
+def get_opts_remote(args=None):
+    return get_opts(get_remote_options, args)
 
 
-def get_opts(get_options):
+def get_opts(get_options, args=None):
     parser = get_options()
-    (cmd_opts, args) = parser.parse_args()
+    (cmd_opts, args) = parser.parse_args(args)
 
     if cmd_opts.print_version:
         print 'SST version: %s' % sst.__version__
@@ -156,7 +164,7 @@ def get_opts(get_options):
         print 'run "%s -h" or "%s --help" to see run options.' % (prog, prog)
         sys.exit(1)
 
-    if cmd_opts.browser_type not in runtests.browser_factories:
+    if cmd_opts.browser_type not in browsers.browser_factories:
         print ("Error: %s should be one of %s"
                % (cmd_opts.browser_type, runtests.browser_factories.keys()))
         sys.exit(1)

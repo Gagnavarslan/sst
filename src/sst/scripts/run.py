@@ -33,6 +33,7 @@ testtools.try_import('selenium')
 
 import sst
 from sst import (
+    browsers,
     command,
     runtests,
     tests,
@@ -81,7 +82,7 @@ def main():
 
     try:
         command.clear_old_results()
-        factory = runtests.browser_factories.get(cmd_opts.browser_type)
+        factory = browsers.browser_factories.get(cmd_opts.browser_type)
         runtests.runtests(
             args,
             test_dir=cmd_opts.dir_name,
@@ -93,6 +94,8 @@ def main():
             failfast=cmd_opts.failfast,
             debug=cmd_opts.debug,
             extended=cmd_opts.extended_tracebacks,
+            includes=cmd_opts.includes,
+            excludes=cmd_opts.excludes
         )
     finally:
 

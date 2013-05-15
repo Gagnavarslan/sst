@@ -19,7 +19,9 @@ def setup_cleanup_test_db():
     # this will copy testproj.db from testproj.db.orginal as setup
     # and remove database after test as a cleanup.
     # (this is used for all tests that access local django admin app only)
-    test_db = 'src/testproject/testproj.db'
+    here = os.path.abspath(os.path.dirname(__file__))
+    test_db = os.path.abspath(
+        os.path.join(here, '..', '..', '..', 'testproject/testproj.db'))
     if os.path.isfile(test_db):
         os.remove(test_db)
     shutil.copyfile(test_db + '.original', test_db)
