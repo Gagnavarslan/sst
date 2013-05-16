@@ -74,7 +74,10 @@ else
 fi
 
 echo "setting path..."
-PATH=sst-deps/bin:$PATH  # so bindings find chromedriver and phantomjs
+PWD=`pwd`
+DEPS_DIR="$PWD/sst-deps/bin"  # webdrivers are in bin directory of branch we pulled in bootstrap
+PATH=$DEPS_DIR:$PATH  # so bindings find chromedriver and phantomjs
+echo "  added: '$DEPS_DIR' to PATH"
 
 echo "----------------------------------"
 echo "environment info:"
