@@ -13,9 +13,8 @@ from testtools import (
     )
 
 
-def _make_test_suite():
-    num_testcases = 40
-
+def _make_test_suite(num_testcases=10):
+    
     def test_method(self):
         time.sleep(2.0)
         self.assertTrue(True)
