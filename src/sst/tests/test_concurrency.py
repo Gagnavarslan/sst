@@ -4,7 +4,7 @@
 #
 #
 # to run:
-#  $ nosetests -m test_concurrent*
+#  $ nosetests -v -m test_concurrent*
 #
 
 import sys
@@ -54,6 +54,10 @@ class ConcurrencyTestCase(TestCase):
     def setUp(self):
         super(ConcurrencyTestCase, self).setUp()
         sst.tests.set_cwd_to_tmp(self)
+        self.addCleanup(self.restore_stdout)
+    
+    def restore_stdout(self):
+        sys.stdout = sys.__stdout__
 
     def split_suite(self, suite):
         return list(iterate_tests(suite))
@@ -86,12 +90,15 @@ class ConcurrencyTestCase(TestCase):
         self.assertTrue(result.wasSuccessful())
         self.assertEqual(result.errors, [])
         self.assertEqual(result.testsRun, num_tests)
+        xml_lines = out.getvalue().splitlines()
+        # xml file has a line for each case + header + footer
+        self.assertEqual(len(xml_lines), num_tests + 2)
 
     def test_concurrent_all_at_once_multi_result(self):
         num_tests = 50
         original_suite = _make_test_suite(num_tests)
+        txt_result = sst.result.TextTestResult(sys.stdout, verbosity=0)
         out = StringIO()
-        txt_result = sst.result.TextTestResult(out, verbosity=1)
         xml_result = junitxml.JUnitXmlResult(out)
         result = MultiTestResult(txt_result, xml_result)
         suite = ConcurrentTestSuite(original_suite, self.split_suite)
@@ -100,6 +107,9 @@ class ConcurrencyTestCase(TestCase):
         self.assertTrue(result.wasSuccessful())
         self.assertEqual(result.errors, [])
         self.assertEqual(result.testsRun, num_tests)
+        xml_lines = out.getvalue().splitlines()
+        # xml file has a line for each case + header + footer
+        self.assertEqual(len(xml_lines), num_tests + 2)
 
     def test_concurrent_even_groups_text_result(self):
         num_tests = 50
@@ -109,32 +119,34 @@ class ConcurrencyTestCase(TestCase):
             self.split_suite(original_suite),
             group_size,
         )
-        results = []
+        result = sst.result.TextTestResult(sys.stdout, verbosity=0)
         for sub_suite in sub_suites:
             suite = ConcurrentTestSuite(sub_suite, self.split_suite)
-            result = sst.result.TextTestResult(sys.stdout, verbosity=1)
             suite.run(result)
-            results.append(result)
-        for result in results:
-            self.assertTrue(result.wasSuccessful())
-            self.assertEqual(result.errors, [])
-            self.assertEqual(result.testsRun, group_size)
+        self.assertTrue(result.wasSuccessful())
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.testsRun, num_tests)
 
     def test_concurrent_even_groups_multi_result(self):
         num_tests = 50
         group_size = 25  # number of tests in each sub_suite
+        
         original_suite = _make_test_suite(num_tests)
         sub_suites = self.group_cases(
             self.split_suite(original_suite),
-            group_size
+            group_size,
         )
-        results = []
+        txt_result = sst.result.TextTestResult(sys.stdout, verbosity=0)
+        out = StringIO()
+        xml_result = junitxml.JUnitXmlResult(out)
+        result = MultiTestResult(txt_result, xml_result)
         for sub_suite in sub_suites:
             suite = ConcurrentTestSuite(sub_suite, self.split_suite)
-            result = sst.result.TextTestResult(sys.stdout, verbosity=1)
             suite.run(result)
-            results.append(result)
-        for result in results:
-            self.assertTrue(result.wasSuccessful())
-            self.assertEqual(result.errors, [])
-            self.assertEqual(result.testsRun, group_size)
+        result.stopTestRun()
+        self.assertTrue(result.wasSuccessful())
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.testsRun, num_tests)
+        xml_lines = out.getvalue().splitlines() 
+        # xml file has a line for each case + header + footer
+        self.assertEqual(len(xml_lines), num_tests + 2)
