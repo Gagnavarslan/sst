@@ -164,4 +164,6 @@ def kill_django(port):
 
 
 if __name__ == '__main__':
-    main()
+    failures = main()
+    if failures:
+        sys.exit(bool(failures))
