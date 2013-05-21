@@ -21,7 +21,6 @@ import ast
 import logging
 import os
 import pdb
-import sys
 import testtools
 import testtools.content
 

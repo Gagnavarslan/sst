@@ -19,7 +19,6 @@
 
 
 from cStringIO import StringIO
-import sys
 
 import junitxml
 import testtools
@@ -195,12 +194,12 @@ class TestXmlOutput(testtools.TestCase):
         self.assertEquals(expected, res._stream.getvalue())
 
     def test_pass_output(self):
-        self.assertOutput('''\
+        expected = '''\
 <testsuite errors="0" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000"/>
 </testsuite>
-''',
-                          'pass')
+'''
+        self.assertOutput(expected, 'pass')
 
     def test_fail_output(self):
         # Getting the file name right is tricky, depending on whether the
@@ -209,20 +208,19 @@ class TestXmlOutput(testtools.TestCase):
         filename = __file__.replace('.pyc', '.py').replace('.pyo', '.py')
         more = dict(exc_type='testtools.testresult.real._StringException',
                     filename=filename)
-        self.assertOutput('''\
+        expected = '''\
 <testsuite errors="0" failures="1" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
 <failure type="{exc_type}">_StringException: Traceback (most recent call last):
-  File "{filename}", line 42, in {name}
+  File "{filename}", line 41, in {name}
     self.assertTrue(False)
 AssertionError: False is not true
 
 </failure>
 </testcase>
 </testsuite>
-''',
-                          'fail',
-                          more)
+'''
+        self.assertOutput(expected, 'fail', more)
 
     def test_error_output(self):
         # Getting the file name right is tricky, depending on whether the
@@ -231,55 +229,54 @@ AssertionError: False is not true
         filename = __file__.replace('.pyc', '.py').replace('.pyo', '.py')
         more = dict(exc_type='testtools.testresult.real._StringException',
                     filename=filename)
-        self.assertOutput('''\
+        expected = '''\
 <testsuite errors="1" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
 <error type="{exc_type}">_StringException: Traceback (most recent call last):
-  File "{filename}", line 45, in {name}
+  File "{filename}", line 44, in {name}
     raise SyntaxError
 SyntaxError: None
 
 </error>
 </testcase>
 </testsuite>
-''',
-                          'error',
-                          more)
+'''
+        self.assertOutput(expected, 'error', more)
 
     def test_skip_output(self):
-        self.assertOutput('''\
+        expected = '''\
 <testsuite errors="0" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
 <skipped></skipped>
 </testcase>
 </testsuite>
-''',
-                          'skip')
+'''
+        self.assertOutput(expected, 'skip')
 
     def test_skip_reason_output(self):
-        self.assertOutput('''\
+        expected = '''\
 <testsuite errors="0" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
 <skipped>Because</skipped>
 </testcase>
 </testsuite>
-''',
-                          'skip_reason')
+'''
+        self.assertOutput(expected, 'skip_reason')
 
     def test_expected_failure_output(self):
-        self.assertOutput('''\
+        expected = '''\
 <testsuite errors="0" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000"/>
 </testsuite>
-''',
-                          'expected_failure')
+'''
+        self.assertOutput(expected, 'expected_failure')
 
     def test_unexpected_success_output(self):
-        self.assertOutput('''\
+        expected = '''\
 <testsuite errors="0" failures="1" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
 <failure type="unittest.case._UnexpectedSuccess"/>
 </testcase>
 </testsuite>
-''',
-                          'unexpected_success')
+'''
+        self.assertOutput(expected, 'unexpected_success')
