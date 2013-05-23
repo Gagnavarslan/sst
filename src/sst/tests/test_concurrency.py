@@ -35,8 +35,10 @@ def _make_test_suite(num_tests):
 
     # every method generated will have this body
     def test_method(self):
-        driver = webdriver.Firefox()
-        driver.quit()
+        # Run selenium webdriver
+        #driver = webdriver.Firefox()
+        #driver.quit()
+        
         self.assertTrue(True)
 
     # create a dict of test methods, sequentially named
@@ -61,7 +63,7 @@ class ConcurrencyTestCase(TestCase):
         super(ConcurrencyTestCase, self).setUp()
         sst.tests.set_cwd_to_tmp(self)
         self.addCleanup(self.restore_stdout)
-
+        
     def restore_stdout(self):
         sys.stdout = sys.__stdout__
 
