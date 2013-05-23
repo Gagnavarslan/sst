@@ -39,7 +39,7 @@ Instructions for releasing SST to PyPI from Launchpad Trunk
 
     * install sphinx (`$ sudo apt-get install python-sphinx`)
 
-    * run `make_actions_rst.py`, which will create `actions.rst`
+    * run `make_actions_rst.py` under /docs, which will create `actions.rst`
 
     * go up to the main SST directory and run:
 

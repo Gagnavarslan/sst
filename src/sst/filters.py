@@ -17,6 +17,7 @@
 #   limitations under the License.
 #
 import fnmatch
+import re
 import unittest
 
 
@@ -63,6 +64,26 @@ def filter_by_patterns(patterns, suite):
                 return True
         return False
     return filter_suite(filter_test_patterns, suite)
+
+
+def filter_by_regexps(regexps, suite):
+    """Returns the tests that match one of ``regexps``.
+
+    :param regexps: A list of test id regexps (strings, will be compiled
+        internally) to include. All tests are included if no regexps are
+        provided.
+
+    :param suite: The test suite to filter.
+    """
+    if not regexps:
+        return suite
+
+    def filter_test_regexps(test):
+        for reg in regexps:
+            if re.search(reg, test.id()) is not None:
+                return True
+        return False
+    return filter_suite(filter_test_regexps, suite)
 
 
 def include_prefixes(prefixes, suite):

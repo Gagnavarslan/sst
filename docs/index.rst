@@ -185,6 +185,86 @@ allows you to put Python packages/modules directly in your test directories
 if you want. A better option is to use the shared directory.
 
 
+--------------------------
+    Selecting tests to run
+--------------------------
+
+While a test suite is meant to fully cover a code base, there are times when
+you don't want to run all the tests but only the relevant ones covering the
+part you're focusing on.
+
+There are several ways to select the tests to run but first we need to
+define a few terms:
+
+All tests have a unique identifier (id) in a given tree:
+
+- for a script this is the python path leading to the file,
+  i.e. `dir.subdir.file` for script in the ``dir/subdir/file.py`` file,
+
+- for a regular test this is the python path to access the test method,
+  i.e. ``dir.subdir.file.class.method`` for a test method ``method`` in a
+  test class ``class`` in a ``dir/subdir/file.py`` file.
+
+``sst-run`` accepts patterns as arguments and will select only the tests
+that matches at least one the paterns. It also accepts ``--exclude pattern``
+arguments, the selected tests will match none of the ``--exclude`` patterns.
+
+In both cases, these patterns are python regular expressions.
+
+The following commands will therefore run various selections of tests:
+
+* A single test::
+
+    sst-run ^dir.subdir.file.class.method
+
+  for regular tests or::
+
+    sst-run ^dir.subdir.file
+
+  for a script
+
+* All tests in a class::
+
+    sst-run ^dir.subdir.file.class
+
+* All tests in a file::
+
+    sst-run ^dir.subdir.file
+
+  note that if the file is a script a single test is run
+
+* All tests in a subdirectory::
+
+    sst-run ^dir.subdir
+
+* All tests in a directory (i.e. a subtree)::
+
+    sst-run ^dir
+
+* All tests in a subtree except for a specific subdirectory::
+
+    sst-run ^dir --excludes ^dir.subdir
+
+* The whole test suite::
+
+    sst-run 
+
+  when invoked at the root of the test tree.
+
+
+Note that '^' is used in the examples above to ensure that the test ids
+*starts* with the given regular expression, in most cases you'll need to
+specify the caret if only if the regexp can match other test ids in your
+test suite. So, for example, with a test suite like containing test ids
+`a.b.foo`, `foo.x` and `foo.y`, `sst-run foo` will select all tests whereas
+`sst-run ^foo` will only select `foo.x` and `foo.y`.
+
+Combining test patterns and ``--excludes`` patterns should allow any subset
+of the test suite to be selected. This is a powerful way to reduce the time
+needed to run only the tests you care about at a given time, running the
+whole test suite should still be used when you want to ensure no regressions
+have been introduced.
+
 -------------------------------------
     Using sst in unittest test suites
 -------------------------------------
