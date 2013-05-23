@@ -103,7 +103,7 @@ class ConcurrencyTestCase(TestCase):
         self.assertEqual(len(xml_lines), num_tests + 2)
 
     def test_concurrent_all_at_once_multi_result(self):
-        num_tests = 4
+        num_tests = 8
         original_suite = _make_test_suite(num_tests)
         txt_result = sst.result.TextTestResult(sys.stdout, verbosity=0)
         out = StringIO()
@@ -120,7 +120,7 @@ class ConcurrencyTestCase(TestCase):
         self.assertEqual(len(xml_lines), num_tests + 2)
 
     def test_concurrent_even_groups_text_result(self):
-        num_tests = 4
+        num_tests = 8
         group_size = 2  # number of tests in each sub_suite
         original_suite = _make_test_suite(num_tests)
         sub_suites = self.group_cases(
@@ -136,7 +136,7 @@ class ConcurrencyTestCase(TestCase):
         self.assertEqual(result.testsRun, num_tests)
 
     def test_concurrent_even_groups_multi_result(self):
-        num_tests = 4
+        num_tests = 8
         group_size = 2  # number of tests in each sub_suite
 
         original_suite = _make_test_suite(num_tests)
