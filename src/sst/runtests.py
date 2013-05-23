@@ -140,6 +140,8 @@ def runtests(test_names, test_dir='.', collect_only=False,
         pass
     res.stopTestRun()
 
+    return len(res.failures) + len(res.errors)
+
 
 def find_shared_directory(test_dir, shared_directory):
     """This function is responsible for finding the shared directory.
