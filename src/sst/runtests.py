@@ -57,7 +57,7 @@ logger = logging.getLogger('SST')
 # not -- vila 2013-05-05
 # MISSINGTEST: 'results' dir, created in current dir unconditionally conflicts
 # with claim that 'shared' can be found somewhere up -- vila 2013-05-05
-def runtests(test_names, test_dir='.', collect_only=False,
+def runtests(test_regexps, test_dir='.', collect_only=False,
              browser_factory=None,
              report_format='console',
              shared_directory=None, screenshots_on=False, failfast=False,
@@ -97,9 +97,8 @@ def runtests(test_names, test_dir='.', collect_only=False,
                                   file_loader_class=loader.ScriptLoader,
                                   dir_loader_class=loader.ScriptDirLoader))
 
-    alltests = filters.filter_by_patterns(test_names, alltests)
-    alltests = filters.include_prefixes(includes, alltests)
-    alltests = filters.exclude_prefixes(excludes, alltests)
+    alltests = filters.filter_by_regexps(test_regexps, alltests)
+    alltests = filters.exclude_regexps(excludes, alltests)
 
     print ''
     print '  %s test cases loaded\n' % alltests.countTestCases()

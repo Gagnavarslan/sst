@@ -79,27 +79,6 @@ class TestFilterTestsById(testtools.TestCase):
                             ['foo', 'bar', 'baz', 'foobar', 'qux'])
 
 
-class TestFilterTestsByPatterns(testtools.TestCase):
-
-    def assertFiltered(self, expected, patterns, ids):
-        """Check that ``patterns`` filters tests created from ``ids``."""
-        filtered = filters.filter_by_patterns(patterns,
-                                              create_tests_from_ids(ids))
-        self.assertEqual(expected,
-                         [t.id() for t in testtools.iterate_tests(filtered)])
-
-    def test_filter_none(self):
-        self.assertFiltered(['foo', 'bar'], [], ['foo', 'bar'])
-
-    def test_filter_one_pattern(self):
-        self.assertFiltered(['foo', 'foobar', 'barfoo'], ['*foo*'],
-                            ['foo', 'foobar', 'barfoo', 'baz'])
-
-    def test_filter_several_patterns(self):
-        self.assertFiltered(['foo', 'foobar', 'barfoo'], ['foo*', '*arf*'],
-                            ['foo', 'foobar', 'barfoo', 'baz'])
-
-
 class TestFilterTestsByRegexps(testtools.TestCase):
 
     def assertFiltered(self, expected, regexps, ids):
@@ -133,33 +112,12 @@ class TestFilterTestsByRegexps(testtools.TestCase):
                             ['foo', 'foobar', 'barfoo', 'baz', 'xfoox'])
 
 
-class TestFilterTestsByIncludedPrefixes(testtools.TestCase):
-
-    def assertFiltered(self, expected, prefixes, ids):
-        """Check that ``prefixes`` filters tests created from ``ids``."""
-        filtered = filters.include_prefixes(prefixes,
-                                            create_tests_from_ids(ids))
-        self.assertEqual(expected,
-                         [t.id() for t in testtools.iterate_tests(filtered)])
-
-    def test_no_includes(self):
-        self.assertFiltered(['foo', 'bar'], [], ['foo', 'bar'])
-
-    def test_one_include(self):
-        self.assertFiltered(['foo.bar', 'foo.baz'], ['foo'],
-                            ['foo.bar', 'bar', 'foo.baz'])
-
-    def test_several_includes(self):
-        self.assertFiltered(['foo.bar', 'foo.baz', 'bar.baz'], ['foo', 'bar.'],
-                            ['foo.bar', 'bar', 'foo.baz', 'bar.baz'])
-
-
 class TestFilterTestsByExcludedPrefixes(testtools.TestCase):
 
-    def assertFiltered(self, expected, prefixes, ids):
+    def assertFiltered(self, expected, regexps, ids):
         """Check that ``prefixes`` filters tests created from ``ids``."""
-        filtered = filters.exclude_prefixes(prefixes,
-                                            create_tests_from_ids(ids))
+        filtered = filters.exclude_regexps(regexps,
+                                           create_tests_from_ids(ids))
         self.assertEqual(expected,
                          [t.id() for t in testtools.iterate_tests(filtered)])
 

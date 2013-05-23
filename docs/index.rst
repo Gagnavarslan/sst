@@ -112,9 +112,8 @@ These actions are defined in the following API:
 
 Usage: `sst-run <options> [testname]`
 
-* Calling sst-run with testname(s) as arguments will just run
-  those tests. The testnames should not include '.py' at
-  the end of the filename.
+* Calling sst-run with test regular expression(s) as arguments will run
+  only the tests matching one of these regular expressions.
 
 * You may optionally create a data file for data-driven
   testing.  Create a '^' delimited txt data file with the same
@@ -140,6 +139,7 @@ Options::
   --disable-flag-skips      run all tests, disable skipping tests due to flags
   --extended-tracebacks     add extra information (page source) to failure reports
   --collect-only            collect/print cases without running tests
+  --excludes=REGEXP         do not run the tests matching the regular expression
   --test                    run selftests (acceptance tests with django server)
 
 

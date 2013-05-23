@@ -72,11 +72,11 @@ Don't look at me !
 
     def test_single_include(self):
         self.assertEqual(['t.bar'],
-                         self.run_tests(None, includes=['t.b']))
+                         self.run_tests(['t.b']))
 
     def test_multiple_includes(self):
         self.assertEqual(['t.bar', 't.too'],
-                         self.run_tests(None, includes=['t.b', 't.to']))
+                         self.run_tests(['t.b', 't.to']))
 
     def test_single_exclude(self):
         self.assertEqual(['t.bar'],
@@ -88,5 +88,4 @@ Don't look at me !
 
     def test_mixed(self):
         self.assertEqual(['t.test_foo'],
-                         self.run_tests(None, includes=['t.t'],
-                                        excludes=['t.to']))
+                         self.run_tests(['t.t'], excludes=['to']))

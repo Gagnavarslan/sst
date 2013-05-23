@@ -94,7 +94,6 @@ def main():
             failfast=cmd_opts.failfast,
             debug=cmd_opts.debug,
             extended=cmd_opts.extended_tracebacks,
-            includes=cmd_opts.includes,
             excludes=cmd_opts.excludes
         )
     finally:
