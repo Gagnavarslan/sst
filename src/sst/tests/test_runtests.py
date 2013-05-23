@@ -90,3 +90,59 @@ Don't look at me !
         self.assertEqual(['t.test_foo'],
                          self.run_tests(None, includes=['t.t'],
                                         excludes=['t.to']))
+
+
+class SSTRunExitCodeTestCase(tests.ImportingLocalFilesTest):
+
+    def setUp(self):
+        super(SSTRunExitCodeTestCase, self).setUp()
+        tests.write_tree_from_desc('''dir: t
+file: t/__init__.py
+from sst import loader
+discover = loader.discoverRegularTests
+
+file: t/test_all_pass.py
+import unittest
+class TestAllPass(unittest.TestCase):
+    def test_all_pass(self):
+        self.assertTrue(True)
+
+file: t/test_one_fail.py
+import unittest
+class TestOneFail(unittest.TestCase):
+    def test_one_fail(self):
+        self.assertTrue(False)
+
+file: t/test_multi_fail.py
+import unittest
+class TestMultiFail(unittest.TestCase):
+    def test_fail_1(self):
+        self.assertTrue(False)
+    def test_fail_2(self):
+        self.assertTrue(False)
+''')
+
+    def run_tests(self, args):
+        self.out = StringIO()
+        self.patch(sys, 'stdout', self.out)
+
+        failures = runtests.runtests(
+            test_names=args
+        )
+
+        exit_code = 0
+        if failures:
+            exit_code = 1
+        return exit_code
+
+    def test_exitcode_pass(self):
+        exit_code = self.run_tests(['*test_all_pass'])
+        self.assertEqual(exit_code, 0)
+
+    def test_exitcode_fail(self):
+        exit_code = self.run_tests(['*test_one_fail'])
+        self.assertEqual(exit_code, 1)
+
+    def test_exitcode_multi_fail(self):
+        exit_code = self.run_tests(['*test_fail*'])
+        self.assertEqual(exit_code, 1)
