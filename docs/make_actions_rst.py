@@ -26,7 +26,6 @@ with open(os.path.join(this_dir, 'actions.rst'), 'w') as h:
             text = text[1:]
         text = textwrap.dedent(text or '')
         h.write(text)
-        h.write('\n')
 
     head1 = """
 =========================
@@ -49,21 +48,19 @@ with open(os.path.join(this_dir, 'actions.rst'), 'w') as h:
         member = getattr(actions, entry)
         doc = getattr(member, '__doc__', '')
 
-        if not doc:
-            continue
-
         _write(entry)
-        _write('-' * len(entry))
         h.write('\n')
+        _write('-' * len(entry))
+        h.write('\n\n')
 
         try:
             spec = inspect.getargspec(member)
         except TypeError:
             pass
         else:
-            _write('::')
+            _write('.. function :: ')
             spec_text = inspect.formatargspec(*spec)
-            h.write('\n   ' + entry + spec_text + '\n\n')
-
+            h.write(entry + spec_text + '\n')
+        h.write('\n    ')
         _write(doc)
-        h.write('\n')
+        h.write('\n\n')
