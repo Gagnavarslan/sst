@@ -8,7 +8,10 @@ sst.actions.go_to('/')
 
 elem = sst.actions.get_element(tag='body')
 sst.actions.assert_text_contains(elem, 'Some text here')
-sst.actions.fails(sst.actions.assert_text_contains, elem, 'dont find this text here')
+sst.actions.fails(sst.actions.assert_text_contains,
+                  elem,
+                  'dont find this text here'
+                  )
 
 body = sst.actions.get_element(tag='body')
 sst.actions.assert_text_contains(body, '.*[C|c]ountry.*', regex=True)
