@@ -83,7 +83,7 @@ def main():
     try:
         command.clear_old_results()
         factory = browsers.browser_factories.get(cmd_opts.browser_type)
-        runtests.runtests(
+        failures = runtests.runtests(
             args,
             test_dir=cmd_opts.dir_name,
             collect_only=cmd_opts.collect_only,
@@ -109,6 +109,8 @@ def main():
                 cmd(*args)
             except Exception:
                 print traceback.format_exc()
+
+    return failures
 
 
 def run_django(port):
@@ -161,4 +163,6 @@ def kill_django(port):
 
 
 if __name__ == '__main__':
-    main()
+    failures = main()
+    if failures:
+        sys.exit(1)

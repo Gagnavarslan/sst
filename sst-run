@@ -10,4 +10,6 @@ if __name__ == "__main__":
     cur_dir = os.path.abspath(os.path.dirname(__file__))
     sys.path.insert(0, os.path.join(cur_dir, 'src'))
     from sst.scripts import run
-    run.main()
+    failures = run.main()
+    if failures:
+        sys.exit(1)
