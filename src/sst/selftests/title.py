@@ -11,10 +11,3 @@ sst.actions.fails(sst.actions.assert_title, 'this is not the title')
 sst.actions.assert_title_contains('The Page')
 sst.actions.assert_title_contains('.*Pag[E|e]', regex=True)
 sst.actions.fails(sst.actions.assert_title_contains, 'foobar')
-
-# title has no text attribute since it's in head
-title = sst.actions.get_element(tag='title')
-sst.actions.fails(sst.actions.assert_text_contains,
-                  title,
-                  'The Page Title'
-                  )
