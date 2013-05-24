@@ -139,7 +139,7 @@ Options::
   --disable-flag-skips      run all tests, disable skipping tests due to flags
   --extended-tracebacks     add extra information (page source) to failure reports
   --collect-only            collect/print cases without running tests
-  --excludes=REGEXP         do not run the tests matching the regular expression
+  --exclude=REGEXP          do not run the tests matching the regular expression
   --test                    run selftests (acceptance tests with django server)
 
 
@@ -206,7 +206,7 @@ All tests have a unique identifier (id) in a given tree:
   test class ``class`` in a ``dir/subdir/file.py`` file.
 
 ``sst-run`` accepts patterns as arguments and will select only the tests
-that matches at least one the paterns. It also accepts ``--exclude pattern``
+that matches at least one of the patterns. It also accepts ``--exclude pattern``
 arguments, the selected tests will match none of the ``--exclude`` patterns.
 
 In both cases, these patterns are python regular expressions.
@@ -243,7 +243,7 @@ The following commands will therefore run various selections of tests:
 
 * All tests in a subtree except for a specific subdirectory::
 
-    sst-run ^dir --excludes ^dir.subdir
+    sst-run ^dir --exclude ^dir.subdir
 
 * The whole test suite::
 
@@ -255,11 +255,11 @@ The following commands will therefore run various selections of tests:
 Note that '^' is used in the examples above to ensure that the test ids
 *starts* with the given regular expression, in most cases you'll need to
 specify the caret if only if the regexp can match other test ids in your
-test suite. So, for example, with a test suite like containing test ids
+test suite. So, for example, with a test suite containing tests with ids
 `a.b.foo`, `foo.x` and `foo.y`, `sst-run foo` will select all tests whereas
 `sst-run ^foo` will only select `foo.x` and `foo.y`.
 
-Combining test patterns and ``--excludes`` patterns should allow any subset
+Combining test patterns and ``--exclude`` patterns should allow any subset
 of the test suite to be selected. This is a powerful way to reduce the time
 needed to run only the tests you care about at a given time, running the
 whole test suite should still be used when you want to ensure no regressions
