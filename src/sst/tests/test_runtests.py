@@ -72,11 +72,11 @@ Don't look at me !
 
     def test_single_include(self):
         self.assertEqual(['t.bar'],
-                         self.run_tests(None, includes=['t.b']))
+                         self.run_tests(['t.b']))
 
     def test_multiple_includes(self):
         self.assertEqual(['t.bar', 't.too'],
-                         self.run_tests(None, includes=['t.b', 't.to']))
+                         self.run_tests(['t.b', 't.to']))
 
     def test_single_exclude(self):
         self.assertEqual(['t.bar'],
@@ -88,8 +88,7 @@ Don't look at me !
 
     def test_mixed(self):
         self.assertEqual(['t.test_foo'],
-                         self.run_tests(None, includes=['t.t'],
-                                        excludes=['t.to']))
+                         self.run_tests(['t.t'], excludes=['to']))
 
 
 class SSTRunExitCodeTestCase(tests.ImportingLocalFilesTest):
@@ -126,9 +125,7 @@ class TestMultiFail(unittest.TestCase):
         self.out = StringIO()
         self.patch(sys, 'stdout', self.out)
 
-        failures = runtests.runtests(
-            test_names=args
-        )
+        failures = runtests.runtests(args)
 
         exit_code = 0
         if failures:
@@ -136,13 +133,13 @@ class TestMultiFail(unittest.TestCase):
         return exit_code
 
     def test_exitcode_pass(self):
-        exit_code = self.run_tests(['*test_all_pass'])
+        exit_code = self.run_tests(['test_all_pass$'])
         self.assertEqual(exit_code, 0)
 
     def test_exitcode_fail(self):
-        exit_code = self.run_tests(['*test_one_fail'])
+        exit_code = self.run_tests(['test_one_fail$'])
         self.assertEqual(exit_code, 1)
 
     def test_exitcode_multi_fail(self):
-        exit_code = self.run_tests(['*test_fail*'])
+        exit_code = self.run_tests(['test_fail_.*'])
         self.assertEqual(exit_code, 1)

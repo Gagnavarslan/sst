@@ -55,8 +55,7 @@ def main():
         failfast=cmd_opts.failfast,
         debug=cmd_opts.debug,
         extended=cmd_opts.extended_tracebacks,
-        # FIXME: not tested -- vila 2013-05-07
-        includes=cmd_opts.includes,
+        # FIXME: not tested -- vila 2013-05-23
         excludes=cmd_opts.excludes
     )
 

@@ -35,28 +35,27 @@ class TestArgParsing(testtools.TestCase):
 
     def test_default_values(self):
         opts, args = self.parse_args([])
-        self.assertIs(None, opts.includes)
         self.assertIs(None, opts.excludes)
         self.assertEqual([], args)
 
-    def test_single_include(self):
-        opts, args = self.parse_args(['--include', 'foo'])
-        self.assertEquals(['foo'], opts.includes)
+    def test_single_regexp(self):
+        opts, args = self.parse_args(['foo'])
+        self.assertEquals(['foo'], args)
         self.assertIs(None, opts.excludes)
 
-    def test_multiple_includes(self):
+    def test_multiple_regexps(self):
         opts, args = self.parse_args(
-            ['--include', 'foo', '-i', 'bar', '-ibaz'])
-        self.assertEquals(['foo', 'bar', 'baz'], opts.includes)
+            ['foo', 'bar', 'baz'])
+        self.assertEquals(['foo', 'bar', 'baz'], args)
         self.assertIs(None, opts.excludes)
 
     def test_single_exclude(self):
         opts, args = self.parse_args(['--exclude', 'foo'])
         self.assertEquals(['foo'], opts.excludes)
-        self.assertIs(None, opts.includes)
+        self.assertEqual([], args)
 
     def test_multiple_excludes(self):
         opts, args = self.parse_args(
             ['--exclude', 'foo', '-e', 'bar', '-ebaz'])
         self.assertEquals(['foo', 'bar', 'baz'], opts.excludes)
-        self.assertIs(None, opts.includes)
+        self.assertEqual([], args)

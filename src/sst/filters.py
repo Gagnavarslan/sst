@@ -16,7 +16,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-import fnmatch
+import re
 import unittest
 
 
@@ -46,52 +46,38 @@ def filter_suite(condition, suite):
     return filtered_suite
 
 
-def filter_by_patterns(patterns, suite):
-    """Returns the tests that match one of ``patterns``.
+def filter_by_regexps(regexps, suite):
+    """Returns the tests that match one of ``regexps``.
 
-    :param patterns: A list of test name globs to include. All tests are
-        included if no patterns are provided.
+    :param regexps: A list of test id regexps (strings, will be compiled
+        internally) to include. All tests are included if no regexps are
+        provided.
 
     :param suite: The test suite to filter.
     """
-    if not patterns:
+    if not regexps:
         return suite
 
-    def filter_test_patterns(test):
-        for pattern in patterns:
-            if fnmatch.fnmatchcase(test.id(), pattern):
+    def filter_test_regexps(test):
+        tid = test.id()
+        for reg in regexps:
+            if re.search(reg, tid) is not None:
                 return True
         return False
-    return filter_suite(filter_test_patterns, suite)
+    return filter_suite(filter_test_regexps, suite)
 
 
-def include_prefixes(prefixes, suite):
-    """Returns the tests whose id starts with one of the prefixes."""
-    if not prefixes:
-        # No prefixes, no filtering
+def exclude_regexps(regexps, suite):
+    """Returns the tests whose id does not match with any of the regexps."""
+    if not regexps:
+        # No regexpes, no filtering
         return suite
 
-    def starts_with_one_of(test):
-        # A test is kept if its id starts with one of the prefixes
+    def matches_none_of(test):
+        # A test is kept if its id matches none of the 'excludes' regexps
         tid = test.id()
-        for prefix in prefixes:
-            if tid.startswith(prefix):
-                return True
-        return False
-    return filter_suite(starts_with_one_of, suite)
-
-
-def exclude_prefixes(prefixes, suite):
-    """Returns the tests whose id does not start with any of the prefixes."""
-    if not prefixes:
-        # No prefixes, no filtering
-        return suite
-
-    def starts_with_none_of(test):
-        # A test is kept if its id matches none of the 'excludes' prefixes
-        tid = test.id()
-        for prefix in prefixes:
-            if tid.startswith(prefix):
+        for regexp in regexps:
+            if re.search(regexp, tid):
                 return False
         return True
-    return filter_suite(starts_with_none_of, suite)
+    return filter_suite(matches_none_of, suite)

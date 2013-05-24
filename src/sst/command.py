@@ -96,13 +96,10 @@ def get_common_options():
     parser.add_option('--collect-only', dest='collect_only',
                       action='store_true', default=False,
                       help='collect/print cases without running tests')
-    parser.add_option('-i', '--include', dest='includes',
-                      action='append',
-                      help='all tests starting with this prefix will be run')
     parser.add_option(
         '-e', '--exclude', dest='excludes',
         action='append',
-        help='all tests starting with this prefix will not be run')
+        help='all tests matching this regular expression will not be run')
     return parser
 
 
@@ -158,8 +155,8 @@ def get_opts(get_options, args=None):
 
     run_tests = getattr(cmd_opts, 'run_tests', False)
     if cmd_opts.dir_name == '.' and not args and not run_tests:
-        print ('Error: you must supply a test case name or specifiy a '
-               'directory.')
+        print ('Error: you must supply a test case regular expression'
+               ' or specifiy a directory.')
         prog = os.path.split(__main__.__file__)[-1]
         print 'run "%s -h" or "%s --help" to see run options.' % (prog, prog)
         sys.exit(1)
