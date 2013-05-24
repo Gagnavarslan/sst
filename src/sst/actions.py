@@ -122,7 +122,7 @@ def retry_on_exception(exception, retries=None):
 
     :argument exception: If this exception is raised, the decorated function
         will be retried.
-    :argument retires: The number of times that the function will be retried.
+    :argument retries: The number of times that the function will be retried.
         If it is `None`, the function will be retried until the time out set by
         `set_wait_timeout` expires.
 
