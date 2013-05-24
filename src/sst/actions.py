@@ -1638,7 +1638,7 @@ def check_flags(*args):
 
     Flags are case-insensitive.
 
-    :arguments args: A list of flags to check.
+    :argument args: A list of flags to check.
 
     """
     if not _check_flags:
@@ -1676,7 +1676,7 @@ def add_cleanup(func, *args, **kwargs):
 
     :argument func: The function to call.
     :argument args: The arguments to pass to `func`.
-    :arguments kwargs: The keyword arguments to pass to `func`.
+    :argument kwargs: The keyword arguments to pass to `func`.
 
     """
     _test.addCleanup(func, *args, **kwargs)
