@@ -120,9 +120,9 @@ def _raise(msg):
 def retry_on_exception(exception, retries=None):
     """Decorate a function so an `exception` triggers a retry.
 
-    :argument exception: If this exception is raised, the decorated function
+    :param exception: If this exception is raised, the decorated function
         will be retried.
-    :argument retries: The number of times that the function will be retried.
+    :param retries: The number of times that the function will be retried.
         If it is `None`, the function will be retried until the time out set by
         `set_wait_timeout` expires.
 
@@ -838,7 +838,7 @@ def wait_for(condition, *args, **kwargs):
         and returns anything different from False (including not returning
         anything) for success.
     :argument args: The arguments to pass to the `condition` function.
-    :argumetn kwargs: The keyword arguments to pass to the `condition`
+    :argument kwargs: The keyword arguments to pass to the `condition`
         function.
     :raise: AssertionError if `condition` does not succeed within the timeout.
         You can set the timeout for `wait_for` by calling `set_wait_timeout`
@@ -862,7 +862,7 @@ def wait_for_and_refresh(condition, *args, **kwargs):
         and returns anything different from False (including not returning
         anything) for success.
     :argument args: The arguments to pass to the `condition` function.
-    :argumetn kwargs: The keyword arguments to pass to the `condition`
+    :argument kwargs: The keyword arguments to pass to the `condition`
         function.
     :raise: AssertionError if `condition` does not succeed within the timeout.
         You can set the timeout for `wait_for` by calling `set_wait_timeout`
@@ -879,7 +879,7 @@ def fails(action, *args, **kwargs):
 
     :argument action: A function to check.
     :argument args: The arguments to pass to the `action` function.
-    :argumetn kwargs: The keyword arguments to pass to the `action` function.
+    :argument kwargs: The keyword arguments to pass to the `action` function.
     :raise: AssertionError if the `action` doesn't raise an AssertionError.
 
     """
