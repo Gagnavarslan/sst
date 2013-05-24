@@ -17,7 +17,8 @@
 #   limitations under the License.
 #
 
-"""
+"""Actions to make Selenium tests simple.
+
 Tests are comprised of Python scripts or test case classes.
 
 Files whose names begin with an underscore will *not* be executed as tests.
@@ -117,11 +118,13 @@ def _raise(msg):
 
 
 def retry_on_exception(exception, retries=None):
-    """Decorate ``func`` so an ``exception`` triggers a retry.
+    """Decorate a function so an `exception` triggers a retry.
 
-    If ``retries`` is None, ``func`` is retried until the time out set by
-    ``set_wait_timeout`` expires. Otherwise, it will be retried the especified
-    number of times. Default is None.
+    :argument exception: If this exception is raised, the decorated function
+        will be retried.
+    :argument retires: The number of times that the function will be retried.
+        If it is `None`, the function will be retried until the time out set by
+        `set_wait_timeout` expires.
 
     """
     def middle(func):
@@ -151,7 +154,7 @@ def retry_on_exception(exception, retries=None):
 
 
 def set_base_url(url):
-    """Set the url used for relative arguments to the `go_to` action."""
+    """Set the URL used for relative arguments to the `go_to` action."""
     global BASE_URL
     if not url.startswith('http') and not url.startswith('file'):
         url = 'http://' + url
@@ -160,39 +163,49 @@ def set_base_url(url):
 
 
 def get_base_url():
-    """Return the base url used by `go_to`."""
+    """Return the base URL used by `go_to`."""
     return BASE_URL
 
 
 def reset_base_url():
+    """Restore the base url to the default.
+
+    This is called automatically for you when a test script completes.
+
     """
-    Restore the base url to the default. This is called automatically for
-    you when a test script completes."""
     global BASE_URL
     BASE_URL = None
 
 
 def end_test():
+    """End the test.
+
+    It can be used conditionally to exit a test under certain conditions.
+
     """
-    If called it ends the test. Can be used conditionally to exit a
-    test under certain conditions."""
     raise EndTest
 
 
 def skip(reason=''):
+    """Skip the test.
+
+    Unlike `end_test` a skipped test will be reported as a skip rather than a
+    pass.
+
+    :argument reason: The reason to skip the test. It will be recorded in the
+        test result.
+
     """
-    Skip the test. Unlike `end_test` a skipped test will be reported
-    as a skip rather than a pass."""
     _test.skipTest(reason)
 
 
 def refresh(wait=True):
-    """
-    Refresh the current page.
+    """Refresh the current page.
 
-    By default this action will wait until a page with a body element is
-    available after the click. You can switch off this behaviour by passing
-    `wait=False`.
+    :argument wait: If `True`, this action will wait until a page with a body
+        element is available. Otherwise, it will return immediately after the
+        Selenium refresh action is completed.
+
     """
     logger.debug('Refreshing current page')
     _test.browser.refresh()
@@ -202,11 +215,17 @@ def refresh(wait=True):
 
 
 def take_screenshot(filename='screenshot.png', add_timestamp=True):
-    """
-    Take a screenshot of the browser window. Called automatically on failures
-    when running in `-s` mode.
+    """Take a screenshot of the browser window.
 
-    Return the path to the saved screenshot."""
+    It is called automatically on failures when running in `-s` mode.
+
+    :argument filename: The name of the file where the screenshot will be
+        saved.
+    :argument add_timestamp: If `True`, a timestamp will be added to the
+        `filename`.
+    :return: The path to the saved screenshot.
+
+    """
     logger.debug('Capturing Screenshot')
     _make_results_dir()
     if add_timestamp:
@@ -223,11 +242,15 @@ def _add_time_stamp(filename):
 
 
 def save_page_source(filename='pagedump.html', add_timestamp=True):
-    """
-    Save the source of the currently opened page.
-    Called automatically on failures when running `-s` mode.
+    """Save the source of the currently opened page.
 
-    Return the path to the saved file.
+    It is called automatically on failures when running in `-s` mode.
+
+    :argument filename: The name of the file where the page will be dumped.
+    :argument add_timestamp: If `True`, a timestamp will be added to the
+        `filename`.
+    :return: The path to the saved file.
+
     """
     logger.debug('Saving page source')
     _make_results_dir()
@@ -242,9 +265,7 @@ def save_page_source(filename='pagedump.html', add_timestamp=True):
 
 
 def _make_results_dir():
-    """
-    Make results directory if it does not exist.
-    """
+    """Make results directory if it does not exist."""
     try:
         os.makedirs(config.results_directory)
     except OSError:
@@ -252,13 +273,15 @@ def _make_results_dir():
         pass  # already exists
 
 
-def sleep(secs):
+def sleep(seconds):
     """Delay execution for the given number of seconds.
 
-    The argument may be a floating point number for subsecond precision.
+    :argument seconds: The number of seconds to sleep. It may be a floating
+        point number for subsecond precision.
+
     """
-    logger.debug('Sleeping %s secs' % secs)
-    time.sleep(secs)
+    logger.debug('Sleeping %s secs' % seconds)
+    time.sleep(seconds)
 
 
 def _fix_url(url):
@@ -279,11 +302,16 @@ def _add_trailing_slash(url):
 def get_argument(name, default=_sentinel):
     """Get an argument from the one the test was called with.
 
-    A test is called with arguments when it is executed by
-    the `run_test`. You can optionally provide a default value
-    that will be used if the argument is not set. If you don't
-    provide a default value and the argument is missing an
-    exception will be raised.
+    A test is called with arguments when it is executed by the `run_test`. You
+    can optionally provide a default value that will be used if the argument
+    is not set.
+
+    :argument name: The name of the argument.
+    :argument default: Value that will be used if the argument is not set.
+    :raise: `LookupError` if you don't provide a default value and the
+        argument is missing.
+    :return: The argument value.
+
     """
     args = config.__args__
 
@@ -294,43 +322,39 @@ def get_argument(name, default=_sentinel):
 
 
 def run_test(name, **kwargs):
+    """Execute a test, with the specified arguments.
+
+    Tests are executed with the same browser (and browser session) as the
+    test calling `run_test`. This includes whether or not Javascript is
+    enabled.
+
+    Before the test is called the timeout and base url are reset, but will be
+    restored to their orginal value when `run_test` returns.
+
+    :argument name: The name of the test to run. It is the test file name
+        without the '.py'. You can specify tests in an alternative directory
+        with relative path syntax. e.g.: `subdir/foo`.
+    :argument kwargs: The arguments to pass to the test. Arguments can be
+        retrieved by the test with `get_argument`.
+    :return: The value of the `RESULT` variable, if set by the test being run.
+
     """
-    Execute a named test, with the specified arguments.
-
-    Arguments can be retrieved by the test with `get_argument`.
-
-    The `name` is the test file name without the '.py'.
-
-    You can specify tests in an alternative directory with
-    relative path syntax. e.g.::
-
-        run_test('subdir/foo', spam='eggs')
-
-    Tests can return a result by setting the name `RESULT`
-    in the test.
-
-    Tests are executed with the same browser (and browser
-    session) as the test calling `test_run`. This includes
-    whether or not Javascript is enabled.
-
-    Before the test is called the timeout and base url are
-    reset, but will be restored to their orginal value
-    when `run_test` returns."""
-    # delayed import to workaround circular imports
+    # Delayed import to workaround circular imports.
     from sst import context
     logger.debug('Executing test: %s' % name)
     return context.run_test(name, kwargs)
 
 
 def go_to(url='', wait=True):
-    """
-    Go to a specific URL. If the url provided is a relative url it will be
-    added to the base url. You can change the base url for the test with
-    `set_base_url`.
+    """Go to a URL.
 
-    By default this action will wait until a page with a body element is
-    available after the click. You can switch off this behaviour by passing
-    `wait=False`.
+    :arguement url: The URL to go to. If it is a relative URL it will be added
+        to the base URL. You can change the base url for the test with
+        `set_base_url`.
+    :argument wait: If `True`, this action will wait until a page with a body
+        element is available. Otherwise, it will return immediately after the
+        Selenium refresh action is completed.
+
     """
     url = _fix_url(url)
 
@@ -342,12 +366,13 @@ def go_to(url='', wait=True):
 
 
 def go_back(wait=True):
-    """
-    Go one step backward in the browser history.
+    """Go one step backward in the browser history.
 
-    By default this action will wait until a page with a body element is
-    available after the click. You can switch off this behaviour by passing
-    `wait=False`."""
+    :argument wait: If `True`, this action will wait until a page with a body
+        element is available. Otherwise, it will return immediately after the
+        Selenium refresh action is completed.
+
+    """
     logger.debug('Going back one step in browser history')
     _test.browser.back()
 
@@ -356,22 +381,28 @@ def go_back(wait=True):
 
 
 def assert_checkbox(id_or_elem):
-    """
-    Assert that the element is a checkbox.
+    """Assert that an element is a checkbox.
 
-    Takes an id or an element object.
-    Raises a failure exception if the element specified doesn't exist or isn't
-    a checkbox."""
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :raise: AssertionError if the element doesn't exist or isn't a checkbox.
+    :return: The element object.
+
+    """
     elem = _get_elem(id_or_elem)
     _elem_is_type(elem, id_or_elem, 'checkbox')
     return elem
 
 
 def assert_checkbox_value(id_or_elem, value):
+    """Assert the value of a checkbox.
+
+    :argument id_or_elem: The identifier of the element, or an element object.
+    :argument value: The expected value of the checkbox. Pass `True` if you
+        want to assert that the checkbox is selected, `False` otherwise.
+    :raise: AssertionError if the element doesn't exist, if it is not a
+        checkbox, or if the checkbox value is not the expected.
+
     """
-    Assert checkbox value. Takes an element id or object plus either True or
-    False. Raises a failure exception if the element specified doesn't exist
-    or isn't a checkbox."""
     checkbox = assert_checkbox(id_or_elem)
     real = checkbox.is_selected()
     msg = 'Checkbox: %r - Has Value: %r' % (_element_to_string(checkbox), real)
@@ -380,12 +411,13 @@ def assert_checkbox_value(id_or_elem, value):
 
 
 def _element_to_string(element):
-    """
-    Get a string that can be used to recognize the element.
+    """Get a string that can be used to recognize the element.
 
     If the element has an id, use it as it will uniquely identify the element.
     Otherwise, fall back to the text. If it has no text, to the value.
-    Fallback to outerHTML as a last resort."""
+    Fallback to outerHTML as a last resort.
+
+    """
     element_id = element.get_attribute('id')
     if element_id:
         return element_id
@@ -402,16 +434,24 @@ def _element_to_string(element):
 
 
 def get_text(id_or_elem):
+    """Return the text of an element.
+
+    :argument id_or_elem: The identifier of the element, or an element object.
+    :raise: AssertionError if the element doesn't exist.
+
     """
-    Return the text of an element. Takes an element id or object."""
     element = _get_elem(id_or_elem)
     return element.text
 
 
 def toggle_checkbox(id_or_elem):
+    """Toggle the checkbox value.
+
+    :argument id_or_elem: The identifier of the element, or an element object.
+    :raise: AssertionError if the element doesn't exist or if it is not a
+        checkbox.
+
     """
-    Toggle the checkbox value. Takes an element id or object. Raises a failure
-    exception if the element specified doesn't exist or isn't a checkbox."""
     checkbox = assert_checkbox(id_or_elem)
     element_string = _element_to_string(checkbox)
     logger.debug('Toggling checkbox: %r' % element_string)
@@ -425,9 +465,15 @@ def toggle_checkbox(id_or_elem):
 
 
 def set_checkbox_value(id_or_elem, new_value):
+    """Set the value of a checkbox.
+
+    :argument id_or_elem: The identifier of the element, or an element object.
+    :argument new_value: The new value for the checkbox. Pass `True` if you
+        want to select the checkbox, `False` otherwise.
+    :raise: AssertionError if the element doesn't exist or if it is not a
+        checkbox.
+
     """
-    Set a checkbox to a specific value, either True or False. Raises a failure
-    exception if the element specified doesn't exist or isn't a checkbox."""
     checkbox = assert_checkbox(id_or_elem)
     logger.debug(
         'Setting checkbox %r to %r' % (_element_to_string(checkbox),
@@ -439,21 +485,24 @@ def set_checkbox_value(id_or_elem, new_value):
 
 
 def _make_keycode(key_to_make):
-    """
-    Take a key and return a keycode"""
+    """Return a keycode from a key name."""
     k = keys.Keys()
     keycode = k.__getattribute__(key_to_make.upper())
     return keycode
 
 
 def simulate_keys(id_or_elem, key_to_press):
-    """
-    Simulate key sent to specified element.
-    (available keys located in `selenium/webdriver/common/keys.py`)
+    """Simulate keys sent to an element.
+
+    Available keys can be found in `selenium/webdriver/common/keys.py`
 
     e.g.::
 
         simulate_keys('text_1', 'BACK_SPACE')
+
+    :argument id_or_elem: The identifier of the element, or an element object.
+    :argument key_to_press: The name of the key to press.
+    :raise: AssertionError if the element doesn't exist.
 
     """
     key_element = _get_elem(id_or_elem)
@@ -470,24 +519,29 @@ _textfields = (
 
 
 def assert_textfield(id_or_elem):
-    """
-    Assert that the element is a textfield, textarea or password box.
+    """Assert that an element is a textfield, textarea or password box.
 
-    Takes an id or an element object.
-    Raises a failure exception if the element specified doesn't exist
-    or isn't a textfield."""
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :raise: AssertionError if the element doesn't exist or isn't a text field.
+    :return: The element object.
+
+    """
     elem = _get_elem(id_or_elem)
     _elem_is_type(elem, id_or_elem, *_textfields)  # see _textfields tuple
     return elem
 
 
 def write_textfield(id_or_elem, new_text, check=True, clear=True):
+    """Write a text into a text field.
+
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument new_text: The text to write.
+    :argument check: If `True`, a check will be made to make sure that the
+        text field contents after writing are the same as `new_text`.
+    :argument clear: If `True`, the field will be cleared before writting into
+        it.
+
     """
-    Set the specified text into the textfield. If the text fails to write (the
-    textfield contents after writing are different to the specified text) this
-    function will fail. You can switch off the checking by passing
-    `check=False`.  The field is cleared before written to. You can switch this
-    off by passing `clear=False`."""
     textfield = assert_textfield(id_or_elem)
     msg = 'Writing to textfield %r with text %r' \
         % (_element_to_string(textfield), new_text)
@@ -513,11 +567,13 @@ def write_textfield(id_or_elem, new_text, check=True, clear=True):
 
 
 def assert_link(id_or_elem):
-    """
-    Assert that the element is a link.
+    """Assert that an element is a link.
 
-    Raises a failure exception if the element specified doesn't exist or
-    isn't a link"""
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :raise: AssertionError if the element doesn't exist or isn't a link.
+    :return: The element object.
+
+    """
     link = _get_elem(id_or_elem)
     if link.tag_name != 'a':
         msg = 'The text %r is not part of a Link or a Link ID' \
@@ -527,7 +583,12 @@ def assert_link(id_or_elem):
 
 
 def get_link_url(id_or_elem):
-    """Return the URL from a link."""
+    """Return the URL from a link.
+
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :raise: AssertionError if the element doesn't exist or isn't a link.
+
+    """
     logger.debug('Getting url from link %r' % id_or_elem)
     link = assert_link(id_or_elem)
     link_url = link.get_attribute('href')
@@ -535,19 +596,23 @@ def get_link_url(id_or_elem):
 
 
 def get_current_url():
-    """Gets the URL of the current page."""
+    """Get the URL of the current page."""
     return _test.browser.current_url
 
 
 def click_link(id_or_elem, check=False, wait=True):
-    """
-    Click the specified link. As some links do redirects the location you end
-    up at is not checked by default. If you pass in `check=True` then this
-    action asserts that the resulting url is the link url.
+    """Click a link.
 
-    By default this action will wait until a page with a body element is
-    available after the click. You can switch off this behaviour by passing
-    `wait=False`."""
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument check: If `True`, the resulting URL will be check to be the same
+        as the one on the link. Default is `False` because some links do
+        redirects.
+    :argument wait: If `True`, this action will wait until a page with a body
+        element is available. Otherwise, it will return immediately after the
+        Selenium refresh action is completed.
+    :raise: AssertionError if the element doesn't exist or isn't a link.
+
+    """
     link = assert_link(id_or_elem)
     link_url = link.get_attribute('href')
 
@@ -564,12 +629,13 @@ def click_link(id_or_elem, check=False, wait=True):
 
 
 def assert_displayed(id_or_elem):
-    """
-    Assert that the element is displayed.
+    """Assert that an element is displayed.
 
-    Takes an id or an element object.
-    Raises a failure exception if the element specified doesn't exist or isn't
-    displayed. Returns the element if it is displayed."""
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :raise: AssertionError if the element doesn't exist or isn't displayed.
+    :return: The element object.
+
+    """
     element = _get_elem(id_or_elem)
     if not element.is_displayed():
         message = 'Element is not displayed'
@@ -578,12 +644,14 @@ def assert_displayed(id_or_elem):
 
 
 def click_element(id_or_elem, wait=True):
-    """
-    Click on an element of any kind not specific to links or buttons.
+    """Click on an element of any kind not specific to links or buttons.
 
-    By default this action will wait until a page with a body element is
-    available after the click. You can switch off this behaviour by passing
-    `wait=False`."""
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument wait: If `True`, this action will wait until a page with a body
+        element is available. Otherwise, it will return immediately after the
+        Selenium refresh action is completed.
+
+    """
     elem = _get_elem(id_or_elem)
 
     logger.debug('Clicking element %r' % _element_to_string(elem))
@@ -594,7 +662,12 @@ def click_element(id_or_elem, wait=True):
 
 
 def assert_title(title):
-    """Assert the page title is as specified."""
+    """Assert the page title.
+
+    :argument title: The expected title.
+    :raise: AssertionError if the title is not the expected.
+
+    """
     real_title = _test.browser.title
     msg = 'Title is: %r. Should be: %r' % (real_title, title)
     if real_title != title:
@@ -602,10 +675,13 @@ def assert_title(title):
 
 
 def assert_title_contains(text, regex=False):
-    """
-    Assert the page title contains the specified text.
+    """Assert that the page title contains a text.
 
-    set `regex=True` to use a regex pattern."""
+    :argument text: The expected text.
+    :argument regex: If `True`, `text` will be used as a regex pattern.
+    :raise: AssertionError if the title doesn't contain the expected text.
+
+    """
     real_title = _test.browser.title
     msg = 'Title is: %r. Does not contain %r' % (real_title, text)
     if regex:
@@ -617,9 +693,13 @@ def assert_title_contains(text, regex=False):
 
 
 def assert_url(url):
+    """Assert the current URL.
+
+    :argument url: The expected URL. It can be an absolute URL or relative to
+        the base url.
+    :raise: AssertionError if the URL is not the expected.
+
     """
-    Assert the current url is as specified. Can be an absolute url or
-    relative to the base url."""
     url = _fix_url(url)
     url = _add_trailing_slash(url)
     real_url = _test.browser.current_url
@@ -630,10 +710,13 @@ def assert_url(url):
 
 
 def assert_url_contains(text, regex=False):
-    """
-    Assert the current url contains the specified text.
+    """Assert that the current URL contains a text.
 
-    set `regex=True` to use a regex pattern."""
+    :argument text: The expected text.
+    :argument regex: If `True`, `text` will be used as a regex pattern.
+    :raise: AssertionError if the URL doesn't contain the expected text.
+
+    """
     real_url = _test.browser.current_url
     msg = 'Url is %r. Does not contain %r' % (real_url, text)
     if regex:
@@ -645,10 +728,14 @@ def assert_url_contains(text, regex=False):
 
 
 def assert_url_network_location(netloc):
-    """Assert the current url's network location is as specified.
+    """Assert the current URL's network location.
 
-    `netloc` is a string containing 'domain:port'.
-    In the case of port 80, `netloc` may contain domain only."""
+    :argument netloc: The expected network location. It is a string containing
+        `domain:port`. In the case of port 80, `netloc` may contain domain
+        only.
+    :raise: AssertionError if the network location is not the expected.
+
+    """
     real_netloc = urlparse(_test.browser.current_url).netloc
     if netloc != real_netloc:
         msg = 'Url network location is: %r. Should be: %r' % (
@@ -661,13 +748,16 @@ _POLL = 0.1
 
 
 def set_wait_timeout(timeout, poll=None):
-    """
-    Set the timeout, in seconds, used by `wait_for`. The default at the start
-    of a test is always 10 seconds.
+    """Set the timeout and poll frequency used by `wait_for`.
 
-    The optional second argument, is how long (in seconds) `wait_for` should
-    wait in between checking its condition (the poll frequency). The default
-    at the start of a test is always 0.1 seconds."""
+    The default timeout at the start of a test is 10 seconds and the poll
+    frequency is 0.1 seconds.
+
+    :argument timeout: The new timeout in seconds.
+    :argument poll: The poll frequency in seconds. It is how long `wait_for`
+       should wait in between checking its condition.
+
+    """
     msg = 'Setting wait timeout to %rs' % timeout
     if poll is not None:
         msg += ('. Setting poll time to %rs' % poll)
@@ -734,60 +824,65 @@ def _wait_for(condition, refresh_page, timeout, poll, *args, **kwargs):
 # significant risk to hide bugs in the user scripts).
 @retry_on_exception(StaleElementReferenceException, retries=1)
 def wait_for(condition, *args, **kwargs):
-    """
-    Wait for an action to pass. Useful for checking the results of actions
-    that may take some time to complete.
+    """Wait for an action to succeed.
 
-    This action takes a condition function and any arguments it should be
-    called with. The condition function can either be an action or a function
-    that returns False or throws an AssertionError for failure, and returns
-    anything different from False (including not returning anything) for
-    success. For example::
+    It is Useful for checking the results of actions that may take some time
+    to complete.
+
+    e.g::
 
         wait_for(assert_title, 'Some page title')
 
-    If the specified condition does not succeed within 10 seconds then
-    `wait_for` fails. If it succeeds, wait_for returns the value returned
-    by the condition.
+    :argument condition: A function to wait for. It can either be an action or
+        a function that returns False or throws an AssertionError for failure,
+        and returns anything different from False (including not returning
+        anything) for success.
+    :argument args: The arguments to pass to the `condition` function.
+    :argumetn kwargs: The keyword arguments to pass to the `condition`
+        function.
+    :raise: AssertionError if `condition` does not succeed within the timeout.
+        You can set the timeout for `wait_for` by calling `set_wait_timeout`
+    :return: The value returned by `condition`.
 
-    You can set the timeout for `wait_for` by calling `set_wait_timeout`."""
+    """
     return _wait_for(condition, False, _TIMEOUT, _POLL, *args, **kwargs)
 
 
 def wait_for_and_refresh(condition, *args, **kwargs):
-    """
-    Wait for an action to pass. Useful for checking the results of actions
-    that may take some time to complete. The difference to wait_for() is, that
-    wait_for_and_refresh() refresh the current page with refresh() after every
-    condition check.
+    """Wait for an action to succeed.
 
-    This action takes a condition function and any arguments it should be
-    called with. The condition function can either be an action or a function
-    that returns False or throws an AssertionError for failure, and returns
-    anything different from False (including not returning anything) for
-    success. For example::
+    It is Useful for checking the results of actions that may take some time
+    to complete.
 
-        wait_for_and_refresh(assert_title, 'Some page title')
+    The difference to `wait_for` is, that `wait_for_and_refresh()` will
+    refresh the current page with after every condition check.
 
-    If the specified condition does not succeed within 10 seconds then
-    `wait_for_and_refresh` fails. If it succeeds, wait_for returns the
-    value returned by the condition.
+    :argument condition: A function to wait for. It can either be an action or
+        a function that returns False or throws an AssertionError for failure,
+        and returns anything different from False (including not returning
+        anything) for success.
+    :argument args: The arguments to pass to the `condition` function.
+    :argumetn kwargs: The keyword arguments to pass to the `condition`
+        function.
+    :raise: AssertionError if `condition` does not succeed within the timeout.
+        You can set the timeout for `wait_for` by calling `set_wait_timeout`
+    :return: The value returned by `condition`.
 
-    You can set the timeout for `wait_for_and_refresh` by calling
-    `set_wait_timeout`.
     """
     return _wait_for(condition, True, _TIMEOUT, _POLL, *args, **kwargs)
 
 
 def fails(action, *args, **kwargs):
+    """Check that an action raises an AssertionError.
+
+    If the action raises a different exception, it will be propagated normally.
+
+    :argument action: A function to check.
+    :argument args: The arguments to pass to the `action` function.
+    :argumetn kwargs: The keyword arguments to pass to the `action` function.
+    :raise: AssertionError if the `action` doesn't raise an AssertionError.
+
     """
-    This action is particularly useful for *testing* other actions, by
-    checking that they fail when they should do. `fails` takes a function
-    (usually an action) and any arguments and keyword arguments to call the
-    function with. If calling the function raises an AssertionError then
-    `fails` succeeds. If the function does *not* raise an AssertionError then
-    this action raises the appropriate failure exception. Alll other
-    exceptions will be propagated normally."""
     logger.debug('Trying action failure: %s' % _get_name(action))
     try:
         action(*args, **kwargs)
@@ -821,14 +916,32 @@ def _elem_is_type(elem, name, *elem_types):
 
 
 def assert_dropdown(id_or_elem):
-    """Assert the specified element is a select drop-list."""
+    """Assert that an element is a drop-down list.
+
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :raise: AssertionError if the element doesn't exist or isn't a drop-down
+        list.
+    :return: The element object.
+
+    """
     elem = _get_elem(id_or_elem)
     _elem_is_type(elem, id_or_elem, 'select-one')
     return elem
 
 
 def set_dropdown_value(id_or_elem, text=None, value=None):
-    """Set the select drop-list to a text or value specified."""
+    """Set the value of a drop-down list.
+
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument text: The text of the drop-down option that will be selected. If
+        you pass the `text` argument, you shouldn't pass `value` too.
+    :argument value: The value of the drop-down option that will be selected.
+        If  you pass the `value` argument, you shouldn't pass `text` too.
+    :raise: AssertionError if the element doesn't exist, if it isn't a
+        drop-down list, if you passed both `text` and `value`, or if the option
+        is not in the drop-down list.
+
+    """
     elem = assert_dropdown(id_or_elem)
     logger.debug(
         'Setting %r option list to %r' % (_element_to_string(elem),
@@ -851,7 +964,14 @@ def set_dropdown_value(id_or_elem, text=None, value=None):
 
 
 def assert_dropdown_value(id_or_elem, text_in):
-    """Assert the specified select drop-list is set to the specified value."""
+    """Assert the selected option in a drop-list.
+
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument text_in: The expected text of the selected option.
+    :raise: AssertionError if the element doesn't exist, if it isn't a
+        drop-down list or if the selected text is not the expected.
+
+    """
     elem = assert_dropdown(id_or_elem)
     # Because there is no way to connect the current
     # text of a select element we have to use 'value'
@@ -865,25 +985,29 @@ def assert_dropdown_value(id_or_elem, text_in):
 
 
 def assert_radio(id_or_elem):
-    """
-    Assert the specified element is a radio button.
+    """Assert that an element is a radio button.
 
-    Takes an id or an element object.
-    Raises a failure exception if the element specified doesn't exist or isn't
-    a radio button"""
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :raise: AssertionError if the element doesn't exist or isn't a radio
+        button.
+    :return: The element object.
+
+    """
     elem = _get_elem(id_or_elem)
     _elem_is_type(elem, id_or_elem, 'radio')
     return elem
 
 
 def assert_radio_value(id_or_elem, value):
-    """
-    Assert the specified element is a radio button with the specified value;
-    True for selected and False for unselected.
+    """Assert the value of a radio button.
 
-    Takes an id or an element object.
-    Raises a failure exception if the element specified doesn't exist or isn't
-    a radio button"""
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument value: The expected valueof the radio button. Pass `True` if you
+        want to assert that the radio button is selected, `False` otherwise.
+    :raise: AssertionError if the element doesn't exist, isn't a radio button,
+        or the value is not the expected.
+
+    """
     elem = assert_radio(id_or_elem)
     selected = elem.is_selected()
     msg = 'Radio %r should be set to: %s.' % (_element_to_string(elem), value)
@@ -892,21 +1016,30 @@ def assert_radio_value(id_or_elem, value):
 
 
 def set_radio_value(id_or_elem):
-    """Select the specified radio button."""
+    """Select a radio button.
+
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :raise: AssertionError if the element doesn't exist or isn't a radio
+        button.
+
+    """
     elem = assert_radio(id_or_elem)
     logger.debug('Selecting radio button item %r' % _element_to_string(elem))
     elem.click()
 
 
 def assert_text(id_or_elem, text):
-    """
-    Assert the specified element text is as specified.
-
-    Raises a failure exception if the element specified doesn't exist or isn't
-    as specified.
+    """Assert the text of an element.
 
     For text fields, it checks the value attribute instead of the text of the
-    element."""
+    element.
+
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument text: The expected text.
+    :raise: AssertionError if the element doesn't exist or its text is not the
+        expected.
+
+    """
     real = _get_text_for_assertion(id_or_elem)
     if real != text:
         msg = 'Element text should be %r. It is %r.' % (text, real)
@@ -942,13 +1075,18 @@ def _is_text_field(element):
 
 
 def assert_text_contains(id_or_elem, text, regex=False):
-    """
-    Assert the specified element contains the specified text.
-
-    set `regex=True` to use a regex pattern.
+    """Assert that the element contains a text.
 
     For text fields, it checks the value attribute instead of the text of the
-    element."""
+    element.
+
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument text: The expected text.
+    :argument regex: If `True`, `text` will be used as a regex pattern.
+    :raise: AssertionError if the element doesn't exist or its text doesn't
+        contain the expected.
+
+    """
     real = _get_text_for_assertion(id_or_elem)
     msg = 'Element text is %r. Does not contain %r.' % (real, text)
     if regex:
@@ -970,16 +1108,26 @@ def _match_text(elem, regex):
 
 def get_elements(tag=None, css_class=None, id=None, text=None,
                  text_regex=None, **kwargs):
+    """Return element objects.
+
+    This action will find and return all matching elements by any of several
+    attributes.
+
+    :argument tag: The HTML tag of the element.
+    :argument css_class: The value of the class attribute of the element.
+    :argument id: The value of the id attribute of the element.
+    :argument text: The text of the element. If you pass the `text` argument,
+        you shouldn't pass the `text_regex` too.
+    :argument text_regex: A regular expression to look for in the text of the
+        element. If you pass the `text_regex` argument, you shouldn't pass
+        the `text` too.
+    :argument kwargs: Keyword arguments to look for values of additional
+        attributes. The key will be the attribute name.
+    :raise: TypeError if you pass both `text` and `text_regex`. AssertionError
+        if no element matches the attributes.
+    :return: A list with the elements that match.
+
     """
-    This function will find and return all matching elements by any of several
-    attributes. If the elements cannot be found from the attributes you
-    provide, the call will fail with an exception.
-
-    You can specify as many or as few attributes as you like.
-
-    `text_regex` finds elements by doing a regular expression search against
-    the text of elements. It cannot be used in conjunction with the `text`
-    argument and cannot be the *only* argument to find elements."""
     if text and text_regex:
         raise TypeError("You can't use text and text_regex arguments")
 
@@ -1023,21 +1171,27 @@ def get_elements(tag=None, css_class=None, id=None, text=None,
 
 def get_element(tag=None, css_class=None, id=None, text=None,
                 text_regex=None, **kwargs):
+    """Return an element object.
+
+    This action will find and return one elements by any of several
+     attributes.
+
+    :argument tag: The HTML tag of the element.
+    :argument css_class: The value of the class attribute of the element.
+    :argument id: The value of the id attribute of the element.
+    :argument text: The text of the element. If you pass the `text` argument,
+        you shouldn't pass the `text_regex` too.
+    :argument text_regex: A regular expression to look for in the text of the
+        element. If you pass the `text_regex` argument, you shouldn't pass
+        the `text` too.
+    :argument kwargs: Keyword arguments to look for values of additional
+        attributes. The key will be the attribute name.
+    :raise: TypeError if you pass both `text` and `text_regex`. AssertionError
+        if no element matches the attributes or if more than one element
+        match.
+    :return: The elements that matches.
+
     """
-    This function will find and return an element by any of several
-    attributes. If the element cannot be found from the attributes you
-    provide, or the attributes match more than one element, the call will fail
-    with an exception.
-
-    Finding elements is useful for checking that the element exists, and also
-    for passing to other actions that work with element objects.
-
-    You can specify as many or as few attributes as you like, so long as they
-    uniquely identify one element.
-
-    `text_regex` finds elements by doing a regular expression search against
-    the text of elements. It cannot be used in conjunction with the `text`
-    argument and cannot be the *only* argument to find elements."""
     elems = get_elements(tag=tag, css_class=css_class,
                          id=id, text=text, text_regex=text_regex, **kwargs)
 
@@ -1050,12 +1204,22 @@ def get_element(tag=None, css_class=None, id=None, text=None,
 
 def exists_element(tag=None, css_class=None, id=None, text=None,
                    text_regex=None, **kwargs):
-    """
-    This function will find if an element exists by any of several
-    attributes. It returns True if the element is found or False
-    if it can't be found.
+    """Check if an element exists.
 
-    You can specify as many or as few attributes as you like."""
+    :argument tag: The HTML tag of the element.
+    :argument css_class: The value of the class attribute of the element.
+    :argument id: The value of the id attribute of the element.
+    :argument text: The text of the element. If you pass the `text` argument,
+        you shouldn't pass the `text_regex` too.
+    :argument text_regex: A regular expression to look for in the text of the
+        element. If you pass the `text_regex` argument, you shouldn't pass
+        the `text` too.
+    :argument kwargs: Keyword arguments to look for values of additional
+        attributes. The key will be the attribute name.
+    :raise: TypeError if you pass both `text` and `text_regex`.
+    :return: True if the element exists, False otherwise.
+
+    """
     try:
         get_elements(tag=tag, css_class=css_class, id=id, text=text,
                      text_regex=text_regex, **kwargs)
@@ -1066,10 +1230,22 @@ def exists_element(tag=None, css_class=None, id=None, text=None,
 
 def assert_element(tag=None, css_class=None, id=None, text=None,
                    text_regex=None, **kwargs):
-    """
-    Assert an element exists by any of several attributes.
+    """Assert that an element exists.
 
-    You can specify as many or as few attributes as you like."""
+    :argument tag: The HTML tag of the element.
+    :argument css_class: The value of the class attribute of the element.
+    :argument id: The value of the id attribute of the element.
+    :argument text: The text of the element. If you pass the `text` argument,
+        you shouldn't pass the `text_regex` too.
+    :argument text_regex: A regular expression to look for in the text of the
+        element. If you pass the `text_regex` argument, you shouldn't pass
+        the `text` too.
+    :argument kwargs: Keyword arguments to look for values of additional
+        attributes. The key will be the attribute name.
+    :raise: TypeError if you pass both `text` and `text_regex`. AssertionError
+        if the element doesn't exist.
+
+    """
     try:
         elems = get_elements(tag=tag, css_class=css_class, id=id, text=text,
                              text_regex=text_regex, **kwargs)
@@ -1080,12 +1256,13 @@ def assert_element(tag=None, css_class=None, id=None, text=None,
 
 
 def assert_button(id_or_elem):
-    """
-    Assert that the specified element is a button.
+    """Assert that an element is a button.
 
-    Takes an id or an element object.
-    Raises a failure exception if the element specified doesn't exist or isn't
-    a button"""
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :raise: AssertionError if the element doesn't exist or isn't a button.
+    :return: The element object.
+
+    """
     elem = _get_elem(id_or_elem)
     if elem.tag_name == 'button':
         return elem
@@ -1096,12 +1273,15 @@ def assert_button(id_or_elem):
 
 
 def click_button(id_or_elem, wait=True):
-    """
-    Click the specified button.
+    """Click a button.
 
-    By default this action will wait until a page with a body element is
-    available after the click. You can switch off this behaviour by passing
-    `wait=False`."""
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument wait: If `True`, this action will wait until a page with a body
+        element is available. Otherwise, it will return immediately after the
+        Selenium refresh action is completed.
+    :raise: AssertionError if the element doesn't exist or isn't a button.
+
+    """
     button = assert_button(id_or_elem)
 
     logger.debug('Clicking button %r' % _element_to_string(button))
@@ -1112,7 +1292,14 @@ def click_button(id_or_elem, wait=True):
 
 
 def get_elements_by_css(selector):
-    """Find all elements that match a css selector."""
+    """Return all the elements that match a CSS selector.
+
+    :argument selector: The CSS selector that will be used to search for the
+        elements.
+    :raise: AssertionError if no element matches the `selector`.
+    :return: A list with the elements that match.
+
+    """
     try:
         return _test.browser.find_elements_by_css_selector(selector)
     except (WebDriverException, NoSuchElementException) as e:
@@ -1121,7 +1308,15 @@ def get_elements_by_css(selector):
 
 
 def get_element_by_css(selector):
-    """Find an element by css selector."""
+    """Return the element that matches a CSS selector.
+
+    :argument selector: The CSS selector that will be used to search for the
+        element.
+    :raise: AssertionError if no element matches the `selector` of if more
+        than one match.
+    :return: The elements that matches.
+
+    """
     elements = get_elements_by_css(selector)
     if len(elements) != 1:
         msg = 'Could not identify element: %s elements found' % len(elements)
@@ -1130,7 +1325,14 @@ def get_element_by_css(selector):
 
 
 def get_elements_by_xpath(selector):
-    """Find all elements that match an xpath."""
+    """Return all the elements that match an XPath selector.
+
+    :argument selector: The XPath selector that will be used to search for the
+        elements.
+    :raise: AssertionError if no element matches the `selector`.
+    :return: A list with the elements that match.
+
+    """
     try:
         return _test.browser.find_elements_by_xpath(selector)
     except (WebDriverException, NoSuchElementException) as e:
@@ -1139,7 +1341,15 @@ def get_elements_by_xpath(selector):
 
 
 def get_element_by_xpath(selector):
-    """Find an element by xpath."""
+    """Return the element that matches an XPath selector.
+
+    :argument selector: The XPath selector that will be used to search for the
+        element.
+    :raise: AssertionError if no element matches the `selector` of if more
+        than one match.
+    :return: The elements that matches.
+
+    """
     elements = get_elements_by_xpath(selector)
     if len(elements) != 1:
         msg = 'Could not identify element: %s elements found' % len(elements)
@@ -1157,16 +1367,20 @@ def get_page_source():
 
 
 def close_window():
-    """ Closes the current window """
+    """ Closes the current window."""
     logger.debug('Closing the current window')
     _test.browser.close()
 
 
 def switch_to_window(index_or_name=None):
-    """
-    Switch focus to the specified window (by index or name).
+    """Switch focus to a window.
 
-    if no window is given, switch focus to the default window."""
+    :argument index_or_name: The index or the name of the window that will be
+        focused. If `None` focus will switch to the default window.
+    :raise: Assertion error if the index is greater than the available windows,
+        or the window couldn't be found.
+
+    """
     if index_or_name is None:
         logger.debug('Switching to default window')
         _test.browser.switch_to_window('')
@@ -1194,10 +1408,13 @@ def switch_to_window(index_or_name=None):
 
 
 def switch_to_frame(index_or_name=None):
-    """
-    Switch focus to the specified frame (by index or name).
+    """Switch focus to a frame.
 
-    if no frame is given, switch focus to the default content frame."""
+    :argument index_or_name: The index or the name of the frame that will be
+        focused. If `None` focus will switch to the default frame.
+    :raise: Assertion error if the frame couldn't be found.
+
+    """
     if index_or_name is None:
         logger.debug('Switching to default content frame')
         _test.browser.switch_to_default_content()
@@ -1211,11 +1428,18 @@ def switch_to_frame(index_or_name=None):
 
 
 def _alert_action(action, expected_text=None, text_to_write=None):
-    """
-    Accept or dismiss a JavaScript alert, confirmation or prompt.
+    """Accept or dismiss a JavaScript alert, confirmation or prompt.
 
-    Optionally, it takes the expected text of the Popup box to check it,
-    and the text to write in the prompt."""
+    :argument action: The action to execute on the alert. It can be either
+        `accept` or `dismiss`.
+    :argument expected_text: The expected text of the alert. If `None`, the
+        alert will not be checked.
+    :argument text_to_write: The text to write in the alert prompt. If `None`,
+        no text will be written.
+    :raise: AssertionError if the alert doesn't contain the expected text, or
+        if an unknown action is passed.
+
+    """
     wait_for(_test.browser.switch_to_alert)
     alert = _test.browser.switch_to_alert()
     alert_text = alert.text
@@ -1234,37 +1458,49 @@ def _alert_action(action, expected_text=None, text_to_write=None):
 
 
 def accept_alert(expected_text=None, text_to_write=None):
-    """
-    Accept a JavaScript alert, confirmation or prompt.
-
-    Optionally, it takes the expected text of the Popup box to check it,
-    and the text to write in the prompt.
+    """Accept a JavaScript alert, confirmation or prompt.
 
     Note that the action that opens the alert should not wait for a page with
     a body element. This means that you should call functions like
-    click_element with the argument wait=Fase."""
+    `click_element` with the argument `wait=Fase`.
+
+    :argument expected_text: The expected text of the alert. If `None`, the
+        alert will not be checked.
+    :argument text_to_write: The text to write in the alert prompt. If `None`,
+        no text will be written.
+
+    """
     logger.debug('Accepting Alert')
     _alert_action('accept', expected_text, text_to_write)
 
 
 def dismiss_alert(expected_text=None, text_to_write=None):
-    """
-    Dismiss a JavaScript alert.
-
-    Optionally, it takes the expected text of the Popup box to check it.,
-    and the text to write in the prompt.
+    """Dismiss a JavaScript alert.
 
     Note that the action that opens the alert should not wait for a page with
     a body element. This means that you should call functions like
-    click_element with the argument wait=Fase."""
+    `click_element` with the argument `wait=Fase`.
+
+    :argument expected_text: The expected text of the alert. If `None`, the
+        alert will not be checked.
+    :argument text_to_write: The text to write in the alert prompt. If `None`,
+        no text will be written.
+
+    """
     logger.debug('Dismissing Alert')
     _alert_action('dismiss', expected_text, text_to_write)
 
 
 def assert_table_headers(id_or_elem, headers):
-    """
-    Assert table `id_or_elem` has headers (<th> tags) where the text matches
-    the sequence `headers`.
+    """Assert the headers of a table.
+
+    The headers are the `<th>` tags.
+
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument headers: A sequence of the expected headers.
+    :raise: AssertionError if the element doesn't exist, or if its headers are
+        not the expected.
+
     """
     logger.debug('Checking headers for %r' % (id_or_elem,))
     elem = _get_elem(id_or_elem)
@@ -1279,9 +1515,15 @@ def assert_table_headers(id_or_elem, headers):
 
 
 def assert_table_has_rows(id_or_elem, num_rows):
-    """
-    Assert the specified table has the specified number of rows (<tr> tags
-    inside the <tbody>).
+    """Assert the number of rows of a table.
+
+    The rows are the `<tr>` tags inside the `<tbody>`
+
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument num_rows: The expected number of rows.
+    :raise: AssertionError if the element doesn't exist, it isn't a table, it
+        doesn't have a tbody, or if its number of rows is not the expected.
+
     """
     logger.debug('Checking table %r has %s rows' % (id_or_elem, num_rows))
     elem = _get_elem(id_or_elem)
@@ -1297,18 +1539,21 @@ def assert_table_has_rows(id_or_elem, num_rows):
 
 
 def assert_table_row_contains_text(id_or_elem, row, contents, regex=False):
-    """
-    Assert the specified row (starting from 0) in the specified table
-    contains the specified contents.
-
-    contents should be a sequence of strings, where each string is the same
-    as the text of the corresponding column.
-
-    If `regex` is True (the default is False) then each cell is checked
-    with a regular expression search.
+    """Assert that a row of a table contains a text.
 
     The row will be looked for inside the <tbody>, to check headers use
     `assert_table_headers`.
+
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument row: The row index, starting from 0.
+    :argument contents: A sequence of strings. Each where string will should
+        be the same as the text of the corresponding column.
+    :argument regex: If `True`, the strings in `contents` will be used as
+        regular expressions.
+    :raise: AssertionError if the element doesn't exist, it isn't a table, it
+        doesn't have a tbody, if the rows number if bigger than the number of
+        rows in the table, or if the row texts doesn't match the expected.
+
     """
     logger.debug(
         'Checking the contents of table %r, row %s.' % (id_or_elem, row))
@@ -1338,12 +1583,15 @@ def assert_table_row_contains_text(id_or_elem, row, contents, regex=False):
 
 
 def assert_attribute(id_or_elem, attribute, value, regex=False):
-    """
-    assert that the specified `attribute` on the element is equal to the
-    `value`.
+    """Assert an the value of an element's attribute.
 
-    If `regex` is True (default is False) then the value will be compared to
-    the attribute using a regular expression search.
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument attribute: The name of the attribute to assert.
+    :argument value: The expected value.
+    :argument regex: If `True`, the `value` will be used as regular expression.
+    :raise: AssertionError if the element doesn't exist, or if the value is not
+        the expected.
+
     """
     elem = _get_elem(id_or_elem)
     logger.debug(
@@ -1359,12 +1607,15 @@ def assert_attribute(id_or_elem, attribute, value, regex=False):
 
 
 def assert_css_property(id_or_elem, property, value, regex=False):
-    """
-    assert that the specified `css property` on the element is equal to the
-    `value`.
+    """Assert the value of an element's CSS property.
 
-    If `regex` is True (default is False) then the value will be compared to
-    the property using a regular expression search.
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :argument property: The name of the CSS property to assert.
+    :argument value: The expected value.
+    :argument regex: If `True`, the `value` will be used as regular expression.
+    :raise: AssertionError if the element doesn't exist, or if the value is not
+        the expected.
+
     """
     elem = _get_elem(id_or_elem)
     logger.debug(
@@ -1383,11 +1634,12 @@ def assert_css_property(id_or_elem, property, value, regex=False):
 
 
 def check_flags(*args):
-    """
-    A test will only run if all the flags passed to this action were supplied
-    at the command line. If a required flag is missing the test is skipped.
+    """Skip a test if one of the flags wasn't supplied at the command line.
 
     Flags are case-insensitive.
+
+    :arguments args: A list of flags to check.
+
     """
     if not _check_flags:
         # Flag checking disabled
@@ -1399,7 +1651,7 @@ def check_flags(*args):
 
 
 def assert_equal(first, second):
-    """Assert two objects are equal."""
+    """Assert that two objects are equal."""
     if _test is None:
         assert first == second
     else:
@@ -1407,7 +1659,7 @@ def assert_equal(first, second):
 
 
 def assert_not_equal(first, second):
-    """Assert two objects are not equal."""
+    """Assert that two objects are not equal."""
     if _test is None:
         assert first != second
     else:
@@ -1415,29 +1667,43 @@ def assert_not_equal(first, second):
 
 
 def add_cleanup(func, *args, **kwargs):
-    """
-    Add a function, with arguments, to be called when the test is
-    completed. Functions added are called on a LIFO basis and are
-    called on test failure or success.
+    """Add a function to be called when the test is completed.
+
+    Functions added are called on a LIFO basis and are called on test failure
+    or success.
 
     They allow a test to clean up after itself.
+
+    :argument func: The function to call.
+    :argument args: The arguments to pass to `func`.
+    :arguments kwargs: The keyword arguments to pass to `func`.
+
     """
     _test.addCleanup(func, *args, **kwargs)
 
 
 def get_cookies():
-    """Gets the cookies of current session (set of dicts)."""
+    """Get the cookies of the current session.
+
+    :return: A set of dicts with the session cookies.
+
+    """
     return _test.browser.get_cookies()
 
 
 def clear_cookies():
-    """Clear the cookies of current session."""
+    """Clear the cookies of the current session."""
     logger.debug('Clearing browser session cookies')
     _test.browser.delete_all_cookies()
 
 
 def set_window_size(width, height):
-    """Resize the current window (width, height) in pixels."""
+    """Resize the current window.
+
+    :argument width: The new width for the window, in pixels.
+    :argument height: The new height for the window, in pixels.
+
+    """
     logger.debug('Resizing window to: %s x %s' % (width, height))
 
     _test.browser.set_window_size(width, height)
@@ -1453,7 +1719,11 @@ def set_window_size(width, height):
 
 
 def get_window_size():
-    """Get the current window size (width, height) in pixels."""
+    """Get the current window size.
+
+    :return: A pair (width, height), in pixels.
+
+    """
     results = _test.browser.get_window_size()
     width = results['width']
     height = results['height']
@@ -1461,9 +1731,7 @@ def get_window_size():
 
 
 def execute_script(script, *args):
-    """
-    Executes JavaScript in the context of the currently selected
-    frame or window.
+    """Execute JavaScript in the currently selected frame or window.
 
     Within the script, use `document` to refer to the current document.
 
@@ -1471,13 +1739,21 @@ def execute_script(script, *args):
 
         execute_script('document.title = "New Title"')
 
-    args will be made available to the script if given.
+    :argument script: The script to execute.
+    :argument args: A list of arguments to be made available to the script.
+    :return: The return value of the script.
+
     """
     logger.debug('Executing script')
     return _test.browser.execute_script(script, *args)
 
 
 def get_element_source(id_or_elem):
-    """Gets the innerHTML source of an element."""
+    """Get the innerHTML source of an element.
+
+    :argument id_or_elem: The identifier of the element, or its element object.
+    :raise: AssertionError if the element doesn't exist
+
+    """
     elem = _get_elem(id_or_elem)
     return elem.get_attribute('innerHTML')
