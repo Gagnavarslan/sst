@@ -7,10 +7,8 @@
 #  $ nosetests -v -m test_concurrent*
 #
 
-import os
 import Queue
 import sys
-import time
 import threading
 import unittest
 from cStringIO import StringIO
@@ -22,7 +20,7 @@ from testtools import (
     iterate_tests,
     MultiTestResult,
     TestCase,
-    )
+)
 
 import sst.result
 import sst.tests
@@ -38,7 +36,7 @@ def _make_test_suite(num_tests):
         # Run selenium webdriver
         #driver = webdriver.Firefox()
         #driver.quit()
-        
+
         self.assertTrue(True)
 
     # create a dict of test methods, sequentially named
@@ -63,7 +61,7 @@ class ConcurrencyTestCase(TestCase):
         super(ConcurrencyTestCase, self).setUp()
         sst.tests.set_cwd_to_tmp(self)
         self.addCleanup(self.restore_stdout)
-        
+
     def restore_stdout(self):
         sys.stdout = sys.__stdout__
 
