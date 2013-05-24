@@ -25,10 +25,10 @@
 SST (selenium-simple-test) is a web test framework that uses Python
 to generate functional browser-based tests.
 
-Tests are made up of scripts, created by composing actions that drive
-a browser and assert conditions. You have the flexibilty of the full
-Python language, along with a convenient set of functions to simplify
-web testing.
+Tests are made up of scripts or test case classes, created by composing
+actions that drive a browser and assert conditions. You have the flexibilty
+of the full Python language, along with a convenient set of functions to
+simplify web testing.
 
 SST consists of:
 
