@@ -18,15 +18,16 @@
 #
 
 """
-Tests are comprised of Python scripts. Files whose names begin with an
-underscore will *not* be executed as test scripts.
+Tests are comprised of Python scripts or test case classes.
 
-Test scripts drive the browser with Selenium WebDriver by importing and
-using SST actions.
+Files whose names begin with an underscore will *not* be executed as tests.
+
+Tests drive the browser with Selenium WebDriver by importing and using SST
+actions.
 
 The standard set of actions are imported by starting the test scripts with::
 
-    from sst.actions import *
+    from sst import actions
 
 
 Actions that work on page elements take either an element id or an
@@ -34,6 +35,7 @@ element object as their first argument. If the element you are working with
 doesn't have a specific id you can get the element object with the
 `get_element` action. `get_element` allows you to find an element by its
 id, tag, text, class or other attributes. See the `get_element` documentation.
+
 """
 
 
