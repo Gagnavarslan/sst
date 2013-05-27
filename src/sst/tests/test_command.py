@@ -17,6 +17,7 @@
 #   limitations under the License.
 #
 
+from cStringIO import StringIO
 import testtools
 
 from sst import command
@@ -59,3 +60,82 @@ class TestArgParsing(testtools.TestCase):
             ['--exclude', 'foo', '-e', 'bar', '-ebaz'])
         self.assertEquals(['foo', 'bar', 'baz'], opts.excludes)
         self.assertEqual([], args)
+
+
+class TestCleanups(testtools.TestCase):
+
+    def test_cleanup_now_consumes(self):
+        out = StringIO()
+        clean = command.Cleaner(out)
+        self.called = False
+
+        def cleaning():
+            self.called = True
+        clean.add('cleaning', cleaning)
+        clean.cleanup_now()
+        self.assertTrue(self.called)
+        self.assertEqual('cleaning', out.getvalue())
+        self.assertEqual([], clean.cleanups)
+
+    def test_cleanup_catches_exceptions(self):
+        out = StringIO()
+        clean = command.Cleaner(out)
+
+        def boom():
+            1/0
+        clean.add('boom\n', boom)
+        clean.cleanup_now()
+        lines = out.getvalue().splitlines()
+        self.assertLess(2, len(lines))
+        self.assertEqual('boom', lines[0])
+        # We don't care about the detailed traceback as long as it ends up with
+        # the expected exception.
+        self.assertEqual(
+            'ZeroDivisionError: integer division or modulo by zero',
+            lines[-1])
+        self.assertEqual([], clean.cleanups)
+
+    def test_keyboard_interrupts(self):
+        out = StringIO()
+        clean = command.Cleaner(out)
+
+        self.called = False
+
+        def cleaning():
+            self.called = True
+
+        clean.add('cleaning', cleaning)
+
+        def kb_interrupts():
+            raise KeyboardInterrupt
+
+        clean.add('interrupts', kb_interrupts)
+        self.assertRaises(KeyboardInterrupt, clean.cleanup_now)
+        self.assertEquals('interrupts', out.getvalue())
+        # The cleanups are still in place
+        self.assertEqual([('interrupts', kb_interrupts, (), {}),
+                          ('cleaning', cleaning, (), {})],
+                         clean.cleanups)
+        # And the first cleanup has not been called
+        self.assertFalse(self.called)
+
+    def test_add_collects_args(self):
+        clean = command.Cleaner()
+
+        def func(*args, **kwargs):
+            pass
+        clean.add('foo', func, 1, 2, foo=4, bar=12)
+        self.assertEquals(('foo', func, (1, 2), {'foo': 4, 'bar': 12}),
+                          clean.cleanups[0])
+
+    def test_usable_as_context_manager(self):
+        self.called = False
+
+        def cleaning():
+            self.called = True
+
+        with command.Cleaner() as cleaner:
+            cleaner.add('cleaning', cleaning)
+            self.assertFalse(self.called)
+
+        self.assertTrue(self.called)
