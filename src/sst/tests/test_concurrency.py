@@ -31,7 +31,7 @@ def _make_test_suite(num_tests):
 
     This is used for generating test data."""
 
-    # every method generated will have this body
+    # Every method generated will have this body
     def test_method(self):
         # Run selenium webdriver
         #driver = webdriver.Firefox()
@@ -39,15 +39,15 @@ def _make_test_suite(num_tests):
 
         self.assertTrue(True)
 
-    # create a dict of test methods, sequentially named
+    # Create a dict of test methods, sequentially named
     d = {}
     for i in range(num_tests):
         d['test_method%i' % i] = test_method
 
-    # generate a Class with the created methods
+    # Generate a Class with the created methods
     SampleTestCase = type('SampleTestCase', (TestCase,), d)
 
-    # make a sequence of test_cases from the test methods
+    # Make a sequence of test_cases from the test methods
     test_cases = [
         SampleTestCase('test_method%i' % i)
         for i in range(num_tests)
@@ -135,7 +135,7 @@ class ConcurrencyTestCase(TestCase):
 
     def test_concurrent_even_groups_multi_result(self):
         num_tests = 8
-        group_size = 2  # number of tests in each sub_suite
+        group_size = 2  # Number of tests in each sub_suite
 
         original_suite = _make_test_suite(num_tests)
         sub_suites = self.group_cases(
@@ -161,17 +161,17 @@ class ConcurrencyTestCase(TestCase):
         num_tests = 16
         num_workers = 4  # number of worker threads to spawn
 
-        def worker(input):
+        def worker(task_queue):
             # Get from input queue until empty
             while True:
                 try:
-                    single_case_suite, result = input.get(False)
+                    single_case_suite, result = task_queue.get(False)
                     # Run the test
                     single_case_suite.run(result)
                 except Queue.Empty:
                     break
 
-        # Genereate a regular unittest suite to run
+        # Genereate a unittest suite to run
         original_suite = _make_test_suite(num_tests)
 
         # Create results and streams.
@@ -180,7 +180,7 @@ class ConcurrencyTestCase(TestCase):
         xml_result = junitxml.JUnitXmlResult(out)
         result = MultiTestResult(txt_result, xml_result)
 
-        # Split the suite into sub suites with one TestCase in each.
+        # Split the suite into sub suites with one TestCase in each
         suites = self.split_suite(original_suite)
 
         # Create queue for test suites
@@ -201,7 +201,7 @@ class ConcurrencyTestCase(TestCase):
         for t in threads:
             t.join()
 
-        # Stop populating XML results.
+        # Stop populating XML results
         result.stopTestRun()
 
         self.assertTrue(result.wasSuccessful())
