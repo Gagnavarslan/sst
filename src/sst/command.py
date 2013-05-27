@@ -17,12 +17,14 @@
 #   limitations under the License.
 #
 
-import __main__
+import __main__  # FIXME: This shouldn't be needed and makes testing harder
+                 # than it should -- vila 2013-05-27
 import logging
+import optparse
 import os
 import sys
 import shutil
-import optparse
+import traceback
 
 
 import sst
@@ -64,7 +66,7 @@ def get_common_options():
     parser.add_option('-j', dest='javascript_disabled',
                       default=False, action='store_true',
                       help='disable javascript in browser')
-    parser.add_option('-m', dest='shared_modules',
+    parser.add_option('-m', dest='shared_directory',
                       default=None,
                       help='directory for shared modules')
     parser.add_option('-q', dest='quiet', action='store_true',
@@ -181,3 +183,50 @@ def get_opts(get_options, args=None):
     config.flags = [flag.lower() for flag in
                     ([] if not with_flags else with_flags.split(','))]
     return (cmd_opts, args)
+
+
+class Cleaner(object):
+    """Store cleanup callables in a stack.
+
+    This allows deferring cleanups until a processing end while setting up an
+    environment.
+    """
+
+    def __init__(self, stream=None):
+        self.stream = stream
+        self.cleanups = []
+
+    def add(self, msg, func, *args, **kwargs):
+        """Add a cleanup callable.
+
+        :param msg: A message to write into the stream when the callable is
+            called.
+
+        :param func: The callable.
+
+        :param args: An optional list of arguments to pass to func.
+
+        :param kwargs: An optional dict of arguments to pass to func.
+        """
+        self.cleanups.insert(0, (msg, func, args, kwargs))
+
+    def _write(self, msg):
+        if self.stream is not None:
+            self.stream.write(msg)
+
+    def cleanup_now(self):
+        """Run cleanups last added first.
+
+        If exceptions occur, they are written to the stream but not propagated.
+        """
+        for msg, func, args, kwargs in self.cleanups:
+            self._write(msg)
+            try:
+                func(*args, **kwargs)
+            except Exception:
+                # Note that since we catch Exception, KeyboardInterrupt is not
+                # caught which is intended. If things go really wrong, the user
+                # should stay in control
+                self._write(traceback.format_exc())
+        # We're done
+        self.cleanups = []
