@@ -51,7 +51,7 @@ def main():
         cmd_opts.dir_name = 'selftests'
         if not tests.check_devserver_port_used(sst.DEVSERVER_PORT):
             run_django(sst.DEVSERVER_PORT)
-            cleaner.add('\nkilling django...', kill_django, sst.DEVSERVER_PORT)
+            cleaner.add('killing django...\n', kill_django, sst.DEVSERVER_PORT)
         else:
             print 'Error: port is in use.'
             print 'can not launch devserver for internal tests.'
@@ -62,7 +62,7 @@ def main():
         print '\nstarting virtual display...'
         display = Xvfb(width=1024, height=768)
         display.start()
-        cleaner.add('\nstopping virtual display...', display.stop)
+        cleaner.add('stopping virtual display...\n', display.stop)
 
     if not cmd_opts.quiet:
         print ''
@@ -78,7 +78,7 @@ def main():
         print '  headless xserver: %r' % cmd_opts.xserver_headless
         print ''
 
-    try:
+    with cleaner:
         command.clear_old_results()
         factory = browsers.browser_factories.get(cmd_opts.browser_type)
         failures = runtests.runtests(
@@ -94,10 +94,6 @@ def main():
             extended=cmd_opts.extended_tracebacks,
             excludes=cmd_opts.excludes
         )
-    finally:
-
-        print '--------------------------------------------------------------'
-        cleaner.cleanup_now()
 
     return failures
 

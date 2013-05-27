@@ -230,3 +230,10 @@ class Cleaner(object):
                 self._write(traceback.format_exc())
         # We're done
         self.cleanups = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        self.cleanup_now()
+        return False

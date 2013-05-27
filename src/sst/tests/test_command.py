@@ -127,3 +127,15 @@ class TestCleanups(testtools.TestCase):
         clean.add('foo', func, 1, 2, foo=4, bar=12)
         self.assertEquals(('foo', func, (1, 2), {'foo': 4, 'bar': 12}),
                           clean.cleanups[0])
+
+    def test_usable_as_context_manager(self):
+        self.called = False
+
+        def cleaning():
+            self.called = True
+
+        with command.Cleaner() as cleaner:
+            cleaner.add('cleaning', cleaning)
+            self.assertFalse(self.called)
+
+        self.assertTrue(self.called)
