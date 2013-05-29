@@ -90,7 +90,7 @@ class SSTTestCase(testtools.TestCase):
         return None
 
     def start_browser(self):
-        logger.debug('\nStarting browser')
+        logger.debug('Starting browser')
         self.browser_factory.setup_for_test(self)
         self.browser = self.browser_factory.browser()
         logger.debug('Browser started: %s' % (self.browser.name))

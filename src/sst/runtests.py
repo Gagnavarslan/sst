@@ -20,11 +20,13 @@
 import junitxml
 import logging
 import os
+import Queue
 import sys
-
+import threading
 
 import testtools
 import testtools.content
+
 from sst import (
     actions,
     browsers,
@@ -129,17 +131,52 @@ def runtests(test_regexps, test_dir='.', collect_only=False,
     else:
         res = text_result
 
+    num_workers = 1  # number of worker threads to spawn
+
+    # Split the suite into sub suites with one TestCase in each
+    suites = split_suite(alltests)
+
+    # Create queue for feeding test suites to workers
+    task_queue = Queue.Queue()
+
+    # Queue up tasks
+    for single_case_suite in suites:
+        task_queue.put((single_case_suite, res))
+
     res.startTestRun()
-    try:
-        alltests.run(res)
-    except KeyboardInterrupt:
-        print >> sys.stderr, 'Test run interrupted'
-    finally:
-        # XXX should warn on cases that were specified but not found
-        pass
+
+    # Start workers
+    threads = []
+    for _ in xrange(num_workers):
+        t = threading.Thread(target=runner_worker, args=(task_queue,))
+        t.start()
+        threads.append(t)
+
+    ## XXX what about catching ctl-c while workers are running? -cmg
+    ##  test interrupts are broken.
+    # Wait on workers
+    for t in threads:
+        t.join()
+
+    # Stop populating results
     res.stopTestRun()
 
     return len(res.failures) + len(res.errors)
+
+
+def runner_worker(task_queue):
+    """Get from input queue, and run each test, until empty."""
+    while True:
+        try:
+            single_case_suite, result = task_queue.get(False)
+            # Run the test
+            single_case_suite.run(result)
+        except Queue.Empty:
+            break
+
+
+def split_suite(suite):
+    return list(testtools.iterate_tests(suite))
 
 
 def find_shared_directory(test_dir, shared_directory):

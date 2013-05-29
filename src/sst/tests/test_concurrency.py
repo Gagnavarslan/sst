@@ -161,16 +161,6 @@ class ConcurrencyTestCase(TestCase):
         num_tests = 16
         num_workers = 4  # number of worker threads to spawn
 
-        def worker(task_queue):
-            # Get from input queue until empty
-            while True:
-                try:
-                    single_case_suite, result = task_queue.get(False)
-                    # Run the test
-                    single_case_suite.run(result)
-                except Queue.Empty:
-                    break
-
         # Genereate a unittest suite to run
         original_suite = _make_test_suite(num_tests)
 
@@ -183,7 +173,7 @@ class ConcurrencyTestCase(TestCase):
         # Split the suite into sub suites with one TestCase in each
         suites = self.split_suite(original_suite)
 
-        # Create queue for test suites
+        # Create queue for feeding test suites to workers
         task_queue = Queue.Queue()
 
         # Queue up tasks
@@ -193,7 +183,7 @@ class ConcurrencyTestCase(TestCase):
         # Start workers
         threads = []
         for _ in xrange(num_workers):
-            t = threading.Thread(target=worker, args=(task_queue,))
+            t = threading.Thread(target=runner_worker, args=(task_queue,))
             t.start()
             threads.append(t)
 
@@ -201,7 +191,7 @@ class ConcurrencyTestCase(TestCase):
         for t in threads:
             t.join()
 
-        # Stop populating XML results
+        # Stop populating results
         result.stopTestRun()
 
         self.assertTrue(result.wasSuccessful())
@@ -210,3 +200,14 @@ class ConcurrencyTestCase(TestCase):
         xml_lines = out.getvalue().splitlines()
         # xml file has a line for each case + header + footer
         self.assertEqual(len(xml_lines), num_tests + 2)
+
+
+def runner_worker(task_queue):
+    """Get from input queue, and run each test, until empty."""
+    while True:
+        try:
+            single_case_suite, result = task_queue.get(False)
+            # Run the test
+            single_case_suite.run(result)
+        except Queue.Empty:
+            break

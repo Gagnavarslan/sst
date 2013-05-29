@@ -71,7 +71,7 @@ def main():
         print '  test directory: %r' % cmd_opts.dir_name
         print '  report format: %r' % cmd_opts.report_format
         print '  browser type: %r' % cmd_opts.browser_type
-        print '  shared directory: %r' % cmd_opts.shared_modules
+        print '  shared directory: %r' % cmd_opts.shared_directory
         print '  screenshots on error: %r' % cmd_opts.screenshots_on
         print '  failfast: %r' % cmd_opts.failfast
         print '  debug: %r' % cmd_opts.debug
