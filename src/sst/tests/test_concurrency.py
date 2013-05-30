@@ -158,6 +158,17 @@ class ConcurrencyTestCase(TestCase):
         self.assertEqual(len(xml_lines), num_tests + 2)
 
     def test_concurrent_one_case_per_threaded_worker(self):
+
+        def runner_worker(task_queue):
+            """Get from input queue, and run each test, until empty."""
+            while True:
+                try:
+                    single_case_suite, result = task_queue.get(False)
+                    # Run the test
+                    single_case_suite.run(result)
+                except Queue.Empty:
+                    break
+
         num_tests = 16
         num_workers = 4  # number of worker threads to spawn
 
@@ -171,7 +182,9 @@ class ConcurrencyTestCase(TestCase):
         result = MultiTestResult(txt_result, xml_result)
 
         # Split the suite into sub suites with one TestCase in each
-        suites = self.split_suite(original_suite)
+        split_suites = self.split_suite(original_suite)
+
+        suites = [ConcurrentTestSuite(s, lambda s: s) for s in split_suites]
 
         # Create queue for feeding test suites to workers
         task_queue = Queue.Queue()
@@ -200,14 +213,3 @@ class ConcurrencyTestCase(TestCase):
         xml_lines = out.getvalue().splitlines()
         # xml file has a line for each case + header + footer
         self.assertEqual(len(xml_lines), num_tests + 2)
-
-
-def runner_worker(task_queue):
-    """Get from input queue, and run each test, until empty."""
-    while True:
-        try:
-            single_case_suite, result = task_queue.get(False)
-            # Run the test
-            single_case_suite.run(result)
-        except Queue.Empty:
-            break
