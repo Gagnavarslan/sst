@@ -139,8 +139,7 @@ Options::
   --disable-flag-skips      run all tests, disable skipping tests due to flags
   --extended-tracebacks     add extra information (page source) to failure reports
   --collect-only            collect/print cases without running tests
-  --exclude=REGEXP          do not run the tests matching the regular expression
-  --test                    run selftests (acceptance tests with django server)
+  --excludes=REGEXP         do not run the tests matching the regular expression
 
 
 --------------------
@@ -364,27 +363,24 @@ putting the following at the start of the test::
   work fine on other platforms, but any issues (or even better - patches)
   should be reported on the Launchpad project.
 
-* Get a copy of SST Trunk, create and activate a virtualenv, install requirements, 
-  and run examples/self-tests from the dev branch::
+* Get a copy of SST Trunk, create and activate a virtualenv, install
+  requirements, and run examples/self-tests from the dev branch::
 
     $ sudo apt-get install bzr python-virtualenv xvfb
     $ bzr branch lp:selenium-simple-test
     $ cd selenium-simple-test
-    $ virtualenv ENV
+    $ ./ci.sh --bootstrap
     $ source ENV/bin/activate
-    (ENV)$ pip install -r requirements.txt
     (ENV)$ ./sst-run -d examples
     
 * (optional) Install test dependencies and run SST's internal unit tests::
 
     (ENV)$ pip install mock nose pep8
-    (ENV)$ nosetests --match ^test_.* --exclude="ENV|testproject|selftests"
+    (ENV)$ ./ci.sh --unit
 
-* (optional) Install `django` and run SST's internal test application with
-  acceptance tests
+* (optional) Run SST's internal test application with acceptance tests::
 
-    (ENV)$ pip install django
-    (ENV)$ ./sst-run --test -x
+    (ENV)$ ./ci.sh --acceptance
 
 * `Launchpad Project <https://launchpad.net/selenium-simple-test>`_
 
@@ -419,7 +415,8 @@ based on an included test Django project.
 You can run the suite of self-tests (and the test Django server) from your
 local branch like this::
 
-    $ ./sst-run --test
+    $ ./ci.sh --bootstrap
+    $ ./ci.sh --acceptance
 
 
 -----------------

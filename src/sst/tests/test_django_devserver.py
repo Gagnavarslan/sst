@@ -26,7 +26,7 @@ import testtools
 
 import sst
 from sst import tests
-from sst.scripts import run
+from sst.scripts import test as script_test
 
 
 class TestDjangoDevServer(testtools.TestCase):
@@ -39,16 +39,16 @@ class TestDjangoDevServer(testtools.TestCase):
         tests.set_cwd_to_tmp(self)
 
     def test_django_start(self):
-        self.addCleanup(run.kill_django, sst.DEVSERVER_PORT)
-        proc = run.run_django(sst.DEVSERVER_PORT)
+        self.addCleanup(script_test.kill_django, sst.DEVSERVER_PORT)
+        proc = script_test.run_django(sst.DEVSERVER_PORT)
         self.assertIsNotNone(proc)
 
     def test_django_devserver_port_used(self):
         used = tests.check_devserver_port_used(sst.DEVSERVER_PORT)
         self.assertFalse(used)
 
-        self.addCleanup(run.kill_django, sst.DEVSERVER_PORT)
-        run.run_django(sst.DEVSERVER_PORT)
+        self.addCleanup(script_test.kill_django, sst.DEVSERVER_PORT)
+        script_test.run_django(sst.DEVSERVER_PORT)
 
         used = tests.check_devserver_port_used(sst.DEVSERVER_PORT)
         self.assertTrue(used)
