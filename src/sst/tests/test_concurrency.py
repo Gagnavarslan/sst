@@ -14,7 +14,7 @@ import unittest
 from cStringIO import StringIO
 
 import junitxml
-from selenium import webdriver
+
 from testtools import (
     ConcurrentTestSuite,
     iterate_tests,
@@ -22,6 +22,7 @@ from testtools import (
     TestCase,
 )
 
+import sst.concurrency
 import sst.result
 import sst.tests
 
@@ -33,10 +34,9 @@ def _make_test_suite(num_tests):
 
     # Every method generated will have this body
     def test_method(self):
-        # Run selenium webdriver
+        #from selenium import webdriver
         #driver = webdriver.Firefox()
         #driver.quit()
-
         self.assertTrue(True)
 
     # Create a dict of test methods, sequentially named
@@ -211,5 +211,33 @@ class ConcurrencyTestCase(TestCase):
         self.assertEqual(result.errors, [])
         self.assertEqual(result.testsRun, num_tests)
         xml_lines = out.getvalue().splitlines()
+        # xml file has a line for each case + header + footer
+        self.assertEqual(len(xml_lines), num_tests + 2)
+
+    def test_concurrent_even_groups_multi_result_forked(self):
+        num_tests = 8
+
+        console_out = StringIO()
+        xml_out = StringIO()
+        txt_result = sst.result.TextTestResult(console_out, verbosity=2)
+        xml_result = junitxml.JUnitXmlResult(xml_out)
+        result = MultiTestResult(txt_result, xml_result)
+
+        original_suite = _make_test_suite(num_tests)
+        suite = ConcurrentTestSuite(
+            original_suite,
+            sst.concurrency.fork_for_tests
+        )
+        #result.startTestRun()
+        suite.run(result)
+        result.stopTestRun()
+
+        # Check the result
+        self.assertTrue(result.wasSuccessful())
+        self.assertEqual(result.errors, [])
+        self.assertEqual(result.testsRun, num_tests)
+
+        # Check the xml output
+        xml_lines = xml_out.getvalue().splitlines()
         # xml file has a line for each case + header + footer
         self.assertEqual(len(xml_lines), num_tests + 2)
