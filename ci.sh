@@ -61,7 +61,7 @@ if [ -n "$BOOTSTRAP" ]; then
         bzr branch lp:~ubuntuone-hackers/selenium-simple-test/sst-deps
     fi
     echo "creating virtualenv..."
-    virtualenv --system-site-packages ENV
+    virtualenv ENV --quiet
     echo "activating virtualenv..."
     source ENV/bin/activate
     echo "installing modules from dependencies branch..."
