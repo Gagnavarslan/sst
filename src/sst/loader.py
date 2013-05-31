@@ -286,10 +286,11 @@ class TestLoader(unittest.TestLoader):
     dirLoaderClass = PackageLoader
     fileLoaderClass = ModuleLoader
 
-    def __init__(self, browser_factory=None,
+    def __init__(self,  results_directory=None, browser_factory=None,
                  screenshots_on=False, debug_post_mortem=False,
                  extended_report=False):
         super(TestLoader, self).__init__()
+        self.results_directory = results_directory
         self.browser_factory = browser_factory
         self.screenshots_on = screenshots_on
         self.debug_post_mortem = debug_post_mortem
@@ -371,6 +372,7 @@ class TestLoader(unittest.TestLoader):
 
         # FIXME: We shouldn't have to set test attributes manually, something
         # smells wrong here. -- vila 2013-04-26
+        test.results_directory = self.results_directory
         test.browser_factory = self.browser_factory
 
         test.screenshots_on = self.screenshots_on

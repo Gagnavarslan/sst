@@ -17,8 +17,10 @@
 #   limitations under the License.
 #
 
+import errno
 import logging
 import optparse
+import os
 import sys
 import shutil
 import traceback
@@ -41,11 +43,13 @@ the end of the filename.
 """
 
 
-def clear_old_results():
+def reset_directory(path):
     try:
-        shutil.rmtree('./results/')
-    except OSError:
-        pass
+        shutil.rmtree(path)
+    except OSError, e:
+        if e.errno != errno.ENOENT:
+            raise
+    os.makedirs(path)
 
 
 def get_common_options():

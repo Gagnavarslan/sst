@@ -52,10 +52,11 @@ def main():
         cleaner.add('stopping virtual display...\n', display.stop)
 
     with cleaner:
-        command.clear_old_results()
+        results_directory = os.path.abspath('results')
+        command.reset_directory(results_directory)
         factory = browsers.browser_factories.get(cmd_opts.browser_type)
         failures = runtests.runtests(
-            args,
+            args, results_directory,
             test_dir=cmd_opts.dir_name,
             collect_only=cmd_opts.collect_only,
             report_format=cmd_opts.report_format,

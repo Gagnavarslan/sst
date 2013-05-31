@@ -41,6 +41,7 @@ id, tag, text, class or other attributes. See the `get_element` documentation.
 
 
 import codecs
+import errno
 import logging
 import os
 import re
@@ -266,11 +267,13 @@ def save_page_source(filename='pagedump.html', add_timestamp=True):
 
 def _make_results_dir():
     """Make results directory if it does not exist."""
+    _test.assertIsNot(None, config.results_directory,
+                      "results_directory should be set")
     try:
         os.makedirs(config.results_directory)
-    except OSError:
-        # FIXME: We should only catch the EEXIST errno -- vila 2013-04-29
-        pass  # already exists
+    except OSError, e:
+        if e.errno != errno.EEXIST:
+            raise
 
 
 def sleep(seconds):
