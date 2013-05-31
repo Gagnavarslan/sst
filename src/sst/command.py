@@ -107,7 +107,7 @@ def get_common_options():
 
 def get_run_options():
     parser = get_common_options()
-    parser.add_option('--concurrency', dest='concurrency_num',
+    parser.add_option('--concurrency', dest='concurrency',
                       default=1,
                       help='concurrency (number of procs):')
     parser.add_option('--test',

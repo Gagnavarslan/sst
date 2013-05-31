@@ -75,7 +75,7 @@ def main():
         print '  screenshots on error: %r' % cmd_opts.screenshots_on
         print '  failfast: %r' % cmd_opts.failfast
         print '  debug: %r' % cmd_opts.debug
-        print '  concurrency enabled: %r' % cmd_opts.use_concurrency
+        print '  concurrency (procs): %d' % cmd_opts.concurrency
         print '  headless xserver: %r' % cmd_opts.xserver_headless
         print ''
 
