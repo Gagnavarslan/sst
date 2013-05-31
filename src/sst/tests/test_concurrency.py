@@ -31,11 +31,6 @@ def _make_test_suite(num_tests):
 
     # Every method generated will have this body
     def test_method(self):
-        import time
-        from selenium import webdriver
-        driver = webdriver.Firefox()
-        time.sleep(5.0)
-        driver.quit()
         self.assertTrue(True)
 
     # Create a dict of test methods, sequentially named

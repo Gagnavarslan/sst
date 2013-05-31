@@ -142,7 +142,7 @@ def runtests(test_regexps, test_dir='.', collect_only=False,
         )
     else:
         suite = alltests
-    
+
     res.startTestRun()
     try:
         alltests.run(res)
