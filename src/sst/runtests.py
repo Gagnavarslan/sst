@@ -20,9 +20,7 @@
 import junitxml
 import logging
 import os
-import Queue
 import sys
-import threading
 
 import testtools
 import testtools.content
