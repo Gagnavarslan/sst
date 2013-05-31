@@ -50,10 +50,6 @@ class ConcurrencyTestCase(TestCase):
     def setUp(self):
         super(ConcurrencyTestCase, self).setUp()
         sst.tests.set_cwd_to_tmp(self)
-        self.addCleanup(self.restore_stdout)
-
-    def restore_stdout(self):
-        sys.stdout = sys.__stdout__
 
     def test_concurrent_forked(self):
         num_tests = 8
