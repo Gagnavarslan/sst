@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+
+import os
+import sys
+
+
+if __name__ == "__main__":
+    # We run from sources, we must ensure we won't import from an installed
+    # version so we insert 'src' in front of sys.path
+    cur_dir = os.path.abspath(os.path.dirname(__file__))
+    sys.path.insert(0, os.path.join(cur_dir, 'src'))
+    from sst.scripts import test
+    failures = test.main()
+    if failures:
+        sys.exit(1)

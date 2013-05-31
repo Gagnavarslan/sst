@@ -69,17 +69,10 @@ def runtests(test_regexps, test_dir='.', collect_only=False,
     config.results_directory = os.path.abspath('results')
     actions._make_results_dir()
 
-    if test_dir == 'selftests':
-        # XXXX horrible hardcoding
-        # selftests should be a command instead
-        package_dir = os.path.dirname(__file__)
-        os.chdir(os.path.dirname(package_dir))
-        test_dir = os.path.join('.', 'sst', 'selftests')
-    else:
-        if not os.path.isdir(test_dir):
-            msg = 'Specified directory %r does not exist' % test_dir
-            print msg
-            sys.exit(1)
+    if not os.path.isdir(test_dir):
+        msg = 'Specified directory %r does not exist' % test_dir
+        print msg
+        sys.exit(1)
     shared_directory = find_shared_directory(test_dir, shared_directory)
     config.shared_directory = shared_directory
     sys.path.append(shared_directory)

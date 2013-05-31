@@ -83,6 +83,7 @@ params = dict(
         'console_scripts': [
             'sst-run = sst.scripts.run:main',
             'sst-remote = sst.scripts.remote:main',
+            'sst-test = sst.scripts.test:main',
         ],
     },
 )
