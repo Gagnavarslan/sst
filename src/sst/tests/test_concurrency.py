@@ -1,8 +1,4 @@
 #
-# work in progress
-# - concurrency strategies for parallel test case runner
-#
-#
 # to run:
 #  $ ./selftest.py src/sst/tests/ -p test_concurrency.py
 #
