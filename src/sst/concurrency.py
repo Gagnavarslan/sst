@@ -26,7 +26,6 @@ def fork_for_tests(suite, concurrency_num=1):
         run(result) called on them to feed tests to result.
     """
     result = []
-    sys.stderr.write('WTF')
     test_blocks = partition_tests(suite, concurrency_num)
     # Clear the tests from the original suite so it doesn't keep them alive
     suite._tests[:] = []
@@ -77,8 +76,6 @@ def partition_tests(suite, count):
     tests = iter_suite_tests(suite)
     for partition, test in itertools.izip(itertools.cycle(partitions), tests):
         partition.append(test)
-    print partitions
-    print 'HELLO'
     return partitions
 
 
