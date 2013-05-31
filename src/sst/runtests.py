@@ -128,12 +128,12 @@ def runtests(test_regexps, results_directory,
     else:
         suite = testtools.ConcurrentTestSuite(
             alltests,
-            lambda suite: concurrency.fork_for_tests(suite, concurrency_num)
+            lambda s: concurrency.fork_for_tests(s, concurrency_num)
         )
 
     res.startTestRun()
     try:
-        alltests.run(res)
+        suite.run(res)
     except KeyboardInterrupt:
         print >> sys.stderr, 'Test run interrupted'
     finally:
