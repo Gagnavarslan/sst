@@ -48,8 +48,8 @@ class TestSSTTestCase(testtools.TestCase):
 
     def setUp(self):
         super(TestSSTTestCase, self).setUp()
+        tests.set_cwd_to_tmp(self)
         self.test = tests.SSTBrowserLessTestCase('run')
-        self.addCleanup(shutil.rmtree, 'results')
         self.result = testtools.TestResult()
         self.test.run(self.result)
 
@@ -80,4 +80,4 @@ class TestSSTTestCase(testtools.TestCase):
         self.assertEqual(config.cache, {})
         self.assertEqual(config.flags, [])
         self.assertFalse(config.javascript_disabled)
-        self.assertEqual(os.path.basename(config.results_directory), 'results')
+        self.assertIs(None, config.results_directory)

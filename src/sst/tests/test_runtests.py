@@ -45,13 +45,14 @@ file: t/too.py
 Don't look at me !
 ''')
 
-    def run_tests(self, *args, **kwargs):
+    def run_tests(self, tests, **kwargs):
         # FIXME: runtests use print, it should accept a stream instead. We also
         # should be able to better focus the test filtering but that requires
         # refactoring runtests. -- vila 2013-05-07
         self.out = StringIO()
         self.patch(sys, 'stdout', self.out)
-        runtests.runtests(*args, test_dir='t', collect_only=True, **kwargs)
+        runtests.runtests(tests, 'no results directory used',
+                          test_dir='t', collect_only=True, **kwargs)
         lines = self.out.getvalue().splitlines()
         self.assertEqual('', lines[0])
         # We don't care about the number of tests, that will be checked later
@@ -125,7 +126,7 @@ class TestMultiFail(unittest.TestCase):
         self.out = StringIO()
         self.patch(sys, 'stdout', self.out)
 
-        failures = runtests.runtests(args)
+        failures = runtests.runtests(args, 'no results directory used')
 
         exit_code = 0
         if failures:

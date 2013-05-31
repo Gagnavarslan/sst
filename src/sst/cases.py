@@ -53,7 +53,7 @@ class SSTTestCase(testtools.TestCase):
     wait_poll = 0.1
     base_url = None
 
-    results_directory = os.path.abspath('results')
+    results_directory = None
     screenshots_on = False
     debug_post_mortem = False
     extended_report = False
@@ -71,7 +71,6 @@ class SSTTestCase(testtools.TestCase):
             # end of the test.
             self.xvfb = xvfbdisplay.use_xvfb_server(self)
         config.results_directory = self.results_directory
-        actions._make_results_dir()
         self.start_browser()
         self.addCleanup(self.stop_browser)
         if self.screenshots_on:
@@ -85,8 +84,9 @@ class SSTTestCase(testtools.TestCase):
     def shortDescription(self):
         # testools wrongly defines this as returning self.id(). Since we're not
         # using the short description (aka the first line of the test
-        # docstring) (who is ? should we ?), we revert to the default behavior
-        # so runners and results don't get mad.
+        # docstring) (who is ? should we ? => the docstring, if present, is
+        # nice to display when the test fails...), we revert to the default
+        # behavior so runners and results don't get mad.
         return None
 
     def start_browser(self):
