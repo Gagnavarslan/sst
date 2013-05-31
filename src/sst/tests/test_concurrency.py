@@ -53,6 +53,7 @@ class ConcurrencyTestCase(TestCase):
 
     def test_concurrent_forked(self):
         num_tests = 8
+        concurrency_num = 4
 
         console_out = StringIO()
         xml_out = StringIO()
@@ -63,7 +64,8 @@ class ConcurrencyTestCase(TestCase):
         original_suite = _make_test_suite(num_tests)
         suite = ConcurrentTestSuite(
             original_suite,
-            sst.concurrency.fork_for_tests
+            lambda suite: sst.concurrency.fork_for_tests(suite,
+                                                         concurrency_num)
         )
         suite.run(result)
         result.stopTestRun()

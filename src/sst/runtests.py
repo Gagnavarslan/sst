@@ -63,7 +63,7 @@ def runtests(test_regexps, test_dir='.', collect_only=False,
              report_format='console',
              shared_directory=None,
              screenshots_on=False,
-             use_concurrency=False,
+             concurrency_num=1,
              failfast=False,
              debug=False,
              extended=False,
@@ -133,13 +133,13 @@ def runtests(test_regexps, test_dir='.', collect_only=False,
     else:
         res = text_result
 
-    if use_concurrency:
+    if concurrency_num == 1:
+        suite = alltests
+    else:
         suite = testtools.ConcurrentTestSuite(
             alltests,
-            concurrency.fork_for_tests
+            lambda suite: concurrency.fork_for_tests(suite, concurrency_num)
         )
-    else:
-        suite = alltests
 
     res.startTestRun()
     try:

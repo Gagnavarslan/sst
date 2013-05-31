@@ -90,7 +90,7 @@ def main():
             browser_factory=factory(cmd_opts.javascript_disabled),
             shared_directory=cmd_opts.shared_directory,
             screenshots_on=cmd_opts.screenshots_on,
-            use_concurrency=cmd_opts.use_concurrency,
+            concurrency_num=int(cmd_opts.concurrency),
             failfast=cmd_opts.failfast,
             debug=cmd_opts.debug,
             extended=cmd_opts.extended_tracebacks,

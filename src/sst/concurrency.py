@@ -11,8 +11,6 @@ import os
 import sys
 import unittest
 
-from multiprocessing import cpu_count
-
 from subunit import (
     ProtocolTestCase,
     TestProtocolClient,
@@ -20,17 +18,14 @@ from subunit import (
 from subunit.test_results import AutoTimingTestResultDecorator
 
 
-def fork_for_tests(suite):
-    """Take suite and start up one runner per CPU by forking()
+def fork_for_tests(suite, concurrency_num=1):
+    """Take suite and start up multiple runners by forking()
 
     :return: An iterable of TestCase-like objects which can each have
         run(result) called on them to feed tests to result.
     """
-
-    concurrency = cpu_count()
-
     result = []
-    test_blocks = partition_tests(suite, concurrency)
+    test_blocks = partition_tests(suite, concurrency_num)
     # Clear the tests from the original suite so it doesn't keep them alive
     suite._tests[:] = []
     for process_tests in test_blocks:
