@@ -19,38 +19,11 @@
 
 
 import cStringIO
-import os
 
 import mock
 import testtools
 
 from sst import tests
-
-
-class TestResultsDirectory(testtools.TestCase):
-
-    def setUp(self):
-        super(TestResultsDirectory, self).setUp()
-        tests.set_cwd_to_tmp(self)
-
-    def test_results_directory_is_created(self):
-
-        class WithResultsDir(tests.SSTBrowserLessTestCase):
-
-            results_directory = 'results'
-
-            def test_pass_and_leaves_a_results_dir(self):
-                pass
-
-        test = WithResultsDir('test_pass_and_leaves_a_results_dir')
-        result = testtools.TestResult()
-        test.run(result)
-        # FIXME: The following assertion outlines that config.results_directory
-        # is modified as a side-effect, this violates isolation
-        # -- vila 2013-01-15
-        from sst import config
-        self.assertTrue(os.path.exists(config.results_directory))
-        self.assertTrue(os.path.exists('results'))
 
 
 class TestHandleExceptions(testtools.TestCase):
