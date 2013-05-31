@@ -75,6 +75,7 @@ def main():
         print '  screenshots on error: %r' % cmd_opts.screenshots_on
         print '  failfast: %r' % cmd_opts.failfast
         print '  debug: %r' % cmd_opts.debug
+        print '  concurrency enabled: %r' % cmd_opts.use_concurrency
         print '  headless xserver: %r' % cmd_opts.xserver_headless
         print ''
 
@@ -89,6 +90,7 @@ def main():
             browser_factory=factory(cmd_opts.javascript_disabled),
             shared_directory=cmd_opts.shared_directory,
             screenshots_on=cmd_opts.screenshots_on,
+            use_concurrency=cmd_opts.use_concurrency,
             failfast=cmd_opts.failfast,
             debug=cmd_opts.debug,
             extended=cmd_opts.extended_tracebacks,

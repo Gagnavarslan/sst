@@ -28,7 +28,6 @@ def fork_for_tests(suite):
     """
 
     concurrency = cpu_count()
-    concurrency = 2  # hardcoded for now.  changeme.
 
     result = []
     test_blocks = partition_tests(suite, concurrency)
@@ -52,7 +51,7 @@ def fork_for_tests(suite):
                 subunit_result = AutoTimingTestResultDecorator(
                     SubUnitSSTProtocolClient(stream))
                 process_suite.run(subunit_result)
-            except Exception as e:
+            except:
                 # Try and report traceback on stream, but exit with error even
                 # if stream couldn't be created or something else goes wrong.
                 # The traceback is formatted to a string and written in one go

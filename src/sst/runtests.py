@@ -31,6 +31,7 @@ from sst import (
     actions,
     browsers,
     cases,
+    concurrency,
     config,
     filters,
     loader,
@@ -62,7 +63,10 @@ logger = logging.getLogger('SST')
 def runtests(test_regexps, test_dir='.', collect_only=False,
              browser_factory=None,
              report_format='console',
-             shared_directory=None, screenshots_on=False, failfast=False,
+             shared_directory=None,
+             screenshots_on=False,
+             use_concurrency=False,
+             failfast=False,
              debug=False,
              extended=False,
              includes=None,
@@ -131,6 +135,14 @@ def runtests(test_regexps, test_dir='.', collect_only=False,
     else:
         res = text_result
 
+    if use_concurrency:
+        suite = testtools.ConcurrentTestSuite(
+            alltests,
+            concurrency.fork_for_tests
+        )
+    else:
+        suite = alltests
+    
     res.startTestRun()
     try:
         alltests.run(res)
