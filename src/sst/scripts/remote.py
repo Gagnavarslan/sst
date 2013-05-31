@@ -18,7 +18,7 @@
 #   limitations under the License.
 #
 
-
+import os
 import testtools
 
 testtools.try_import('selenium')
@@ -32,7 +32,8 @@ from sst import (
 def main():
     cmd_opts, args = command.get_opts_remote()
 
-    command.clear_old_results()
+    results_directory = os.path.abspath('results')
+    command.reset_directory(results_directory)
 
     print '--------------------------------------------------------------'
 
@@ -45,7 +46,7 @@ def main():
             "name": cmd_opts.session_name},
         cmd_opts.webdriver_remote_url)
     runtests.runtests(
-        args,
+        args, results_directory,
         test_dir=cmd_opts.dir_name,
         count_only=cmd_opts.count_only,
         report_format=cmd_opts.report_format,

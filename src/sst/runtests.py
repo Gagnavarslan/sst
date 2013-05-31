@@ -56,9 +56,8 @@ logger = logging.getLogger('SST')
 
 # MISSINGTEST: 'shared' relationship with test_dir, auto-added to sys.path or
 # not -- vila 2013-05-05
-# MISSINGTEST: 'results' dir, created in current dir unconditionally conflicts
-# with claim that 'shared' can be found somewhere up -- vila 2013-05-05
-def runtests(test_regexps, test_dir='.', collect_only=False,
+def runtests(test_regexps, results_directory,
+             test_dir='.', collect_only=False,
              browser_factory=None,
              report_format='console',
              shared_directory=None,
@@ -70,20 +69,10 @@ def runtests(test_regexps, test_dir='.', collect_only=False,
              includes=None,
              excludes=None):
 
-    config.results_directory = os.path.abspath('results')
-    actions._make_results_dir()
-
-    if test_dir == 'selftests':
-        # XXXX horrible hardcoding
-        # selftests should be a command instead
-        package_dir = os.path.dirname(__file__)
-        os.chdir(os.path.dirname(package_dir))
-        test_dir = os.path.join('.', 'sst', 'selftests')
-    else:
-        if not os.path.isdir(test_dir):
-            msg = 'Specified directory %r does not exist' % test_dir
-            print msg
-            sys.exit(1)
+    if not os.path.isdir(test_dir):
+        msg = 'Specified directory %r does not exist' % (test_dir,)
+        print msg
+        sys.exit(1)
     shared_directory = find_shared_directory(test_dir, shared_directory)
     config.shared_directory = shared_directory
     sys.path.append(shared_directory)
@@ -93,7 +82,8 @@ def runtests(test_regexps, test_dir='.', collect_only=False,
         # makes little sense here -- vila 2013-04-11
         browser_factory = browsers.FirefoxFactory()
 
-    test_loader = loader.TestLoader(browser_factory, screenshots_on,
+    test_loader = loader.TestLoader(results_directory,
+                                    browser_factory, screenshots_on,
                                     debug, extended)
     alltests = test_loader.suiteClass()
     alltests.addTests(
@@ -123,7 +113,7 @@ def runtests(test_regexps, test_dir='.', collect_only=False,
     text_result = result.TextTestResult(sys.stdout, failfast=failfast,
                                         verbosity=2)
     if report_format == 'xml':
-        results_file = os.path.join(config.results_directory, 'results.xml')
+        results_file = os.path.join(results_directory, 'results.xml')
         xml_stream = file(results_file, 'wb')
         res = testtools.testresult.MultiTestResult(
             text_result,

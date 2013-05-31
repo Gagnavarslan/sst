@@ -1,14 +1,14 @@
 * run all tests
 
-  sst test
+  sst-test
 
 * run acceptance tests
 
-  sst test -i tests.acceptance
+  sst-test -i tests.acceptance
 
 * run unit tests
 
-  sst test -e tests.acceptance
+  sst-test -e tests.acceptance
 
 * some test_loader tests are too big, this screams for better helpers so
    they can be simplified.
@@ -34,6 +34,7 @@ The key points that need to be handled are:
 - allowing the user to specify some matching on the base names encountered
    while walking the tree (or a sub tree). This should remain separate for
    files and directories (the rules are different).
+   => addressed with '^test_name'
 
 - how the sub tree is iterated
 

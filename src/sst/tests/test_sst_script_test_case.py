@@ -68,16 +68,20 @@ class TestScreenShotsAndPageDump(testtools.TestCase):
         self.out = StringIO()
         self.patch(sys, 'stdout', self.out)
 
+    def run_failing_test(self, test):
+        result = testtools.TestResult()
+        test.run(result)
+        self.assertEqual(0, len(result.errors))
+        self.assertEqual(1, len(result.failures))
+
     def test_screenshot_and_page_dump_enabled(self):
         test = SSTStringTestCase('ignored')
         test.script_code = 'assert False'
         test.screenshots_on = True
         test.results_directory = 'results'
-        result = testtools.TestResult()
-        test.run(result)
-        self.assertEqual(0, len(result.errors))
-        self.assertEqual(1, len(result.failures))
+        self.run_failing_test(test)
         # We get a screenshot and a pagesource
+        self.assertTrue(os.path.exists('results'))
         files = sorted(os.listdir('results'))
         self.assertEqual(2, len(files))
 
@@ -94,10 +98,6 @@ class TestScreenShotsAndPageDump(testtools.TestCase):
         test.script_code = 'assert False'
         test.screenshots_on = False
         test.results_directory = 'results'
-        result = testtools.TestResult()
-        test.run(result)
-        self.assertEqual(0, len(result.errors))
-        self.assertEqual(1, len(result.failures))
-        # No screenshot required, no files
-        files = os.listdir('results')
-        self.assertEqual(0, len(files))
+        self.run_failing_test(test)
+        # No screenshot required, no files, not even a directory
+        self.assertFalse(os.path.exists('results'))

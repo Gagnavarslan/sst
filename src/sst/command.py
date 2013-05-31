@@ -17,8 +17,7 @@
 #   limitations under the License.
 #
 
-import __main__  # FIXME: This shouldn't be needed and makes testing harder
-                 # than it should -- vila 2013-05-27
+import errno
 import logging
 import optparse
 import os
@@ -44,11 +43,13 @@ the end of the filename.
 """
 
 
-def clear_old_results():
+def reset_directory(path):
     try:
-        shutil.rmtree('./results/')
-    except OSError:
-        pass
+        shutil.rmtree(path)
+    except OSError, e:
+        if e.errno != errno.ENOENT:
+            raise
+    os.makedirs(path)
 
 
 def get_common_options():
@@ -107,16 +108,12 @@ def get_common_options():
 
 def get_run_options():
     parser = get_common_options()
-    parser.add_option('--concurrency', dest='concurrency',
-                      default=1,
-                      help='concurrency (number of procs):')
-    parser.add_option('--test',
-                      dest='run_tests', action='store_true',
-                      default=False,
-                      help='run selftests (acceptance tests using django)')
     parser.add_option('-x', dest='xserver_headless',
                       default=False, action='store_true',
                       help='run browser in headless xserver (Xvfb)')
+    parser.add_option('--concurrency', dest='concurrency',
+                      default=1,
+                      help='concurrency (number of procs)')
     return parser
 
 
@@ -157,14 +154,6 @@ def get_opts(get_options, args=None):
     if cmd_opts.print_version:
         print 'SST version: %s' % sst.__version__
         sys.exit()
-
-    run_tests = getattr(cmd_opts, 'run_tests', False)
-    if cmd_opts.dir_name == '.' and not args and not run_tests:
-        print ('Error: you must supply a test case regular expression'
-               ' or specifiy a directory.')
-        prog = os.path.split(__main__.__file__)[-1]
-        print 'run "%s -h" or "%s --help" to see run options.' % (prog, prog)
-        sys.exit(1)
 
     if cmd_opts.browser_type not in browsers.browser_factories:
         print ("Error: %s should be one of %s"
