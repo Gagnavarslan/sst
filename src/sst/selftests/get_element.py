@@ -4,12 +4,6 @@ import sst.actions
 
 sst.actions.set_base_url('http://localhost:%s/' % sst.DEVSERVER_PORT)
 sst.actions.go_to('/')
-sst.actions.assert_title('The Page Title')
-
-
-# simple title check by tag
-elem = sst.actions.get_element(tag='title')
-sst.actions.assert_text(elem, 'The Page Title')
 
 # unique id
 elem = sst.actions.get_element(id='longscroll_link')

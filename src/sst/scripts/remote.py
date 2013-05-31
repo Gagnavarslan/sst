@@ -50,13 +50,12 @@ def main():
         count_only=cmd_opts.count_only,
         report_format=cmd_opts.report_format,
         browser_factory=browser_factory,
-        shared_directory=cmd_opts.shared_modules,
+        shared_directory=cmd_opts.shared_directory,
         screenshots_on=cmd_opts.screenshots_on,
         failfast=cmd_opts.failfast,
         debug=cmd_opts.debug,
         extended=cmd_opts.extended_tracebacks,
-        # FIXME: not tested -- vila 2013-05-07
-        includes=cmd_opts.includes,
+        # FIXME: not tested -- vila 2013-05-23
         excludes=cmd_opts.excludes
     )
 

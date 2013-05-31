@@ -24,7 +24,6 @@ import os
 import subprocess
 import sys
 import time
-import traceback
 import urllib
 
 import testtools
@@ -46,14 +45,13 @@ def main():
     print '--------------------------------------------------------------'
     print 'starting SST...'
 
-    cleanups = []
+    cleaner = command.Cleaner(sys.stdout)
 
     if cmd_opts.run_tests:
         cmd_opts.dir_name = 'selftests'
         if not tests.check_devserver_port_used(sst.DEVSERVER_PORT):
             run_django(sst.DEVSERVER_PORT)
-            cleanups.append(('\nkilling django...', kill_django,
-                             sst.DEVSERVER_PORT))
+            cleaner.add('killing django...\n', kill_django, sst.DEVSERVER_PORT)
         else:
             print 'Error: port is in use.'
             print 'can not launch devserver for internal tests.'
@@ -64,7 +62,7 @@ def main():
         print '\nstarting virtual display...'
         display = Xvfb(width=1024, height=768)
         display.start()
-        cleanups.append(('\nstopping virtual display...', display.stop))
+        cleaner.add('stopping virtual display...\n', display.stop)
 
     if not cmd_opts.quiet:
         print ''
@@ -80,36 +78,24 @@ def main():
         print '  headless xserver: %r' % cmd_opts.xserver_headless
         print ''
 
-    try:
+    with cleaner:
         command.clear_old_results()
         factory = browsers.browser_factories.get(cmd_opts.browser_type)
-        runtests.runtests(
+        failures = runtests.runtests(
             args,
             test_dir=cmd_opts.dir_name,
             collect_only=cmd_opts.collect_only,
             report_format=cmd_opts.report_format,
             browser_factory=factory(cmd_opts.javascript_disabled),
-            shared_directory=cmd_opts.shared_modules,
+            shared_directory=cmd_opts.shared_directory,
             screenshots_on=cmd_opts.screenshots_on,
             failfast=cmd_opts.failfast,
             debug=cmd_opts.debug,
             extended=cmd_opts.extended_tracebacks,
-            includes=cmd_opts.includes,
             excludes=cmd_opts.excludes
         )
-    finally:
 
-        print '--------------------------------------------------------------'
-        for cleanup in cleanups:
-            # run cleanups, displaying but not propagating exceptions
-            desc = cleanup[0]
-            cmd = cleanup[1]
-            args = cleanup[2:]
-            print desc
-            try:
-                cmd(*args)
-            except Exception:
-                print traceback.format_exc()
+    return failures
 
 
 def run_django(port):
@@ -162,4 +148,6 @@ def kill_django(port):
 
 
 if __name__ == '__main__':
-    main()
+    failures = main()
+    if failures:
+        sys.exit(1)
