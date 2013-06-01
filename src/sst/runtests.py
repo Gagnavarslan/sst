@@ -23,7 +23,6 @@ import os
 import sys
 
 import testtools
-import testtools.content
 
 from sst import (
     actions,
