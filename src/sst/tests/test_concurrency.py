@@ -156,4 +156,4 @@ class TestFail(unittest.TestCase):
         self.assertIn('test cases loaded', output)
         self.assertIn('Ran 2 tests', output)
         self.assertIn('OK', output)
-        self.assertIn('FAIL', output)
+        self.assertIn('FAILED (failures=1)', output)
