@@ -45,7 +45,8 @@ def fork_for_tests(suite, concurrency_num=1):
                 # child actually gets keystrokes for pdb etc).
                 sys.stdin.close()
                 subunit_result = AutoTimingTestResultDecorator(
-                    SubUnitSSTProtocolClient(stream))
+                    TestProtocolClient(stream)
+                )
                 process_suite.run(subunit_result)
             except:
                 # Try and report traceback on stream, but exit with error even
@@ -93,7 +94,6 @@ def iter_suite_tests(suite):
 
 
 class TestInOtherProcess(ProtocolTestCase):
-    # Should be in subunit, I think. RBC.
     def __init__(self, stream, pid):
         ProtocolTestCase.__init__(self, stream)
         self.pid = pid
@@ -103,15 +103,3 @@ class TestInOtherProcess(ProtocolTestCase):
             ProtocolTestCase.run(self, result)
         finally:
             pid, status = os.waitpid(self.pid, 0)
-        # GZ 2011-10-18: If status is nonzero, should report to the result
-        #                that something went wrong.
-
-
-class SubUnitSSTProtocolClient(TestProtocolClient):
-    def addSuccess(self, test, details=None):
-        # The subunit client always includes the details in the subunit
-        # stream, but we don't want to include it in ours.
-        if details is not None and 'log' in details:
-            del details['log']
-        return super(SubUnitSSTProtocolClient, self).addSuccess(
-            test, details)
