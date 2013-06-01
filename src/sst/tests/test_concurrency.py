@@ -7,7 +7,7 @@ import sys
 import unittest
 from cStringIO import StringIO
 
-import junitxml
+from junitxml import JUnitXmlResult
 
 from testtools import (
     ConcurrentTestSuite,
@@ -15,9 +15,11 @@ from testtools import (
     TestCase,
 )
 
-import sst.concurrency
-import sst.result
-import sst.tests
+from sst import (
+    concurrency,
+    result,
+    tests,
+)
 
 
 def _make_test_suite(num_tests):
@@ -49,7 +51,7 @@ class ConcurrencyTestCase(TestCase):
 
     def setUp(self):
         super(ConcurrencyTestCase, self).setUp()
-        sst.tests.set_cwd_to_tmp(self)
+        tests.set_cwd_to_tmp(self)
 
     def test_concurrent_forked(self):
         num_tests = 8
@@ -57,23 +59,22 @@ class ConcurrencyTestCase(TestCase):
 
         console_out = StringIO()
         xml_out = StringIO()
-        txt_result = sst.result.TextTestResult(console_out, verbosity=0)
-        xml_result = junitxml.JUnitXmlResult(xml_out)
-        result = MultiTestResult(txt_result, xml_result)
+        txt_result = result.TextTestResult(console_out, verbosity=0)
+        xml_result = JUnitXmlResult(xml_out)
+        res = MultiTestResult(txt_result, xml_result)
 
         original_suite = _make_test_suite(num_tests)
         suite = ConcurrentTestSuite(
             original_suite,
-            lambda suite: sst.concurrency.fork_for_tests(suite,
-                                                         concurrency_num)
+            lambda suite: concurrency.fork_for_tests(suite, concurrency_num)
         )
-        suite.run(result)
-        result.stopTestRun()
+        suite.run(res)
+        res.stopTestRun()
 
         # Check the result
-        self.assertTrue(result.wasSuccessful())
-        self.assertEqual(result.errors, [])
-        self.assertEqual(result.testsRun, num_tests)
+        self.assertTrue(res.wasSuccessful())
+        self.assertEqual(res.errors, [])
+        self.assertEqual(res.testsRun, num_tests)
 
         # Check the xml output
         xml_lines = xml_out.getvalue().splitlines()
