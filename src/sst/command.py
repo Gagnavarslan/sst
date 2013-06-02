@@ -35,11 +35,10 @@ from sst import (
 )
 
 
-usage = """Usage: %prog [testname] [options]
+usage = """Usage: %prog [regex] [options]
 
-- Calling %prog with testname(s) as arguments will just run
-those tests. The testnames should not include '.py' at
-the end of the filename.
+- Calling %prog with regex as arguments will run
+the tests whose testname(s) match the regex.
 """
 
 
@@ -95,14 +94,13 @@ def get_common_options():
     parser.add_option('--extended-tracebacks', dest='extended_tracebacks',
                       action='store_true', default=False,
                       help='add extra information (page source) to failure'
-                      'reports')
+                      ' reports')
     parser.add_option('--collect-only', dest='collect_only',
                       action='store_true', default=False,
                       help='collect/print cases without running tests')
-    parser.add_option(
-        '-e', '--exclude', dest='excludes',
-        action='append',
-        help='all tests matching this regular expression will not be run')
+    parser.add_option('-e', '--exclude', dest='excludes',
+                      action='append',
+                      help='all tests matching this regex will not be run')
     return parser
 
 

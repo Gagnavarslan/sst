@@ -110,36 +110,33 @@ These actions are defined in the following API:
     Command line options for sst-run
 ------------------------------------
 
-Usage: `sst-run <options> [testname]`
+Usage: sst-run [regex] [options]
 
-* Calling sst-run with test regular expression(s) as arguments will run
-  only the tests matching one of these regular expressions.
+- Calling sst-run with regex as arguments will run
+the tests whose testname(s) match the regex.
 
-* You may optionally create a data file for data-driven
-  testing.  Create a '^' delimited txt data file with the same
-  name as the test, plus the '.csv' extension.  This will
-  run a test using each row in the data file (1st row of data
-  file is variable name mapping)
 
-Options::
-
+Options:
   -h, --help                show this help message and exit
   -d DIR_NAME               directory of test case files
-  -r REPORT_FORMAT          report type: xml
+  -r REPORT_FORMAT          valid report types: xml
   -b BROWSER_TYPE           select webdriver (Firefox, Chrome, PhantomJS, etc)
   -j                        disable javascript in browser
-  -m SHARED_MODULES         directory for shared modules
+  -m SHARED_DIRECTORY       directory for shared modules
   -q                        output less debugging info during test run
   -V                        print version info and exit
   -s                        save screenshots on failures
-  -x                        run browser in headless xserver (Xvfb)
   --failfast                stop test execution after first failure
   --debug                   drop into debugger on test fail or error
   --with-flags=WITH_FLAGS   comma separated list of flags to run tests with
   --disable-flag-skips      run all tests, disable skipping tests due to flags
   --extended-tracebacks     add extra information (page source) to failure reports
   --collect-only            collect/print cases without running tests
-  --excludes=REGEXP         do not run the tests matching the regular expression
+  -e EXCLUDES,
+  --exclude=EXCLUDES        all tests matching this regex will not be run
+  -x                        run browser in headless xserver (Xvfb)
+  --concurrency=CONCURRENCY concurrency (number of procs)
+
 
 
 --------------------
@@ -263,6 +260,7 @@ of the test suite to be selected. This is a powerful way to reduce the time
 needed to run only the tests you care about at a given time, running the
 whole test suite should still be used when you want to ensure no regressions
 have been introduced.
+
 
 -------------------------------------
     Using sst in unittest test suites
