@@ -25,9 +25,8 @@ SST consists of:
 
  * user actions and assertions (API) in Python
  * test case loader (generates/compiles scripts to unittest cases)
- * console test runner
+ * concurrent test runner
  * data parameterization/injection
- * selectable output reports
  * selectable browsers
  * headless (xvfb) mode
  * screenshots on errors
@@ -287,6 +286,127 @@ stopping this server (see `src/sst/xvfbdisplay.py` for details or
 `src/sst/tests/test_xvfb.py` for examples.
 
 
+--------------------
+    Shared directory
+--------------------
+
+SST allows you to have a directory called `shared` in the top level directory
+of your tests, which is added to `sys.path`. Here you can keep helper modules
+used by all your tests. `sst-run` will not run Python files in the `shared`
+directory as tests.
+
+By default SST looks in the test directory you specify to find `shared`,
+alternatively you can specify a different directory using the `-m` command
+line argument to `sst-run`.
+
+If there is no `shared` directory in the test directory, then `sst-run` will
+walk up from the test directory to the current directory looking for one. This
+allows you to run tests just from a subdirectory without having to explicitly
+specify where the shared directory is.
+
+
+---------------------
+    sst.config module
+---------------------
+
+Inside tests you can import the `sst.config` module to know various things
+about the current test environment. The `sst.config` module has the following
+information::
+
+    from sst import config
+
+    # is javascript disabled?
+    config.javascript_disabled
+
+    # which browser is being used?
+    config.browser_type
+
+    # full path to the shared directory
+    config.shared_directory
+
+    # full path to the results directory
+    config.results_directory
+
+    # flags for the current test run
+    config.flags
+
+    # A per test cache. A dictionary that is cleared at the start of each test.
+    config.cache
+
+------------------------
+    Disabling Javascript
+------------------------
+
+If you need to disable Javascript for an individual test, you can do it by
+putting the following at the start of the test::
+
+    JAVASCRIPT_DISABLED = True
+
+
+--------------------------------
+    Development on Ubuntu/Debian
+--------------------------------
+
+* SST is primarily being developed on Linux, specifically Ubuntu. It should
+  work fine on other platforms, but any issues (or even better - patches)
+  should be reported on the Launchpad project.
+
+* Get a copy of SST Trunk, create and activate a virtualenv, install
+  requirements, and run examples/self-tests from the dev branch::
+
+    $ sudo apt-get install bzr python-virtualenv xvfb
+    $ bzr branch lp:selenium-simple-test
+    $ cd selenium-simple-test
+    $ ./ci.sh --bootstrap
+    $ source ENV/bin/activate
+    (ENV)$ ./sst-run -d examples
+    
+* (optional) Install test dependencies and run SST's internal unit tests::
+
+    (ENV)$ pip install mock nose pep8
+    (ENV)$ ./ci.sh --unit
+
+* (optional) Run SST's internal test application with acceptance tests::
+
+    (ENV)$ ./ci.sh --acceptance
+
+* `Launchpad Project <https://launchpad.net/selenium-simple-test>`_
+
+* `Browse the Source (Trunk)
+  <http://bazaar.launchpad.net/~canonical-isd-qa/selenium-simple-test/trunk/files>`_
+
+* To manually setup dependencies, SST uses the following non-stdlib packages:
+
+    * selenium
+    * testtools
+    * django (optional - needed for internal self-tests only)
+
+------------------------
+    Running the examples
+------------------------
+
+SST source code repository and package download contain some trivial example
+scripts.
+
+You can run them from your local sst directory like this::
+
+    $ ./sst-run -d examples
+
+
+--------------------------
+    Running the self-tests
+--------------------------
+
+SST source code repository and package download contain a set of self-tests
+based on an included test Django project.
+
+You can run the suite of self-tests (and the test Django server) from your
+local branch like this::
+
+    $ ./ci.sh --bootstrap
+    $ ./ci.sh --acceptance
+
+
 -----------------
     Related links
 -----------------
@@ -295,4 +415,3 @@ stopping this server (see `src/sst/xvfbdisplay.py` for details or
 * `Selenium WebDriver (from 'Architecture of Open Source Applications')
   <http://www.aosabook.org/en/selenium.html>`_
 * `Python Unittest <http://docs.python.org/library/unittest.html>`_
-
