@@ -31,6 +31,11 @@ from subunit import (
 from subunit.test_results import AutoTimingTestResultDecorator
 
 
+# You can parallelize a test run across a configurable number of worker
+# processes. While this can speed up CPU-bound test runs, it is mainly
+# useful for IO-bound tests that spend most of their time waiting for
+# data to arrive from someplace else and can benefit from parallelization.
+
 def fork_for_tests(suite, concurrency_num=1):
     """Take suite and start up multiple runners by forking()
 
