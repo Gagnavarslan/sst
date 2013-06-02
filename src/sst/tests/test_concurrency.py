@@ -18,9 +18,9 @@
 #
 
 
+from cStringIO import StringIO
 import sys
 import unittest
-from cStringIO import StringIO
 
 from junitxml import JUnitXmlResult
 
@@ -112,13 +112,13 @@ discover = loader.discoverRegularTests
 file: t/test_conc1.py
 import unittest
 class Test1(unittest.TestCase):
-    def test_me_1(self):
+    def test_pass_1(self):
         self.assertTrue(True)
 
 file: t/test_conc2.py
 import unittest
 class Test2(unittest.TestCase):
-    def test_me_2(self):
+    def test_pass_2(self):
         self.assertTrue(True)
 ''')
 
@@ -138,7 +138,7 @@ class Test2(unittest.TestCase):
         self.assertIn('OK', output)
         self.assertNotIn('FAIL', output)
 
-    def test_runtests_concurrent_onefail(self):
+    def test_runtests_concurrent_withfails(self):
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
 from sst import loader
@@ -150,10 +150,16 @@ class TestPass(unittest.TestCase):
     def test_me(self):
         self.assertTrue(True)
 
-file: t/test_fail.py
+file: t/test_fail1.py
 import unittest
-class TestFail(unittest.TestCase):
-    def test_fail(self):
+class TestFail1(unittest.TestCase):
+    def test_fail_1(self):
+        self.assertTrue(False)
+
+file: t/test_fail2.py
+import unittest
+class TestFail2(unittest.TestCase):
+    def test_fail_2(self):
         self.assertTrue(False)
 ''')
 
@@ -169,6 +175,7 @@ class TestFail(unittest.TestCase):
         lines = output.splitlines()
         self.assertEqual('', lines[0])
         self.assertIn('test cases loaded', output)
-        self.assertIn('Ran 2 tests', output)
+        self.assertIn('Ran 3 tests', output)
         self.assertIn('OK', output)
-        self.assertIn('FAILED (failures=1)', output)
+        self.assertEqual(output.count('Traceback (most recent call last):'), 2)
+        self.assertIn('FAILED (failures=2)', output)
