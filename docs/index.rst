@@ -34,7 +34,8 @@ SST consists of:
 
  * user actions and assertions (API) in Python
  * test case loader (generates/compiles scripts to unittest cases)
- * concurrent test runner
+ * console test runner
+ * concurrent/parallel tests
  * data parameterization/injection
  * selectable browsers
  * headless (xvfb) mode
