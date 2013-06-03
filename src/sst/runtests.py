@@ -105,7 +105,7 @@ def runtests(test_regexps, results_directory,
         print 'Collect-Only Enabled, Not Running Tests...\n'
         print 'Tests Collected:'
         print '-' * 16
-        for t in testtools.testsuite.iterate_tests(alltests):
+        for t in testtools.iterate_tests(alltests):
             print t.id()
         return
 

@@ -30,6 +30,8 @@ from subunit import (
 )
 from subunit.test_results import AutoTimingTestResultDecorator
 
+from testtools import iterate_tests
+
 
 # You can parallelize a test run across a configurable number of worker
 # processes. While this can speed up CPU-bound test runs, it is mainly
@@ -91,23 +93,10 @@ def partition_tests(suite, count):
     # just one partition.  So the slowest partition shouldn't be much slower
     # than the fastest.
     partitions = [list() for i in range(count)]
-    tests = iter_suite_tests(suite)
+    tests = iterate_tests(suite)
     for partition, test in itertools.izip(itertools.cycle(partitions), tests):
         partition.append(test)
     return partitions
-
-
-def iter_suite_tests(suite):
-    """Return all tests in a suite, recursing through nested suites"""
-    if isinstance(suite, unittest.TestCase):
-        yield suite
-    elif isinstance(suite, unittest.TestSuite):
-        for item in suite:
-            for r in iter_suite_tests(item):
-                yield r
-    else:
-        raise Exception('unknown type %r for object %r'
-                        % (type(suite), suite))
 
 
 class TestInOtherProcess(ProtocolTestCase):
