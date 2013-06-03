@@ -86,7 +86,7 @@ def runtests(test_regexps, results_directory,
                                   file_loader_class=loader.ScriptLoader,
                                   dir_loader_class=loader.ScriptDirLoader))
 
-    alltests = filters.filter_by_regexps(test_regexps, alltests)
+    alltests = filters.include_regexps(test_regexps, alltests)
     alltests = filters.exclude_regexps(excludes, alltests)
 
     print ''

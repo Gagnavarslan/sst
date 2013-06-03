@@ -34,7 +34,6 @@ The key points that need to be handled are:
 - allowing the user to specify some matching on the base names encountered
    while walking the tree (or a sub tree). This should remain separate for
    files and directories (the rules are different).
-   => addressed with '^test_name'
 
 - how the sub tree is iterated
 
