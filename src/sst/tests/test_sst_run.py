@@ -71,12 +71,8 @@ class TestSSTTestCase(testtools.TestCase):
         self.assertEqual(test.id(), 'sst.tests.SSTBrowserLessTestCase.run')
 
     def test_config(self):
-        # FIXME: This test fails because it assumes no script test will be run
-        # before it. Additionally, context.py not only doesn't properly protect
-        # config but it also modifies actions. http://pad.lv/1180029
         self.assertIsNone(config._current_context)
-        self.expectFailure('context is not properly isolated',
-                           self.assertEqual, config.browser_type, 'firefox')
+        self.assertEqual(config.browser_type, 'firefox')
         self.assertEqual(config.cache, {})
         self.assertEqual(config.flags, [])
         self.assertFalse(config.javascript_disabled)
