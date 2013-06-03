@@ -84,6 +84,7 @@ class ConcurrencyForkedTestCase(TestCase):
             original_suite,
             lambda suite: concurrency.fork_for_tests(suite, concurrency_num)
         )
+        res.startTestRun()
         suite.run(res)
         res.stopTestRun()
 
