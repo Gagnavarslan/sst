@@ -267,7 +267,7 @@ def Loaders(test_loader, file_loader_class, dir_loader_class):
         (test_loader.fileLoaderClass, test_loader.dirLoaderClass) = orig
 
 
-class xTestLoader(unittest.TestLoader):
+class TestLoader(unittest.TestLoader):
     """Load tests from an arbitrary tree.
 
     This also provides ways for packages to define the test loading as they see
@@ -335,7 +335,7 @@ class xTestLoader(unittest.TestLoader):
         return sys.modules[mod_name]
 
 
-class SSTestLoader(xTestLoader):
+class SSTestLoader(TestLoader):
     """Load tests from an sst tree.
 
     This loader is able to load sst scripts and create test cases with the

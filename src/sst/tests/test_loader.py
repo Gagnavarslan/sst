@@ -101,7 +101,7 @@ class TestNameMatcher(testtools.TestCase):
 class TestFileLoader(testtools.TestCase):
 
     def make_test_loader(self):
-        return loader.xTestLoader()
+        return loader.TestLoader()
 
     def test_discover_nothing(self):
         tests.set_cwd_to_tmp(self)
@@ -115,7 +115,7 @@ class TestFileLoader(testtools.TestCase):
 class TestModuleLoader(tests.ImportingLocalFilesTest):
 
     def make_test_loader(self):
-        return loader.xTestLoader()
+        return loader.TestLoader()
 
     def test_default_includes(self):
         mod_loader = loader.ModuleLoader(self.make_test_loader())
@@ -154,7 +154,7 @@ class Test(unittest.TestCase):
 class TestDirLoaderDiscoverPath(tests.ImportingLocalFilesTest):
 
     def make_test_loader(self):
-        test_loader = loader.xTestLoader()
+        test_loader = loader.TestLoader()
         # We don't use the default PackageLoader for unit testing DirLoader
         # behavior. But we still leave ModuleLoader for the file loader.
         test_loader.dirLoaderClass = loader.DirLoader
@@ -247,7 +247,7 @@ class Test(unittest.TestCase):
 class TestPackageLoader(tests.ImportingLocalFilesTest):
 
     def make_test_loader(self):
-        return loader.xTestLoader()
+        return loader.TestLoader()
 
     def test_discover_package_with_invalid_file(self):
         tests.write_tree_from_desc('''dir: dir
@@ -517,7 +517,7 @@ _hidden_too.py
 class TestTestLoaderPattern(tests.ImportingLocalFilesTest):
 
     def make_test_loader(self):
-        return loader.xTestLoader()
+        return loader.TestLoader()
 
     def test_default_pattern(self):
         tests.write_tree_from_desc('''dir: t
@@ -563,7 +563,7 @@ class TestTestLoaderTopLevelDir(testtools.TestCase):
         tests.protect_imports(self)
 
     def make_test_loader(self):
-        return loader.xTestLoader()
+        return loader.TestLoader()
 
     def _create_foo_in_tests(self):
         tests.write_tree_from_desc('''dir: t
