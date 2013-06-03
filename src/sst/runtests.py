@@ -26,7 +26,6 @@ import sys
 import testtools
 import testtools.content
 from sst import (
-    actions,
     browsers,
     cases,
     config,
@@ -78,9 +77,9 @@ def runtests(test_regexps, results_directory,
         # makes little sense here -- vila 2013-04-11
         browser_factory = browsers.FirefoxFactory()
 
-    test_loader = loader.TestLoader(results_directory,
-                                    browser_factory, screenshots_on,
-                                    debug, extended)
+    test_loader = loader.SSTestLoader(results_directory,
+                                      browser_factory, screenshots_on,
+                                      debug, extended)
     alltests = test_loader.suiteClass()
     alltests.addTests(
         test_loader.discoverTests(test_dir,

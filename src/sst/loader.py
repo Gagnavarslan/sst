@@ -250,7 +250,7 @@ class PackageLoader(DirLoader):
 def Loaders(test_loader, file_loader_class, dir_loader_class):
     """A context manager for loading tests from a tree.
 
-    This is mainly used when walking a tree a requiring a different set of
+    This is mainly used when walking a tree and requiring a different set of
     loaders for a subtree.
     """
     if file_loader_class is None:
@@ -267,13 +267,8 @@ def Loaders(test_loader, file_loader_class, dir_loader_class):
         (test_loader.fileLoaderClass, test_loader.dirLoaderClass) = orig
 
 
-class TestLoader(unittest.TestLoader):
-    """Load tests from an sst tree.
-
-    This loader is able to load sst scripts and create test cases with the
-    right sst specific attributes (browser, error handling, reporting).
-
-    This also allows test case based modules to be loaded when appropriate.
+class xTestLoader(unittest.TestLoader):
+    """Load tests from an arbitrary tree.
 
     This also provides ways for packages to define the test loading as they see
     fit.
@@ -285,16 +280,6 @@ class TestLoader(unittest.TestLoader):
 
     dirLoaderClass = PackageLoader
     fileLoaderClass = ModuleLoader
-
-    def __init__(self,  results_directory=None, browser_factory=None,
-                 screenshots_on=False, debug_post_mortem=False,
-                 extended_report=False):
-        super(TestLoader, self).__init__()
-        self.results_directory = results_directory
-        self.browser_factory = browser_factory
-        self.screenshots_on = screenshots_on
-        self.debug_post_mortem = debug_post_mortem
-        self.extended_report = extended_report
 
     def discover(self, start_dir, pattern='test*.py', top_level_dir=None):
         if top_level_dir:
@@ -348,6 +333,26 @@ class TestLoader(unittest.TestLoader):
         mod_name = path.replace(os.path.sep, '.')
         __import__(mod_name)
         return sys.modules[mod_name]
+
+
+class SSTestLoader(xTestLoader):
+    """Load tests from an sst tree.
+
+    This loader is able to load sst scripts and create test cases with the
+    right sst specific attributes (browser, error handling, reporting).
+
+    This also allows test case based modules to be loaded when appropriate.
+    """
+
+    def __init__(self, results_directory=None, browser_factory=None,
+                 screenshots_on=False, debug_post_mortem=False,
+                 extended_report=False):
+        super(SSTestLoader, self).__init__()
+        self.results_directory = results_directory
+        self.browser_factory = browser_factory
+        self.screenshots_on = screenshots_on
+        self.debug_post_mortem = debug_post_mortem
+        self.extended_report = extended_report
 
     def loadTestsFromScript(self, dir_name, script_name):
         suite = self.suiteClass()
