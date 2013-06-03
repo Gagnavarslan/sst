@@ -58,7 +58,7 @@ def get_common_options():
                       help='directory of test case files')
     parser.add_option('-r', dest='report_format',
                       default='console',
-                      help='valid report types: xml')
+                      help='report type: xml')
     parser.add_option('-b', dest='browser_type',
                       default='Firefox',
                       help=('select webdriver (Firefox, Chrome, '

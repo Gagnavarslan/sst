@@ -118,7 +118,7 @@ the tests whose testname(s) match the regex.
 Options:
   -h, --help                show this help message and exit
   -d DIR_NAME               directory of test case files
-  -r REPORT_FORMAT          valid report types: xml
+  -r REPORT_FORMAT          report type: xml
   -b BROWSER_TYPE           select webdriver (Firefox, Chrome, PhantomJS, etc)
   -j                        disable javascript in browser
   -m SHARED_DIRECTORY       directory for shared modules
