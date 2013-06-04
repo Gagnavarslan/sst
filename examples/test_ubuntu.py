@@ -1,8 +1,8 @@
 from sst.actions import *
-from sst import runtests
+from sst import cases
 
 
-class TestUbuntu(runtests.SSTTestCase):
+class TestUbuntu(cases.SSTTestCase):
 
     def test_ubuntu_home_page(self):
         go_to('http://www.ubuntu.com/')

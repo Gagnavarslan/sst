@@ -19,11 +19,15 @@
 #
 
 import os
+import sys
+
+
 import testtools
 
 testtools.try_import('selenium')
 
 from sst import (
+    browsers,
     command,
     runtests,
 )
@@ -35,9 +39,7 @@ def main():
     results_directory = os.path.abspath('results')
     command.reset_directory(results_directory)
 
-    print '--------------------------------------------------------------'
-
-    browser_factory = runtests.RemoteBrowserFactory(
+    browser_factory = browsers.RemoteBrowserFactory(
         {
             "browserName": cmd_opts.browser_type.lower(),
             "platform": cmd_opts.browser_platform.upper(),
@@ -46,7 +48,7 @@ def main():
             "name": cmd_opts.session_name},
         cmd_opts.webdriver_remote_url)
     runtests.runtests(
-        args, results_directory,
+        args, results_directory, sys.stdout,
         test_dir=cmd_opts.dir_name,
         count_only=cmd_opts.count_only,
         report_format=cmd_opts.report_format,
@@ -59,8 +61,6 @@ def main():
         # FIXME: not tested -- vila 2013-05-23
         excludes=cmd_opts.excludes
     )
-
-    print '--------------------------------------------------------------'
 
 
 if __name__ == '__main__':
