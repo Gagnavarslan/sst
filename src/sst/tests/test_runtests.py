@@ -92,6 +92,40 @@ Don't look at me !
                          self.run_tests(['t.t'], excludes=['to']))
 
 
+class TestRunTestsShared(tests.ImportingLocalFilesTest):
+
+    def xtest_shared_in_top(self):
+        tests.write_tree_from_desc('''dir: t
+# no t/__init__.py required, we don't need to import the scripts
+file: t/foo.py
+from sst.actions import *
+
+raise AssertionError('Loading only, executing fails')
+dir: t/shared
+file: t/shared/amodule.py
+Don't look at me !
+''')
+        script_dir_loader = loader.ScriptDirLoader(self.make_test_loader())
+        suite = script_dir_loader.discover('t', 'shared')
+        self.assertIs(None, suite)
+
+    def xtest_shared_in_dir(self):
+        tests.write_tree_from_desc('''dir: t
+# no t/__init__.py required, we don't need to import the scripts
+dir: t/subdir
+file: t/subdir/foo.py
+raise AssertionError('Loading only, executing fails')
+dir: t/shared
+file: t/shared/amodule.py
+Don't look at me !
+''')
+        test_loader = self.make_test_loader()
+        suite = test_loader.discoverTests(
+            '.', file_loader_class=loader.ScriptLoader,
+            dir_loader_class=loader.ScriptDirLoader)
+        self.assertEqual(1, suite.countTestCases())
+
+
 class SSTRunExitCodeTestCase(tests.ImportingLocalFilesTest):
 
     def setUp(self):

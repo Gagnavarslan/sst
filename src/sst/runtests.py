@@ -81,11 +81,7 @@ def runtests(test_regexps, results_directory,
                                       browser_factory, screenshots_on,
                                       debug, extended)
     alltests = test_loader.suiteClass()
-    alltests.addTests(
-        test_loader.discoverTests(test_dir,
-                                  file_loader_class=loader.ScriptLoader,
-                                  dir_loader_class=loader.ScriptDirLoader))
-
+    alltests.addTests(test_loader.discoverTestsFromTree(test_dir))
     alltests = filters.include_regexps(test_regexps, alltests)
     alltests = filters.exclude_regexps(excludes, alltests)
 
