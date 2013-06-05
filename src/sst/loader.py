@@ -189,7 +189,7 @@ class SSTestLoader(TestLoader):
     """
 
     file_matcher = NameMatcher(includes=[r'.*\.py$'], excludes=[r'^_'])
-    dir_matcher = NameMatcher(includes=[r'.*'], excludes=[r'^_'])
+    dir_matcher = NameMatcher(includes=[r'.*'], excludes=[r'^_', '^shared$'])
 
     def __init__(self, results_directory=None, browser_factory=None,
                  screenshots_on=False, debug_post_mortem=False,

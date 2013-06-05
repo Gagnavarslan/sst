@@ -19,7 +19,10 @@
 
 from cStringIO import StringIO
 
+import testtools
+
 from sst import (
+    browsers,
     runtests,
     tests,
 )
@@ -76,9 +79,24 @@ Don't look at me !
                          self.run_tests(['t.t'], excludes=['to']))
 
 
+class TestRunBrowserFactory(testtools.TestCase):
+
+    def test_browser_factory_is_mandatory(self):
+        self.assertRaises(RuntimeError, runtests.runtests,
+                          None, 'no results directory used', None,
+                          browser_factory=None)
+
+
 class TestRunTestsShared(tests.ImportingLocalFilesTest):
 
-    def xtest_shared_in_top(self):
+    def run_tests(self, test_dir, shared_dir=None):
+        out = StringIO()
+        runtests.runtests(None, 'no results directory used', out,
+                          test_dir=test_dir, shared_directory=shared_dir,
+                          collect_only=True)
+        return out.getvalue().splitlines()
+
+    def test_shared_in_top(self):
         tests.write_tree_from_desc('''dir: t
 # no t/__init__.py required, we don't need to import the scripts
 file: t/foo.py
@@ -89,11 +107,10 @@ dir: t/shared
 file: t/shared/amodule.py
 Don't look at me !
 ''')
-        script_dir_loader = loader.ScriptDirLoader(self.make_test_loader())
-        suite = script_dir_loader.discover('t', 'shared')
-        self.assertIs(None, suite)
+        test_names = self.run_tests('t', 't/shared')
+        self.assertEqual(['t.foo'], test_names)
 
-    def xtest_shared_in_dir(self):
+    def test_shared_in_dir(self):
         tests.write_tree_from_desc('''dir: t
 # no t/__init__.py required, we don't need to import the scripts
 dir: t/subdir
@@ -103,11 +120,8 @@ dir: t/shared
 file: t/shared/amodule.py
 Don't look at me !
 ''')
-        test_loader = self.make_test_loader()
-        suite = test_loader.discoverTests(
-            '.', file_loader_class=loader.ScriptLoader,
-            dir_loader_class=loader.ScriptDirLoader)
-        self.assertEqual(1, suite.countTestCases())
+        test_names = self.run_tests('.', 't/shared')
+        self.assertEqual(['t.subdir.foo'], test_names)
 
 
 class SSTRunExitCodeTestCase(tests.ImportingLocalFilesTest):
@@ -142,7 +156,8 @@ class TestMultiFail(unittest.TestCase):
 
     def run_tests(self, args):
         out = StringIO()
-        failures = runtests.runtests(args, 'no results directory used', out)
+        failures = runtests.runtests(args, 'no results directory used', out,
+                                     browser_factory=browsers.FirefoxFactory())
         return bool(failures)
 
     def test_pass(self):
