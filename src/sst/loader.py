@@ -75,7 +75,7 @@ def NameMatchers(test_loader, file_matcher=None, dir_matcher=None):
         test_loader.file_matcher = file_matcher
         test_loader.dir_matcher = dir_matcher
         # 'test_loader' will now use the specified file/dir matchers
-        yield
+        yield test_loader
     finally:
         (test_loader.file_matcher, test_loader.dir_matcher) = orig
 
@@ -101,22 +101,16 @@ class TestLoader(unittest.TestLoader):
             # setup properly
             sys.path.insert(0, top_level_dir)
 
-        translated = '^' + fnmatch.translate(pattern)
-        with NameMatchers(self,
-                          file_matcher=NameMatcher(includes=[translated])):
-            return self.discoverTestsFromTree(start_dir)
+        translated = NameMatcher(includes=['^' + fnmatch.translate(pattern)])
+        with NameMatchers(self, file_matcher=translated) as tl:
+            return tl.discoverTestsFromTree(start_dir)
 
-    # FIXME: Check we have tests for:
-    # - import error
-    # - discover defined or not
-    # - load_tests defined or not
     def discoverTestsFromTree(self, dir_path, package=None):
         suite = self.suiteClass()
         names = os.listdir(dir_path)
         if package is None:
             if os.path.isfile(os.path.join(dir_path, '__init__.py')):
                 package = self.importFromPath(dir_path)
-                suite.addTests(self.loadTestsFromModule(package))
                 names.remove('__init__.py')
         if package is not None:
             # Can we delegate to the package ?
@@ -128,8 +122,10 @@ class TestLoader(unittest.TestLoader):
             load_tests = getattr(package, 'load_tests', None)
             if load_tests is not None:
                 # let unittest handle the 'load_tests' protocol
-                suite.addTests(self.test_loader.loadTestsFromModule(package))
+                suite.addTests(self.loadTestsFromModule(package))
                 return suite
+            # If tests are defined in the package, load them
+            suite.addTests(self.loadTestsFromModule(package))
         suite.addTests(self.discoverTestsFromNames(dir_path, names))
         return suite
 
@@ -144,8 +140,6 @@ class TestLoader(unittest.TestLoader):
                 suite.addTests(self.discoverTestsFromTree(path))
         return suite
 
-    # FIXME: Check we have tests for:
-    # - import error
     def discoverTestsFromFile(self, path):
         module = self.importFromPath(path)
         return self.loadTestsFromModule(module)

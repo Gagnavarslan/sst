@@ -110,6 +110,23 @@ I'm not even python code
                               test_loader.discoverTestsFromTree, 't')
         self.assertEqual('No module named t.test_foo', e.message)
 
+    def test_invalid_init_file(self):
+        tests.write_tree_from_desc('''dir: t
+file: t/__init__.py
+I'm not even python code
+file: t/test_foo.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_it(self):
+        self.assertTrue(True)
+''')
+        test_loader = self.make_test_loader()
+        e = self.assertRaises(SyntaxError,
+                              test_loader.discoverTestsFromTree, 't')
+        self.assertEqual('EOL while scanning string literal', e.args[0])
+
     def test_symlink_is_ignored(self):
         tests.write_tree_from_desc('''dir: t
 file: t/foo
@@ -163,9 +180,7 @@ class Test(unittest.TestCase):
         suite = test_loader.discoverTestsFromTree('t')
         self.assertEqual(1, suite.countTestCases())
 
-    # FIXME: Not strictly a TestLoader test, may be more appropriate as
-    # demonstrating how to discover different kind of tests -- vila 2013-06-04
-    def test_scripts_below_regular(self):
+    def test_discover_changing_file_matcher(self):
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
 file: t/test_foo.py
@@ -175,21 +190,70 @@ class Test(unittest.TestCase):
 
     def test_me(self):
       self.assertTrue(True)
-dir: t/scripts
-file: t/scripts/__init__.py
+dir: t/other
+file: t/other/__init__.py
+import unittest
 from sst import loader
 
-discover = loader.discoverTestScripts
-file: t/scripts/script.py
-raise AssertionError('Loading only, executing fails')
+def discover(test_loader, package, directory_path, names):
+    suite = test_loader.loadTestsFromModule(package)
+    # Change the test.*\.py rule
+    fmatcher = loader.NameMatcher(includes=['.*'])
+    with loader.NameMatchers(test_loader, fmatcher) as tl:
+        suite.addTests(tl.discoverTestsFromNames(directory_path, names))
+    return suite
+
+class Test(unittest.TestCase):
+
+    def test_in_init(self):
+      self.assertTrue(True)
+file: t/other/not_starting_with_test.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_me(self):
+      self.assertTrue(True)
+''')
+        test_loader = self.make_test_loader()
+        suite = test_loader.discoverTestsFromTree('t')
+        self.assertEqual(3, suite.countTestCases())
+        self.assertEqual(['t.other.Test.test_in_init',
+                          't.other.not_starting_with_test.Test.test_me',
+                         't.test_foo.Test.test_me'],
+                         [t.id() for t in testtools.iterate_tests(suite)])
+
+    def test_load_tests(self):
+        tests.write_tree_from_desc('''dir: t
+file: t/__init__.py
+import unittest
+
+def load_tests(test_loader, tests, ignore):
+    # A simple way to reveal the side effect is to add more tests
+    class TestLoadTest(unittest.TestCase):
+        def test_in_load_test(self):
+          self.assertTrue(True)
+    tests.addTests(test_loader.loadTestsFromTestCase(TestLoadTest))
+    return tests
+
+class TestInit(unittest.TestCase):
+
+    def test_in_init(self):
+      self.assertTrue(True)
+
+file: t/test_not_discovered.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_me(self):
+      self.assertTrue(True)
 ''')
         test_loader = self.make_test_loader()
         suite = test_loader.discoverTestsFromTree('t')
         self.assertEqual(2, suite.countTestCases())
-        # Check which kind of tests have been discovered or we may miss regular
-        # test cases seen as scripts.
-        self.assertEqual(['t.scripts.script',
-                         't.test_foo.Test.test_me'],
+        self.assertEqual(['t.TestInit.test_in_init',
+                          't.TestLoadTest.test_in_load_test'],
                          [t.id() for t in testtools.iterate_tests(suite)])
 
 
@@ -320,14 +384,9 @@ file: t/__init__.py
 dir: t/regular
 file: t/regular/__init__.py
 from sst import loader
-import unittest
 
 discover = loader.discoverRegularTests
 
-class Test(unittest.TestCase):
-
-    def test_in_init(self):
-      self.assertTrue(True)
 file: t/regular/test_foo.py
 import unittest
 
@@ -342,8 +401,7 @@ raise AssertionError('Loading only, executing fails')
         suite = test_loader.discoverTestsFromTree('t')
         # Check which kind of tests have been discovered or we may miss regular
         # test cases seen as scripts.
-        self.assertEqual(['t.regular.Test.test_in_init',
-                          't.regular.test_foo.Test.test_me',
+        self.assertEqual(['t.regular.test_foo.Test.test_me',
                           't.script'],
                          [t.id() for t in testtools.iterate_tests(suite)])
 
