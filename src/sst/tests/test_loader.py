@@ -108,7 +108,7 @@ I'm not even python code
         test_loader = self.make_test_loader()
         e = self.assertRaises(ImportError,
                               test_loader.discoverTestsFromTree, 't')
-        self.assertEqual('No module named t.test_foo', e.message)
+        self.assertEqual('No module named t.test_foo', e.args[0])
 
     def test_invalid_init_file(self):
         tests.write_tree_from_desc('''dir: t
@@ -163,7 +163,7 @@ class Test(unittest.TestCase):
                               test_loader.discoverTestsFromTree, 't/dir')
         # 't' is a package but 'dir' is not, hence, 'dir.test_foo' is not
         # either, blame python for the approximate message ;-/
-        self.assertEqual('No module named dir.test_foo', e.message)
+        self.assertEqual('No module named dir.test_foo', e.args[0])
 
     def test_simple_file_in_a_package(self):
         tests.write_tree_from_desc('''dir: t
@@ -220,7 +220,7 @@ class Test(unittest.TestCase):
         self.assertEqual(3, suite.countTestCases())
         self.assertEqual(['t.other.Test.test_in_init',
                           't.other.not_starting_with_test.Test.test_me',
-                         't.test_foo.Test.test_me'],
+                          't.test_foo.Test.test_me'],
                          [t.id() for t in testtools.iterate_tests(suite)])
 
     def test_load_tests(self):
@@ -304,11 +304,6 @@ class TestTestLoaderTopLevelDir(testtools.TestCase):
         # We build trees rooted in test_base_dir from which we will import
         tests.set_cwd_to_tmp(self)
         tests.protect_imports(self)
-
-    def make_test_loader(self):
-        return loader.TestLoader()
-
-    def _create_foo_in_tests(self):
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
 file: t/foo.py
@@ -319,33 +314,30 @@ class Test(unittest.TestCase):
     def test_me(self):
       self.assertTrue(True)
 ''')
+        self.loader = loader.TestLoader()
 
     def test_simple_file_in_a_dir(self):
-        self._create_foo_in_tests()
-        test_loader = self.make_test_loader()
-        suite = test_loader.discover('t', '*.py', self.test_base_dir)
+        suite = self.loader.discover('t', '*.py', self.test_base_dir)
         self.assertEqual(1, suite.countTestCases())
 
     def test_simple_file_in_a_dir_no_sys_path(self):
-        self._create_foo_in_tests()
-        test_loader = self.make_test_loader()
         e = self.assertRaises(ImportError,
-                              test_loader.discover, 't', '*.py')
-        self.assertEqual(e.message, 'No module named t')
+                              self.loader.discover, 't', '*.py')
+        self.assertEqual('No module named t', e.args[0])
 
 
-class TestSSTestLoader(tests.ImportingLocalFilesTest):
+class TestSSTestLoaderDiscoverTestsFromTree(tests.ImportingLocalFilesTest):
 
-    def make_test_loader(self):
-        return loader.SSTestLoader()
+    def discover(self, start_dir):
+        test_loader = loader.SSTestLoader()
+        return test_loader.discoverTestsFromTree(start_dir)
 
     def test_simple_script(self):
         # A simple do nothing script with no imports
         tests.write_tree_from_desc('''file: foo.py
 pass
 ''')
-        test_loader = self.make_test_loader()
-        suite = test_loader.discoverTestsFromTree('.')
+        suite = self.discover('.')
         self.assertEqual(1, suite.countTestCases())
 
     def test_simple_script_with_csv(self):
@@ -356,8 +348,7 @@ file: foo.csv
 1^baz
 2^qux
 ''')
-        test_loader = self.make_test_loader()
-        suite = test_loader.discoverTestsFromTree('.')
+        suite = self.discover('.')
         self.assertEqual(2, suite.countTestCases())
 
     def test_simple_script_in_a_dir(self):
@@ -366,16 +357,14 @@ file: foo.csv
 file: t/script.py
 raise AssertionError('Loading only, executing fails')
 ''')
-        test_loader = self.make_test_loader()
-        suite = test_loader.discoverTestsFromTree('t')
+        suite = self.discover('t')
         self.assertEqual(1, suite.countTestCases())
 
     def test_ignore_privates(self):
         tests.write_tree_from_desc('''dir: t
 file: t/_private.py
 ''')
-        test_loader = self.make_test_loader()
-        suite = test_loader.discoverTestsFromTree('t')
+        suite = self.discover('t')
         self.assertEqual(0, suite.countTestCases())
 
     def test_regular_below_scripts(self):
@@ -397,8 +386,7 @@ class Test(unittest.TestCase):
 file: t/script.py
 raise AssertionError('Loading only, executing fails')
 ''')
-        test_loader = self.make_test_loader()
-        suite = test_loader.discoverTestsFromTree('t')
+        suite = self.discover('t')
         # Check which kind of tests have been discovered or we may miss regular
         # test cases seen as scripts.
         self.assertEqual(['t.regular.test_foo.Test.test_me',
@@ -439,8 +427,7 @@ file: not_a_test
 file: test_not_a_test.potato
 _hidden_too.py
 ''')
-        test_loader = self.make_test_loader()
-        suite = test_loader.discoverTestsFromTree('.')
+        suite = self.discover('.')
         self.assertEqual(['script1',
                           'script2',
                           'tests.test_real.Test_test_real.test_test_real',
