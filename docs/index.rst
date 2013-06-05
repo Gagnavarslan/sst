@@ -271,12 +271,12 @@ have been introduced.
 sst uses unittest test cases internally to wrap the execution of the script
 and taking care of starting and stopping the browser. If you prefer to
 integrate some sst tests into an existing unittest test suite you can use
-SSTTestCase from runtests.py::
+SSTTestCase from cases.py::
 
   from sst.actions import *
-  from sst import runtests
+  from sst import cases
 
-  class TestUbuntu(runtests.SSTTestCase):
+  class TestUbuntu(cases.SSTTestCase):
 
       def test_ubuntu_home_page(self):
           go_to('http://www.ubuntu.com/')
