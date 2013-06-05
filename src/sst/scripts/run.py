@@ -20,10 +20,7 @@
 
 
 import os
-import subprocess
 import sys
-import time
-import urllib
 
 import testtools
 
@@ -38,15 +35,12 @@ from sst import (
 
 def main():
     cmd_opts, args = command.get_opts_run()
-
-    print '--------------------------------------------------------------'
-    print 'starting SST...'
-
-    cleaner = command.Cleaner(sys.stdout)
+    out = sys.stdout
+    cleaner = command.Cleaner(out)
 
     if cmd_opts.xserver_headless:
         from sst.xvfbdisplay import Xvfb
-        print '\nstarting virtual display...'
+        out.write('starting virtual display...')
         display = Xvfb(width=1024, height=768)
         display.start()
         cleaner.add('stopping virtual display...\n', display.stop)
@@ -56,7 +50,7 @@ def main():
         command.reset_directory(results_directory)
         factory = browsers.browser_factories.get(cmd_opts.browser_type)
         failures = runtests.runtests(
-            args, results_directory,
+            args, results_directory, out,
             test_dir=cmd_opts.dir_name,
             collect_only=cmd_opts.collect_only,
             report_format=cmd_opts.report_format,
