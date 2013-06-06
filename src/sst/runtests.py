@@ -63,29 +63,22 @@ def runtests(test_regexps, results_directory, out,
              extended=False,
              includes=None,
              excludes=None):
-
     if not os.path.isdir(test_dir):
         raise RuntimeError('Specified directory %r does not exist'
                            % (test_dir,))
+    if browser_factory is None and collect_only is False:
+        raise RuntimeError('A browser must be specified')
     shared_directory = find_shared_directory(test_dir, shared_directory)
     config.shared_directory = shared_directory
-    sys.path.append(shared_directory)
+    if shared_directory is not None:
+        sys.path.append(shared_directory)
 
-    if browser_factory is None:
-        # TODO: We could raise an error instead as providing a default value
-        # makes little sense here -- vila 2013-04-11
-        browser_factory = browsers.FirefoxFactory()
-
-    test_loader = loader.TestLoader(results_directory,
-                                    browser_factory, screenshots_on,
-                                    debug, extended)
+    test_loader = loader.SSTestLoader(results_directory,
+                                      browser_factory, screenshots_on,
+                                      debug, extended)
     alltests = test_loader.suiteClass()
-    alltests.addTests(
-        test_loader.discoverTests(test_dir,
-                                  file_loader_class=loader.ScriptLoader,
-                                  dir_loader_class=loader.ScriptDirLoader))
-
-    alltests = filters.filter_by_regexps(test_regexps, alltests)
+    alltests.addTests(test_loader.discoverTestsFromTree(test_dir))
+    alltests = filters.include_regexps(test_regexps, alltests)
     alltests = filters.exclude_regexps(excludes, alltests)
 
     if not alltests.countTestCases():

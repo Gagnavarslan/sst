@@ -33,9 +33,6 @@ class TextTestResult(testresult.TextTestResult):
         self.timer = timer
         self.verbose = verbosity > 1
 
-    def startTestRun(self):
-        super(TextTestResult, self).startTestRun()
-
     def startTest(self, test):
         if self.verbose:
             self.stream.write(str(test))

@@ -46,7 +46,7 @@ def filter_suite(condition, suite):
     return filtered_suite
 
 
-def filter_by_regexps(regexps, suite):
+def include_regexps(regexps, suite):
     """Returns the tests that match one of ``regexps``.
 
     :param regexps: A list of test id regexps (strings, will be compiled
@@ -58,13 +58,13 @@ def filter_by_regexps(regexps, suite):
     if not regexps:
         return suite
 
-    def filter_test_regexps(test):
+    def matches_one_of(test):
         tid = test.id()
         for reg in regexps:
             if re.search(reg, tid) is not None:
                 return True
         return False
-    return filter_suite(filter_test_regexps, suite)
+    return filter_suite(matches_one_of, suite)
 
 
 def exclude_regexps(regexps, suite):

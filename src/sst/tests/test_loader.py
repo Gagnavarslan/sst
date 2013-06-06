@@ -46,136 +46,75 @@ from sst import (
 )
 
 
-class TestMatchesForRegexp(testtools.TestCase):
-
-    def test_matches(self):
-        matches = loader.matches_for_regexp('foo.*')
-        # All assertions should succeed, if one of them fails, we have a bigger
-        # problem than having one test for each assertion
-        self.assertTrue(matches('foo'))
-        self.assertFalse(matches('bar'))
-        self.assertTrue(matches('foobar'))
-        self.assertFalse(matches('barfoo'))
-
-
-class TestMatchesForGlob(testtools.TestCase):
-
-    def test_matches(self):
-        matches = loader.matches_for_glob('foo*')
-        # All assertions should succeed, if one of them fails, we have a bigger
-        # problem than having one test for each assertion
-        self.assertTrue(matches('foo'))
-        self.assertFalse(matches('fo'))
-        self.assertFalse(matches('bar'))
-        self.assertTrue(matches('foobar'))
-        self.assertFalse(matches('barfoo'))
-
-
 class TestNameMatcher(testtools.TestCase):
 
-    def test_default_includes(self):
-        name_matcher = loader.NameMatcher()
-        self.assertTrue(name_matcher.includes('foo'))
-        self.assertTrue(name_matcher.matches('foo'))
+    def test_defaults(self):
+        nm = loader.NameMatcher()
+        self.assertFalse(nm.matches(''))
+        self.assertFalse(nm.matches('foo'))
 
-    def test_default_exclude(self):
-        name_matcher = loader.NameMatcher()
-        self.assertFalse(name_matcher.excludes('foo'))
-        self.assertTrue(name_matcher.matches('foo'))
+    def test_simple_include(self):
+        nm = loader.NameMatcher(includes=['foo'])
+        self.assertTrue(nm.matches('foo'))
+        self.assertTrue(nm.matches('XXXfooXXX'))
 
-    def test_provided_includes(self):
-        name_matcher = loader.NameMatcher(
-            includes=loader.matches_for_regexp('^.*foo$'))
-        self.assertTrue(name_matcher.includes('foo'))
-        self.assertTrue(name_matcher.includes('barfoo'))
-        self.assertFalse(name_matcher.includes('bar'))
-        self.assertFalse(name_matcher.includes('foobar'))
+    def test_multiple_includes(self):
+        nm = loader.NameMatcher(includes=['foo', '^bar'])
+        self.assertTrue(nm.matches('foo'))
+        self.assertTrue(nm.matches('bar'))
+        self.assertTrue(nm.matches('barfoo'))
+        self.assertTrue(nm.matches('foobar'))
+        self.assertFalse(nm.matches('bazbar'))
 
-    def test_provided_excludes(self):
-        name_matcher = loader.NameMatcher(
-            excludes=loader.matches_for_regexp('^bar.*foo$'))
-        self.assertTrue(name_matcher.excludes('barfoo'))
-        self.assertFalse(name_matcher.excludes('foo'))
+    def test_simple_excludes(self):
+        nm = loader.NameMatcher(includes=['.*'], excludes=['foo'])
+        self.assertTrue(nm.matches('bar'))
+        self.assertFalse(nm.matches('foo'))
+        self.assertFalse(nm.matches('foobar'))
+
+    def test_multiple_excludes(self):
+        nm = loader.NameMatcher(includes=['.*'], excludes=['foo$', '^bar'])
+        self.assertTrue(nm.matches('baz'))
+        self.assertTrue(nm.matches('footix'))
+        self.assertFalse(nm.matches('foo'))
+        self.assertFalse(nm.matches('barista'))
 
 
-class TestFileLoader(testtools.TestCase):
+class TestTestLoader(tests.ImportingLocalFilesTest):
 
-    def get_test_loader(self):
+    def make_test_loader(self):
         return loader.TestLoader()
 
-    def test_discover_nothing(self):
-        tests.set_cwd_to_tmp(self)
-        with open('foo', 'w') as f:
-            f.write('bar\n')
-        file_loader = loader.FileLoader(self.get_test_loader())
-        suite = file_loader.discover('.', 'foo')
-        self.assertIs(None, suite)
-
-
-class TestModuleLoader(tests.ImportingLocalFilesTest):
-
-    def get_test_loader(self):
-        return loader.TestLoader()
-
-    def test_default_includes(self):
-        mod_loader = loader.ModuleLoader(self.get_test_loader())
-        self.assertTrue(mod_loader.matches('foo.py'))
-        # But we won't try to import a random file
-        self.assertFalse(mod_loader.matches('foopy'))
-
-    def test_discover_empty_file(self):
-        with open('foo.py', 'w') as f:
+    def test_ignored_file(self):
+        with open('empty.py', 'w') as f:
             f.write('')
-        mod_loader = loader.ModuleLoader(self.get_test_loader())
-        suite = mod_loader.discover('.', 'foo.py')
+        test_loader = self.make_test_loader()
+        suite = test_loader.discoverTestsFromTree('.')
         self.assertEqual(0, suite.countTestCases())
 
-    def test_discover_invalid_file(self):
-        with open('foo.py', 'w') as f:
+    def test_invalid_file(self):
+        with open('test_foo.py', 'w') as f:
             f.write("I'm no python code")
-        mod_loader = loader.ModuleLoader(self.get_test_loader())
-        self.assertRaises(SyntaxError, mod_loader.discover, '.', 'foo.py')
+        test_loader = self.make_test_loader()
+        self.assertRaises(SyntaxError, test_loader.discoverTestsFromTree, '.')
 
-    def test_discover_valid_file(self):
-        with open('foo.py', 'w') as f:
-            f.write('''
-import unittest
-
-class Test(unittest.TestCase):
-
-    def test_it(self):
-        self.assertTrue(True)
-''')
-        mod_loader = loader.ModuleLoader(self.get_test_loader())
-        suite = mod_loader.discover('.', 'foo.py')
-        self.assertEqual(1, suite.countTestCases())
-
-
-class TestDirLoaderDiscoverPath(tests.ImportingLocalFilesTest):
-
-    def get_test_loader(self):
-        test_loader = loader.TestLoader()
-        # We don't use the default PackageLoader for unit testing DirLoader
-        # behavior. But we still leave ModuleLoader for the file loader.
-        test_loader.dirLoaderClass = loader.DirLoader
-        return test_loader
-
-    def test_discover_path_for_file_without_package(self):
+    def test_invalid_file_in_a_dir(self):
         tests.write_tree_from_desc('''dir: t
-file: t/foo.py
+file: t/test_foo.py
 I'm not even python code
 ''')
-        # Since 'foo' can't be imported, discover_path should not be invoked,
-        # ensure we still get some meaningful error message.
-        dir_loader = loader.DirLoader(self.get_test_loader())
+        # Since 'foo' can't be imported, discoverTestsFromTree should not be
+        # invoked, ensure we still get some meaningful error message.
+        test_loader = self.make_test_loader()
         e = self.assertRaises(ImportError,
-                              dir_loader.discover_path, 't', 'foo.py')
-        self.assertEqual('No module named t.foo', e.message)
+                              test_loader.discoverTestsFromTree, 't')
+        self.assertEqual('No module named t.test_foo', e.args[0])
 
-    def test_discover_path_for_valid_file(self):
+    def test_invalid_init_file(self):
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
-file: t/foo.py
+I'm not even python code
+file: t/test_foo.py
 import unittest
 
 class Test(unittest.TestCase):
@@ -183,15 +122,35 @@ class Test(unittest.TestCase):
     def test_it(self):
         self.assertTrue(True)
 ''')
-        dir_loader = loader.DirLoader(self.get_test_loader())
-        suite = dir_loader.discover_path('t', 'foo.py')
-        self.assertEqual(1, suite.countTestCases())
+        test_loader = self.make_test_loader()
+        e = self.assertRaises(SyntaxError,
+                              test_loader.discoverTestsFromTree, 't')
+        self.assertEqual('EOL while scanning string literal', e.args[0])
 
-    def test_discover_path_for_dir(self):
+    def test_symlink_is_ignored(self):
+        tests.write_tree_from_desc('''dir: t
+file: t/foo
+tagada
+link: t/foo t/test_bar.py
+''')
+        test_loader = self.make_test_loader()
+        suite = test_loader.discoverTestsFromTree('.')
+        # Despite a matching name, symlink is ignored
+        self.assertEqual(0, suite.countTestCases())
+
+    def test_broken_symlink_is_ignored(self):
+        tests.write_tree_from_desc('''dir: t
+link: t/test_bar.py t/test_qux.py
+''')
+        test_loader = self.make_test_loader()
+        suite = test_loader.discoverTestsFromTree('.')
+        self.assertEqual(0, suite.countTestCases())
+
+    def test_file_in_a_dir(self):
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
 dir: t/dir
-file: t/dir/foo.py
+file: t/dir/test_foo.py
 import unittest
 
 class Test(unittest.TestCase):
@@ -199,228 +158,214 @@ class Test(unittest.TestCase):
     def test_it(self):
         self.assertTrue(True)
 ''')
-        dir_loader = loader.DirLoader(self.get_test_loader())
+        test_loader = self.make_test_loader()
         e = self.assertRaises(ImportError,
-                              dir_loader.discover_path, 't', 'dir')
-        # 't' is a module but 'dir' is not, hence, 'dir.foo' is not either,
-        # blame python for the approximate message ;-/
-        self.assertEqual('No module named dir.foo', e.message)
+                              test_loader.discoverTestsFromTree, 't/dir')
+        # 't' is a package but 'dir' is not, hence, 'dir.test_foo' is not
+        # either, blame python for the approximate message ;-/
+        self.assertEqual('No module named dir.test_foo', e.args[0])
 
-    def test_discover_path_for_not_matching_symlink(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/foo
-tagada
-link: t/foo t/bar.py
-''')
-        dir_loader = loader.DirLoader(self.get_test_loader())
-        suite = dir_loader.discover_path('t', 'bar.py')
-        self.assertIs(None, suite)
-
-    def test_discover_path_for_broken_symlink(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/foo
-tagada
-link: bar t/qux
-''')
-        dir_loader = loader.DirLoader(self.get_test_loader())
-        suite = dir_loader.discover_path('t', 'qux')
-        self.assertIs(None, suite)
-
-    def test_discover_simple_file_in_dir(self):
+    def test_simple_file_in_a_package(self):
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
-file: t/foo.py
+file: t/test_foo.py
 import unittest
 
 class Test(unittest.TestCase):
 
-    def test_it(self):
-        self.assertTrue(True)
+    def test_me(self):
+      self.assertTrue(True)
 ''')
-        dir_loader = loader.DirLoader(self.get_test_loader())
-        suite = dir_loader.discover('.', 't')
-        # Despite using DirLoader, python triggers the 't' import so we are
-        # able to import foo.py and all is well
+        test_loader = self.make_test_loader()
+        suite = test_loader.discoverTestsFromTree('t')
         self.assertEqual(1, suite.countTestCases())
 
-
-class TestPackageLoader(tests.ImportingLocalFilesTest):
-
-    def get_test_loader(self):
-        test_loader = loader.TestLoader()
-        return test_loader
-
-    def test_discover_package_with_invalid_file(self):
-        tests.write_tree_from_desc('''dir: dir
-file: dir/__init__.py
-file: dir/foo.py
-I'm not even python code
-''')
-        pkg_loader = loader.PackageLoader(self.get_test_loader())
-        e = self.assertRaises(SyntaxError, pkg_loader.discover, '.', 'dir')
-        self.assertEqual('EOL while scanning string literal', e.args[0])
-
-    def test_discover_simple_file_in_dir(self):
+    def test_discover_changing_file_matcher(self):
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
-file: t/foo.py
+file: t/test_foo.py
 import unittest
 
 class Test(unittest.TestCase):
 
-    def test_it(self):
-        self.assertTrue(True)
+    def test_me(self):
+      self.assertTrue(True)
+dir: t/other
+file: t/other/__init__.py
+import unittest
+from sst import loader
+
+def discover(test_loader, package, directory_path, names):
+    suite = test_loader.loadTestsFromModule(package)
+    # Change the test.*\.py rule
+    fmatcher = loader.NameMatcher(includes=['.*'])
+    with loader.NameMatchers(test_loader, fmatcher) as tl:
+        suite.addTests(tl.discoverTestsFromNames(directory_path, names))
+    return suite
+
+class Test(unittest.TestCase):
+
+    def test_in_init(self):
+      self.assertTrue(True)
+file: t/other/not_starting_with_test.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_me(self):
+      self.assertTrue(True)
 ''')
-        dir_loader = loader.DirLoader(self.get_test_loader())
-        suite = dir_loader.discover('.', 't')
+        test_loader = self.make_test_loader()
+        suite = test_loader.discoverTestsFromTree('t')
+        self.assertEqual(3, suite.countTestCases())
+        self.assertEqual(['t.other.Test.test_in_init',
+                          't.other.not_starting_with_test.Test.test_me',
+                          't.test_foo.Test.test_me'],
+                         [t.id() for t in testtools.iterate_tests(suite)])
+
+    def test_load_tests(self):
+        tests.write_tree_from_desc('''dir: t
+file: t/__init__.py
+import unittest
+
+def load_tests(test_loader, tests, ignore):
+    # A simple way to reveal the side effect is to add more tests
+    class TestLoadTest(unittest.TestCase):
+        def test_in_load_test(self):
+          self.assertTrue(True)
+    tests.addTests(test_loader.loadTestsFromTestCase(TestLoadTest))
+    return tests
+
+class TestInit(unittest.TestCase):
+
+    def test_in_init(self):
+      self.assertTrue(True)
+
+file: t/test_not_discovered.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_me(self):
+      self.assertTrue(True)
+''')
+        test_loader = self.make_test_loader()
+        suite = test_loader.discoverTestsFromTree('t')
+        self.assertEqual(2, suite.countTestCases())
+        self.assertEqual(['t.TestInit.test_in_init',
+                          't.TestLoadTest.test_in_load_test'],
+                         [t.id() for t in testtools.iterate_tests(suite)])
+
+
+class TestTestLoaderPattern(tests.ImportingLocalFilesTest):
+
+    def make_test_loader(self):
+        return loader.TestLoader()
+
+    def test_default_pattern(self):
+        tests.write_tree_from_desc('''dir: t
+file: t/__init__.py
+file: t/foo.py
+Don't look at me !
+file: t/test_foo.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_me(self):
+      self.assertTrue(True)
+''')
+        test_loader = self.make_test_loader()
+        suite = test_loader.discover('t')
+        self.assertEqual(1, suite.countTestCases())
+
+    def test_pattern(self):
+        tests.write_tree_from_desc('''dir: t
+file: t/__init__.py
+file: t/foo_foo.py
+import unittest
+
+class Test(unittest.TestCase):
+
+    def test_me(self):
+      self.assertTrue(True)
+file: t/test_foo.py
+Don't look at me !
+''')
+        test_loader = self.make_test_loader()
+        suite = test_loader.discover('t', pattern='foo*.py')
         self.assertEqual(1, suite.countTestCases())
 
 
-class TestLoadScript(testtools.TestCase):
+class TestTestLoaderTopLevelDir(testtools.TestCase):
 
     def setUp(self):
-        super(TestLoadScript, self).setUp()
+        super(TestTestLoaderTopLevelDir, self).setUp()
+        # We build trees rooted in test_base_dir from which we will import
         tests.set_cwd_to_tmp(self)
+        tests.protect_imports(self)
+        tests.write_tree_from_desc('''dir: t
+file: t/__init__.py
+file: t/foo.py
+import unittest
 
-    def create_script(self, path, content):
-        with open(path, 'w') as f:
-            f.write(content)
+class Test(unittest.TestCase):
 
-    def test_load_simple_script(self):
-        # A simple do nothing script with no imports
-        self.create_script('foo.py', 'pass')
-        suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
+    def test_me(self):
+      self.assertTrue(True)
+''')
+        self.loader = loader.TestLoader()
+
+    def test_simple_file_in_a_dir(self):
+        suite = self.loader.discover('t', '*.py', self.test_base_dir)
         self.assertEqual(1, suite.countTestCases())
 
-    def test_load_simple_script_with_csv(self):
-        self.create_script('foo.py', "pass")
-        with open('foo.csv', 'w') as f:
-            f.write('''\
+    def test_simple_file_in_a_dir_no_sys_path(self):
+        e = self.assertRaises(ImportError,
+                              self.loader.discover, 't', '*.py')
+        self.assertEqual('No module named t', e.args[0])
+
+
+class TestSSTestLoaderDiscoverTestsFromTree(tests.ImportingLocalFilesTest):
+
+    def discover(self, start_dir):
+        test_loader = loader.SSTestLoader()
+        return test_loader.discoverTestsFromTree(start_dir)
+
+    def test_simple_script(self):
+        # A simple do nothing script with no imports
+        tests.write_tree_from_desc('''file: foo.py
+pass
+''')
+        suite = self.discover('.')
+        self.assertEqual(1, suite.countTestCases())
+
+    def test_simple_script_with_csv(self):
+        tests.write_tree_from_desc('''file: foo.py
+pass
+file: foo.csv
 'foo'^'bar'
 1^baz
 2^qux
 ''')
-        suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
+        suite = self.discover('.')
         self.assertEqual(2, suite.countTestCases())
 
-    def test_load_non_existing_script(self):
-        suite = loader.TestLoader().loadTestsFromScript('.', 'foo.py')
-        self.assertEqual(0, suite.countTestCases())
-
-
-class TestScriptLoader(tests.ImportingLocalFilesTest):
-
-    def get_test_loader(self):
-        return loader.TestLoader()
-
-    def test_simple_script(self):
+    def test_simple_script_in_a_dir(self):
         tests.write_tree_from_desc('''dir: t
 # no t/__init__.py required, we don't need to import the scripts
-file: t/foo.py
-from sst.actions import *
-
+file: t/script.py
 raise AssertionError('Loading only, executing fails')
 ''')
-        script_loader = loader.ScriptLoader(self.get_test_loader())
-        suite = script_loader.discover('t', 'foo.py')
+        suite = self.discover('t')
         self.assertEqual(1, suite.countTestCases())
 
     def test_ignore_privates(self):
         tests.write_tree_from_desc('''dir: t
 file: t/_private.py
 ''')
-        script_loader = loader.ScriptLoader(self.get_test_loader())
-        suite = script_loader.discover('t', '_private.py')
-        self.assertIs(None, suite)
-
-
-class TesScriptDirLoader(tests.ImportingLocalFilesTest):
-
-    def test_shared(self):
-        tests.write_tree_from_desc('''dir: t
-# no t/__init__.py required, we don't need to import the scripts
-file: t/foo.py
-from sst.actions import *
-
-raise AssertionError('Loading only, executing fails')
-dir: t/shared
-file: t/shared/amodule.py
-Don't look at me !
-''')
-        script_dir_loader = loader.ScriptDirLoader(loader.TestLoader())
-        suite = script_dir_loader.discover('t', 'shared')
-        self.assertIs(None, suite)
-
-    def test_regular(self):
-        tests.write_tree_from_desc('''dir: t
-# no t/__init__.py required, we don't need to import the scripts
-dir: t/subdir
-file: t/subdir/foo.py
-raise AssertionError('Loading only, executing fails')
-dir: t/shared
-file: t/shared/amodule.py
-Don't look at me !
-''')
-        test_loader = loader.TestLoader()
-        suite = test_loader.discoverTests(
-            '.', file_loader_class=loader.ScriptLoader,
-            dir_loader_class=loader.ScriptDirLoader)
-        self.assertEqual(1, suite.countTestCases())
-
-
-class TestTestLoader(tests.ImportingLocalFilesTest):
-
-    def test_simple_file_in_a_dir(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/foo.py
-import unittest
-
-class Test(unittest.TestCase):
-
-    def test_me(self):
-      self.assertTrue(True)
-''')
-        test_loader = loader.TestLoader()
-        suite = test_loader.discoverTests('t')
-        self.assertEqual(1, suite.countTestCases())
-
-    def test_broken_file_in_a_dir(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/foo.py
-I'm not even python code
-''')
-        test_loader = loader.TestLoader()
-        e = self.assertRaises(SyntaxError, test_loader.discoverTests, 't')
-        self.assertEqual('EOL while scanning string literal', e.args[0])
-
-    def test_scripts_below_regular(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/foo.py
-import unittest
-
-class Test(unittest.TestCase):
-
-    def test_me(self):
-      self.assertTrue(True)
-dir: t/scripts
-file: t/scripts/__init__.py
-from sst import loader
-
-discover = loader.discoverTestScripts
-file: t/scripts/script.py
-raise AssertionError('Loading only, executing fails')
-''')
-        test_loader = loader.TestLoader()
-        suite = test_loader.discoverTests('t')
-        self.assertEqual(2, suite.countTestCases())
-        # Check which kind of tests have been discovered or we may miss regular
-        # test cases seen as scripts.
-        self.assertEqual(['t.foo.Test.test_me',
-                          't.scripts.script'],
-                         [t.id() for t in testtools.iterate_tests(suite)])
+        suite = self.discover('t')
+        self.assertEqual(0, suite.countTestCases())
 
     def test_regular_below_scripts(self):
         tests.write_tree_from_desc('''dir: t
@@ -428,15 +373,10 @@ file: t/__init__.py
 dir: t/regular
 file: t/regular/__init__.py
 from sst import loader
-import unittest
 
 discover = loader.discoverRegularTests
 
-class Test(unittest.TestCase):
-
-    def test_in_init(self):
-      self.assertTrue(True)
-file: t/regular/foo.py
+file: t/regular/test_foo.py
 import unittest
 
 class Test(unittest.TestCase):
@@ -446,15 +386,10 @@ class Test(unittest.TestCase):
 file: t/script.py
 raise AssertionError('Loading only, executing fails')
 ''')
-        test_loader = loader.TestLoader()
-        suite = test_loader.discoverTests(
-            't',
-            file_loader_class=loader.ScriptLoader,
-            dir_loader_class=loader.ScriptDirLoader)
+        suite = self.discover('t')
         # Check which kind of tests have been discovered or we may miss regular
         # test cases seen as scripts.
-        self.assertEqual(['t.regular.Test.test_in_init',
-                          't.regular.foo.Test.test_me',
+        self.assertEqual(['t.regular.test_foo.Test.test_me',
                           't.script'],
                          [t.id() for t in testtools.iterate_tests(suite)])
 
@@ -489,89 +424,13 @@ discover = loader.discoverRegularTests
 file: script1.py
 file: script2.py
 file: not_a_test
-# '.p' is intentional, not a typoed '.py'
-file: test_not_a_test.p
+file: test_not_a_test.potato
 _hidden_too.py
 ''')
-        test_loader = loader.TestLoader()
-        suite = test_loader.discoverTests(
-            '.',
-            file_loader_class=loader.ScriptLoader,
-            dir_loader_class=loader.ScriptDirLoader)
+        suite = self.discover('.')
         self.assertEqual(['script1',
                           'script2',
                           'tests.test_real.Test_test_real.test_test_real',
                           'tests.test_real1.Test_test_real1.test_test_real1',
                           'tests.test_real2.Test_test_real2.test_test_real2'],
                          [t.id() for t in testtools.iterate_tests(suite)])
-
-
-class TestTestLoaderPattern(tests.ImportingLocalFilesTest):
-
-    def test_default_pattern(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/foo.py
-Don't look at me !
-file: t/test_foo.py
-import unittest
-
-class Test(unittest.TestCase):
-
-    def test_me(self):
-      self.assertTrue(True)
-''')
-        test_loader = loader.TestLoader()
-        suite = test_loader.discover('t')
-        self.assertEqual(1, suite.countTestCases())
-
-    def test_pattern(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/foo_foo.py
-import unittest
-
-class Test(unittest.TestCase):
-
-    def test_me(self):
-      self.assertTrue(True)
-file: t/test_foo.py
-Don't look at me !
-''')
-        test_loader = loader.TestLoader()
-        suite = test_loader.discover('t', pattern='foo*.py')
-        self.assertEqual(1, suite.countTestCases())
-
-
-class TestTestLoaderTopLevelDir(testtools.TestCase):
-
-    def setUp(self):
-        super(TestTestLoaderTopLevelDir, self).setUp()
-        # We build trees rooted in test_base_dir from which we will import
-        tests.set_cwd_to_tmp(self)
-        tests.protect_imports(self)
-
-    def _create_foo_in_tests(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/foo.py
-import unittest
-
-class Test(unittest.TestCase):
-
-    def test_me(self):
-      self.assertTrue(True)
-''')
-
-    def test_simple_file_in_a_dir(self):
-        self._create_foo_in_tests()
-        test_loader = loader.TestLoader()
-        suite = test_loader.discover('t', '*.py', self.test_base_dir)
-        self.assertEqual(1, suite.countTestCases())
-
-    def test_simple_file_in_a_dir_no_sys_path(self):
-        self._create_foo_in_tests()
-        test_loader = loader.TestLoader()
-        e = self.assertRaises(ImportError,
-                              test_loader.discover, 't', '*.py')
-        self.assertEqual(e.message, 'No module named t')
