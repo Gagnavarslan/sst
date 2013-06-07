@@ -18,9 +18,11 @@
 #
 
 from cStringIO import StringIO
-import sys
+
+import testtools
 
 from sst import (
+    browsers,
     runtests,
     tests,
 )
@@ -46,26 +48,11 @@ Don't look at me !
 ''')
 
     def run_tests(self, tests, **kwargs):
-        # FIXME: runtests use print, it should accept a stream instead. We also
-        # should be able to better focus the test filtering but that requires
-        # refactoring runtests. -- vila 2013-05-07
-        self.out = StringIO()
-        self.patch(sys, 'stdout', self.out)
-        runtests.runtests(tests, 'no results directory used',
+        out = StringIO()
+        runtests.runtests(tests, 'no results directory used', out,
                           test_dir='t', collect_only=True, **kwargs)
-        lines = self.out.getvalue().splitlines()
-        self.assertEqual('', lines[0])
-        # We don't care about the number of tests, that will be checked later
-        # by the caller
-        self.assertTrue(lines[1].endswith('test cases loaded'))
-        self.assertEqual('', lines[2])
-        self.assertEqual('-' * 62, lines[3])
-        self.assertEqual('Collect-Only Enabled, Not Running Tests...',
-                         lines[4])
-        self.assertEqual('', lines[5])
-        self.assertEqual('Tests Collected:', lines[6])
-        self.assertEqual('----------------', lines[7])
-        return lines[8:]
+        lines = out.getvalue().splitlines()
+        return lines
 
     def test_all(self):
         self.assertEqual(['t.bar', 't.test_foo', 't.too'],
@@ -90,6 +77,51 @@ Don't look at me !
     def test_mixed(self):
         self.assertEqual(['t.test_foo'],
                          self.run_tests(['t.t'], excludes=['to']))
+
+
+class TestRunBrowserFactory(testtools.TestCase):
+
+    def test_browser_factory_is_mandatory(self):
+        self.assertRaises(RuntimeError, runtests.runtests,
+                          None, 'no results directory used', None,
+                          browser_factory=None)
+
+
+class TestRunTestsShared(tests.ImportingLocalFilesTest):
+
+    def run_tests(self, test_dir, shared_dir=None):
+        out = StringIO()
+        runtests.runtests(None, 'no results directory used', out,
+                          test_dir=test_dir, shared_directory=shared_dir,
+                          collect_only=True)
+        return out.getvalue().splitlines()
+
+    def test_shared_in_top(self):
+        tests.write_tree_from_desc('''dir: t
+# no t/__init__.py required, we don't need to import the scripts
+file: t/foo.py
+from sst.actions import *
+
+raise AssertionError('Loading only, executing fails')
+dir: t/shared
+file: t/shared/amodule.py
+Don't look at me !
+''')
+        test_names = self.run_tests('t', 't/shared')
+        self.assertEqual(['t.foo'], test_names)
+
+    def test_shared_in_dir(self):
+        tests.write_tree_from_desc('''dir: t
+# no t/__init__.py required, we don't need to import the scripts
+dir: t/subdir
+file: t/subdir/foo.py
+raise AssertionError('Loading only, executing fails')
+dir: t/shared
+file: t/shared/amodule.py
+Don't look at me !
+''')
+        test_names = self.run_tests('.', 't/shared')
+        self.assertEqual(['t.subdir.foo'], test_names)
 
 
 class SSTRunExitCodeTestCase(tests.ImportingLocalFilesTest):
@@ -123,24 +155,16 @@ class TestMultiFail(unittest.TestCase):
 ''')
 
     def run_tests(self, args):
-        self.out = StringIO()
-        self.patch(sys, 'stdout', self.out)
+        out = StringIO()
+        failures = runtests.runtests(args, 'no results directory used', out,
+                                     browser_factory=browsers.FirefoxFactory())
+        return bool(failures)
 
-        failures = runtests.runtests(args, 'no results directory used')
+    def test_pass(self):
+        self.assertEqual(0, self.run_tests(['test_all_pass$']))
 
-        exit_code = 0
-        if failures:
-            exit_code = 1
-        return exit_code
+    def test_fail(self):
+        self.assertEqual(1, self.run_tests(['test_one_fail$']))
 
-    def test_exitcode_pass(self):
-        exit_code = self.run_tests(['test_all_pass$'])
-        self.assertEqual(exit_code, 0)
-
-    def test_exitcode_fail(self):
-        exit_code = self.run_tests(['test_one_fail$'])
-        self.assertEqual(exit_code, 1)
-
-    def test_exitcode_multi_fail(self):
-        exit_code = self.run_tests(['test_fail_.*'])
-        self.assertEqual(exit_code, 1)
+    def test_multi_fail(self):
+        self.assertEqual(1, self.run_tests(['test_fail_.*']))

@@ -18,9 +18,6 @@
 #
 
 
-import sys
-from cStringIO import StringIO
-
 import testtools
 
 
@@ -33,9 +30,6 @@ class TestDjangoDevServer(testtools.TestCase):
 
     def setUp(self):
         super(TestDjangoDevServer, self).setUp()
-        # capture test output so we don't pollute the test runs
-        self.out = StringIO()
-        self.patch(sys, 'stdout', self.out)
         tests.set_cwd_to_tmp(self)
 
     def test_django_start(self):
@@ -46,9 +40,13 @@ class TestDjangoDevServer(testtools.TestCase):
     def test_django_devserver_port_used(self):
         used = tests.check_devserver_port_used(sst.DEVSERVER_PORT)
         self.assertFalse(used)
-
         self.addCleanup(script_test.kill_django, sst.DEVSERVER_PORT)
         script_test.run_django(sst.DEVSERVER_PORT)
-
         used = tests.check_devserver_port_used(sst.DEVSERVER_PORT)
         self.assertTrue(used)
+        e = self.assertRaises(RuntimeError,
+                              script_test.run_django, sst.DEVSERVER_PORT)
+        self.assertEqual('Error: port %s is in use.\n'
+                         'Can not launch devserver for internal tests.'
+                         % (sst.DEVSERVER_PORT,),
+                         e.args[0])

@@ -19,9 +19,7 @@
 #
 
 
-import errno
 import os
-import shutil
 import subprocess
 import sys
 import time
@@ -30,6 +28,7 @@ import urllib
 import testtools
 
 testtools.try_import('selenium')
+testtools.try_import('django')
 
 import sst
 from sst import (
@@ -45,19 +44,15 @@ package_dir = os.path.dirname(os.path.dirname(__file__))
 
 def main():
     cmd_opts, args = command.get_opts_run()
-    cleaner = command.Cleaner(sys.stdout)
+    out = sys.stdout
+    cleaner = command.Cleaner(out)
 
-    if not tests.check_devserver_port_used(sst.DEVSERVER_PORT):
-        run_django(sst.DEVSERVER_PORT)
-        cleaner.add('killing django...\n', kill_django, sst.DEVSERVER_PORT)
-    else:
-        print 'Error: port is in use.'
-        print 'can not launch devserver for internal tests.'
-        sys.exit(1)
+    run_django(sst.DEVSERVER_PORT)
+    cleaner.add('killing django...\n', kill_django, sst.DEVSERVER_PORT)
 
     if cmd_opts.xserver_headless:
         from sst.xvfbdisplay import Xvfb
-        print '\nstarting virtual display...'
+        out.write('starting virtual display...\n')
         display = Xvfb(width=1024, height=768)
         display.start()
         cleaner.add('stopping virtual display...\n', display.stop)
@@ -69,7 +64,7 @@ def main():
         test_dir = os.path.join('.', 'sst', 'selftests')
         factory = browsers.browser_factories.get(cmd_opts.browser_type)
         failures = runtests.runtests(
-            args, results_directory,
+            args, results_directory, out,
             test_dir=test_dir,
             collect_only=cmd_opts.collect_only,
             report_format=cmd_opts.report_format,
@@ -88,30 +83,25 @@ def main():
 
 def run_django(port):
     """Start django server for running local self-tests."""
+    if tests.check_devserver_port_used(port):
+        raise RuntimeError('Error: port %s is in use.\n'
+                           'Can not launch devserver for internal tests.'
+                           % (sst.DEVSERVER_PORT,))
     manage_file = os.path.abspath(
         os.path.join(package_dir, '../testproject/manage.py'))
     url = 'http://localhost:%s/' % port
 
     if not os.path.isfile(manage_file):
-        print 'Error: can not find the django testproject.'
-        print '%r does not exist' % manage_file
-        print 'you must run self-tests from the dev branch or package source.'
-        sys.exit(1)
+        raise RuntimeError(
+            'Error: can not find the django testproject.\n'
+            '%r does not exist\n'
+            'you must run self-tests from the dev branch or package source.'
+            % (manage_file,))
 
-    django = testtools.try_import('django')
-    if django is None:
-        print 'Error: can not find django module.'
-        print 'you must have django installed to run the test project.'
-        # FIXME: Using sys.exit() makes it hard to test in isolation. Moreover
-        # this error path is not covered by a test. Both points may be related
-        # ;) -- vila 2013-05-10
-        sys.exit(1)
     proc = subprocess.Popen([manage_file, 'runserver', port],
                             stderr=open(os.devnull, 'w'),
                             stdout=open(os.devnull, 'w')
                             )
-    print '--------------------------------------------------------------'
-    print 'waiting for django to come up...'
     attempts = 30
     for count in xrange(attempts):
         try:
@@ -121,9 +111,7 @@ def run_django(port):
         except IOError:
             time.sleep(0.2)
             if count >= attempts - 1:  # timeout
-                print 'Error: can not get response from %r' % url
                 raise
-    print 'django found. continuing...'
     return proc
 
 

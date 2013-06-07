@@ -25,7 +25,6 @@ import sys
 import testtools
 
 from sst import (
-    actions,
     browsers,
     cases,
     concurrency,
@@ -55,7 +54,7 @@ logger = logging.getLogger('SST')
 
 # MISSINGTEST: 'shared' relationship with test_dir, auto-added to sys.path or
 # not -- vila 2013-05-05
-def runtests(test_regexps, results_directory,
+def runtests(test_regexps, results_directory, out,
              test_dir='.', collect_only=False,
              browser_factory=None,
              report_format='console',
@@ -67,50 +66,35 @@ def runtests(test_regexps, results_directory,
              extended=False,
              includes=None,
              excludes=None):
-
     if not os.path.isdir(test_dir):
-        msg = 'Specified directory %r does not exist' % (test_dir,)
-        print msg
-        sys.exit(1)
+        raise RuntimeError('Specified directory %r does not exist'
+                           % (test_dir,))
+    if browser_factory is None and collect_only is False:
+        raise RuntimeError('A browser must be specified')
     shared_directory = find_shared_directory(test_dir, shared_directory)
     config.shared_directory = shared_directory
-    sys.path.append(shared_directory)
+    if shared_directory is not None:
+        sys.path.append(shared_directory)
 
-    if browser_factory is None:
-        # TODO: We could raise an error instead as providing a default value
-        # makes little sense here -- vila 2013-04-11
-        browser_factory = browsers.FirefoxFactory()
-
-    test_loader = loader.TestLoader(results_directory,
-                                    browser_factory, screenshots_on,
-                                    debug, extended)
+    test_loader = loader.SSTestLoader(results_directory,
+                                      browser_factory, screenshots_on,
+                                      debug, extended)
     alltests = test_loader.suiteClass()
-    alltests.addTests(
-        test_loader.discoverTests(test_dir,
-                                  file_loader_class=loader.ScriptLoader,
-                                  dir_loader_class=loader.ScriptDirLoader))
-
-    alltests = filters.filter_by_regexps(test_regexps, alltests)
+    alltests.addTests(test_loader.discoverTestsFromTree(test_dir))
+    alltests = filters.include_regexps(test_regexps, alltests)
     alltests = filters.exclude_regexps(excludes, alltests)
 
-    print ''
-    print '  %s test cases loaded\n' % alltests.countTestCases()
-    print '--------------------------------------------------------------'
-
     if not alltests.countTestCases():
-        print 'Error: Did not find any tests'
-        sys.exit(1)
+        # FIXME: Really needed ? Can't we just rely on the number of tests run
+        # ? -- vila 2013-06-04
+        raise RuntimeError('Did not find any tests')
 
     if collect_only:
-        print 'Collect-Only Enabled, Not Running Tests...\n'
-        print 'Tests Collected:'
-        print '-' * 16
-        for t in testtools.iterate_tests(alltests):
-            print t.id()
-        return
+        for t in testtools.testsuite.iterate_tests(alltests):
+            out.write(t.id() + '\n')
+        return 0
 
-    text_result = result.TextTestResult(sys.stdout, failfast=failfast,
-                                        verbosity=2)
+    text_result = result.TextTestResult(out, failfast=failfast, verbosity=2)
     if report_format == 'xml':
         results_file = os.path.join(results_directory, 'results.xml')
         xml_stream = file(results_file, 'wb')
@@ -134,10 +118,7 @@ def runtests(test_regexps, results_directory,
     try:
         suite.run(res)
     except KeyboardInterrupt:
-        print >> sys.stderr, 'Test run interrupted'
-    finally:
-        # XXX should warn on cases that were specified but not found
-        pass
+        out.write('Test run interrupted\n')
     res.stopTestRun()
 
     return len(res.failures) + len(res.errors)
