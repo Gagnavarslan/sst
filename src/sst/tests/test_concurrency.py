@@ -271,3 +271,50 @@ class TestFail2(unittest.TestCase):
         self.assertIn('OK', output)
         self.assertEqual(output.count('Traceback (most recent call last):'), 2)
         self.assertIn('FAILED (failures=2)', output)
+
+
+class PartitionTestCase(tests.ImportingLocalFilesTest):
+
+    def setUp(self):
+        super(PartitionTestCase, self).setUp()
+        tests.write_tree_from_desc('''dir: t
+file: t/__init__.py
+file: t/test_partitions.py
+import unittest
+class SampleTestCase(unittest.TestCase):
+    def test_pass_1(self):
+        self.assertTrue(True)
+    def test_pass_2(self):
+        self.assertTrue(True)
+    def test_pass_3(self):
+        self.assertTrue(True)
+    def test_pass_4(self):
+        self.assertTrue(True)
+    def test_pass_5(self):
+        self.assertTrue(True)
+    def test_pass_6(self):
+        self.assertTrue(True)
+    def test_pass_7(self):
+        self.assertTrue(True)
+    def test_pass_8(self):
+        self.assertTrue(True)
+''')
+
+    def test_partition_even_groups(self):
+        suite = loader.TestLoader().discover('t')
+        parted_tests = concurrency.partition_tests(suite, 4)
+        self.assertEqual(len(parted_tests), 4)
+        self.assertEqual(len(parted_tests[0]), 2)
+        self.assertEqual(len(parted_tests[1]), 2)
+
+    def test_partition_one_in_each(self):
+        suite = loader.TestLoader().discover('t')
+        parted_tests = concurrency.partition_tests(suite, 8)
+        self.assertEqual(len(parted_tests), 8)
+        self.assertEqual(len(parted_tests[0]), 1)
+
+    def test_partition_all_in_one(self):
+        suite = loader.TestLoader().discover('t')
+        parted_tests = concurrency.partition_tests(suite, 1)
+        self.assertEqual(len(parted_tests), 1)
+        self.assertEqual(len(parted_tests[0]), 8)
