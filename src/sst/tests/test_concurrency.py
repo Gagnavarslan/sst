@@ -31,6 +31,7 @@ from testtools import (
 )
 
 from sst import (
+    browsers,
     concurrency,
     result,
     runtests,
@@ -82,7 +83,7 @@ class ConcurrencyForkedTestCase(TestCase):
         original_suite = _make_allpass_test_suite(num_tests)
         suite = ConcurrentTestSuite(
             original_suite,
-            lambda suite: concurrency.fork_for_tests(suite, concurrency_num)
+            concurrency.fork_for_tests(concurrency_num)
         )
         res.startTestRun()
         suite.run(res)
@@ -123,18 +124,16 @@ class Test2(unittest.TestCase):
         self.assertTrue(True)
 ''')
 
-        self.out = StringIO()
-        self.patch(sys, 'stdout', self.out)
-
-        runtests.runtests(
-            ['^t'], 'no results directory used',
-            concurrency_num=2
+        out = StringIO()
+        failures = runtests.runtests(
+            ['^t'], 'no results directory used', out,
+            concurrency_num=2,
+            browser_factory=browsers.FirefoxFactory(),
         )
 
-        output = self.out.getvalue()
+        output = out.getvalue()
         lines = output.splitlines()
-        self.assertEqual('', lines[0])
-        self.assertIn('test cases loaded', output)
+        self.assertEqual('Tests running...', lines[0])
         self.assertIn('Ran 2 tests', output)
         self.assertIn('OK', output)
         self.assertNotIn('FAIL', output)
@@ -164,18 +163,15 @@ class TestFail2(unittest.TestCase):
         self.assertTrue(False)
 ''')
 
-        self.out = StringIO()
-        self.patch(sys, 'stdout', self.out)
-
-        runtests.runtests(
-            ['^t'], 'no results directory used',
-            concurrency_num=2
+        out = StringIO()
+        failures = runtests.runtests(
+            ['^t'], 'no results directory used', out,
+            concurrency_num=2,
+            browser_factory=browsers.FirefoxFactory(),
         )
-
-        output = self.out.getvalue()
+        output = out.getvalue()
         lines = output.splitlines()
-        self.assertEqual('', lines[0])
-        self.assertIn('test cases loaded', output)
+        self.assertEqual('Tests running...', lines[0])
         self.assertIn('Ran 3 tests', output)
         self.assertIn('OK', output)
         self.assertEqual(output.count('Traceback (most recent call last):'), 2)

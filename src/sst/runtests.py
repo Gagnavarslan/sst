@@ -111,7 +111,7 @@ def runtests(test_regexps, results_directory, out,
     else:
         suite = testtools.ConcurrentTestSuite(
             alltests,
-            lambda s: concurrency.fork_for_tests(s, concurrency_num)
+            concurrency.fork_for_tests(concurrency_num),
         )
 
     res.startTestRun()
