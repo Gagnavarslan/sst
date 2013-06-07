@@ -41,7 +41,7 @@ from itertools import cycle
 from subunit import ProtocolTestCase, TestProtocolClient
 from subunit.test_results import AutoTimingTestResultDecorator
 
-from testtools import iterate_tests, try_import
+from testtools import iterate_tests
 
 
 def fork_for_tests(concurrency_num=1):
