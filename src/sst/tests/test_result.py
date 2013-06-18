@@ -214,6 +214,8 @@ class TestXmlOutput(testtools.TestCase):
 <failure type="{exc_type}">_StringException: Traceback (most recent call last):
   File "{filename}", line 41, in {name}
     self.assertTrue(False)
+  File "/usr/lib/python2.7/unittest/case.py", line 425, in assertTrue
+    raise self.failureException(msg)
 AssertionError: False is not true
 
 </failure>
