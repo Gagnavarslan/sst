@@ -38,7 +38,7 @@ def get_case(kind):
             pass
 
         def test_fail(self):
-            self.assertTrue(False)
+            raise self.failureException
 
         def test_error(self):
             raise SyntaxError
@@ -213,10 +213,8 @@ class TestXmlOutput(testtools.TestCase):
 <testcase classname="{classname}" name="{name}" time="0.000">
 <failure type="{exc_type}">_StringException: Traceback (most recent call last):
   File "{filename}", line 41, in {name}
-    self.assertTrue(False)
-  File "/usr/lib/python2.7/unittest/case.py", line 425, in assertTrue
-    raise self.failureException(msg)
-AssertionError: False is not true
+    raise self.failureException
+AssertionError
 
 </failure>
 </testcase>
