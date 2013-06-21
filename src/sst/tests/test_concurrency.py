@@ -24,6 +24,9 @@ import unittest
 
 from junitxml import JUnitXmlResult
 
+from subunit import TestProtocolClient
+from subunit.test_results import AutoTimingTestResultDecorator
+
 from testtools import (
     ConcurrentTestSuite,
     MultiTestResult,
@@ -38,6 +41,66 @@ from sst import (
     runtests,
     tests,
 )
+
+
+class SubunitStreamTestCase(tests.ImportingLocalFilesTest):
+
+    def test_subunit_stream(self):
+        tests.write_tree_from_desc('''dir: t
+file: t/__init__.py
+file: t/test_pass.py
+import unittest
+class BothPass(unittest.TestCase):
+    def test_pass_1(self):
+        self.assertTrue(True)
+    def test_pass_2(self):
+        self.assertTrue(True)
+''')
+        suite = loader.TestLoader().discover('t', pattern='test_pass.py')
+        subunit_stream = StringIO()
+        subunit_result = TestProtocolClient(subunit_stream)
+        suite.run(subunit_result)
+        stream_content = subunit_stream.getvalue()
+
+        # Check stream directly
+        lines = stream_content.splitlines()
+        self.assertIn('test: t.test_pass.BothPass.test_pass_1', lines)
+        self.assertIn('successful: t.test_pass.BothPass.test_pass_1', lines)
+        self.assertIn('test: t.test_pass.BothPass.test_pass_2', lines)
+        self.assertIn('successful: t.test_pass.BothPass.test_pass_2', lines)
+        print lines
+        # Check populated result
+        self.assertTrue(subunit_result.wasSuccessful())
+        self.assertEqual(subunit_result.testsRun, suite.countTestCases())
+        self.assertEqual(subunit_result.errors, [])
+        self.assertEqual(subunit_result.failures, [])
+        self.assertEqual(subunit_result.skipped, [])
+
+    def test_timingdecorated_subunit_stream(self):
+        tests.write_tree_from_desc('''dir: t
+file: t/__init__.py
+file: t/test_pass.py
+import unittest
+class BothPass(unittest.TestCase):
+    def test_pass_1(self):
+        self.assertTrue(True)
+    def test_pass_2(self):
+        self.assertTrue(True)
+''')
+        suite = loader.TestLoader().discover('t', pattern='test_pass.py')
+        subunit_stream = StringIO()
+        subunit_result = AutoTimingTestResultDecorator(
+            TestProtocolClient(subunit_stream)
+        )
+        suite.run(subunit_result)
+        stream_content = subunit_stream.getvalue()
+
+        # Check decorated stream directly
+        lines = stream_content.splitlines()
+        self.assertIn('test: t.test_pass.BothPass.test_pass_1', lines)
+        self.assertIn('successful: t.test_pass.BothPass.test_pass_1', lines)
+        self.assertIn('test: t.test_pass.BothPass.test_pass_2', lines)
+        self.assertIn('successful: t.test_pass.BothPass.test_pass_2', lines)
 
 
 class ConcurrencyTestCase(tests.ImportingLocalFilesTest):
