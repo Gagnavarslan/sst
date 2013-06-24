@@ -68,7 +68,7 @@ class BothPass(unittest.TestCase):
         self.assertIn('successful: t.test_pass.BothPass.test_pass_1', lines)
         self.assertIn('test: t.test_pass.BothPass.test_pass_2', lines)
         self.assertIn('successful: t.test_pass.BothPass.test_pass_2', lines)
-        print lines
+
         # Check populated result
         self.assertTrue(subunit_result.wasSuccessful())
         self.assertEqual(subunit_result.testsRun, suite.countTestCases())
@@ -101,6 +101,8 @@ class BothPass(unittest.TestCase):
         self.assertIn('successful: t.test_pass.BothPass.test_pass_1', lines)
         self.assertIn('test: t.test_pass.BothPass.test_pass_2', lines)
         self.assertIn('successful: t.test_pass.BothPass.test_pass_2', lines)
+        timer_count = len([line for line in lines if line.startswith('time:')])
+        self.assertEqual(timer_count, 6)
 
 
 class ConcurrencyTestCase(tests.ImportingLocalFilesTest):
@@ -197,9 +199,12 @@ class OneSkip(unittest.TestCase):
         self.assertEqual(len(result.errors), 0)
         self.assertEqual(len(result.failures), 0)
         ### XXX test skips are not working because of:
-        # https://bugs.launchpad.net/testtools/+bug/1189593
-        # cmg - 06/10/2013
-        # self.assertEqual(len(result.skipped), 1)
+        # https://bugs.launchpad.net/testtools/+bug/1194128
+        # cmg - 06/24/2013
+        # once fixed, change assertion to:
+        #self.assertEqual(len(result.skipped), 1)
+        self.expectFailure('bug 1189593: skips broken in sst result.',
+                           self.assertEqual, len(result.skipped), 1)
 
     def test_forked_with_dead_subprocess(self):
         tests.write_tree_from_desc('''dir: t
