@@ -18,14 +18,53 @@
 #
 
 
-import testtools.run
+import sys
+import time
 import unittest
+
+import testtools
+import junitxml
+
+from sst import result
+
+
+class TestRunner(object):
+    """Test Runner that writes XML output and reports status.
+
+    """
+    resultclass = testtools.testresult.MultiTestResult
+
+    def __init__(self, xml_stream, verbosity, txt_stream=None):
+        if txt_stream is None:
+            txt_stream = sys.stderr
+        self.verbosity = verbosity
+        self._txt_stream = txt_stream
+        self._xml_stream = xml_stream
+
+    def _make_result(self):
+        xml_result = junitxml.JUnitXmlResult(self._xml_stream)
+        txt_result = result.TextTestResult(self._txt_stream,
+                                           None, self.verbosity)
+        return self.resultclass(xml_result, txt_result)
+
+    def run(self, test):
+        result = self._make_result()
+        result.startTestRun()
+        test.run(result)
+        result.stopTestRun()
+        return result
 
 
 class TestProgram(testtools.run.TestProgram):
 
-    def __init__(self, module, argv, stdout=None, testRunner=None, exit=True):
+    def __init__(self, module, argv, stdout=None,
+                 testRunner=None, exit=True, xml=True):
         if testRunner is None:
-            testRunner = unittest.TextTestRunner
+            testRunner = unittest.TextTestRunner(verbosity=2)
+
+        if xml:
+            xml_stream = file('unitresults.xml', 'wb')
+            testRunner = TestRunner(xml_stream, verbosity=2)
+
         super(TestProgram, self).__init__(module, argv=argv, stdout=stdout,
                                           testRunner=testRunner, exit=exit)

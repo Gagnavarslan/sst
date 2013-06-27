@@ -30,7 +30,6 @@ class TestDjangoDevServer(testtools.TestCase):
 
     def setUp(self):
         super(TestDjangoDevServer, self).setUp()
-        tests.set_cwd_to_tmp(self)
 
     def test_django_start(self):
         self.addCleanup(script_test.kill_django, sst.DEVSERVER_PORT)

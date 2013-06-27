@@ -25,6 +25,8 @@ import testtools
 
 import sst
 import sst.selftests
+import sst.scripts
+import sst.tests
 
 
 class Pep8ConformanceTestCase(testtools.TestCase):
