@@ -58,12 +58,11 @@ def main():
         cleaner.add('stopping virtual display...\n', display.stop)
 
     with cleaner:
-        excludes = [r'^sst\.\w*$', r'^sst\.scripts\.']
-        shared_directory = os.path.join('.', 'sst', 'selftests', 'shared')
         results_directory = os.path.abspath('results')
         command.reset_directory(results_directory)
         os.chdir(os.path.dirname(package_dir))
         test_dir = os.path.join('.', 'sst',)
+        shared_directory = os.path.join('.', 'sst', 'selftests', 'shared')
         factory = browsers.browser_factories.get(cmd_opts.browser_type)
         failures = runtests.runtests(
             args, results_directory, out,
@@ -76,7 +75,7 @@ def main():
             failfast=cmd_opts.failfast,
             debug=cmd_opts.debug,
             extended=cmd_opts.extended_tracebacks,
-            excludes=excludes
+            excludes=cmd_opts.excludes
         )
 
     return failures

@@ -26,6 +26,8 @@ version **0.2.4** (Not yet released)
 * refactored ``retry_on_stale_element`` to make a new more generic
   ``retry_on_exception``.
 * the script directory is not added to sys.path implicitly anymore.
+* ``sst-test`` can run all tests, ``nose`` is not used nor a dependency
+  anymore.
 
 
 version **0.2.3** (2013 Apr 17)
