@@ -26,25 +26,30 @@ from sst import tests
 from sst.scripts import test as script_test
 
 
+# sst.DEVSERVER_PORT is already in used when sst-test is running,
+# so defining another port here for unit testing.
+DEVSERVER_PORT = '8130'
+
+
 class TestDjangoDevServer(testtools.TestCase):
 
     def setUp(self):
         super(TestDjangoDevServer, self).setUp()
 
     def test_django_start(self):
-        self.addCleanup(script_test.kill_django, sst.DEVSERVER_PORT)
-        proc = script_test.run_django(sst.DEVSERVER_PORT)
+        self.addCleanup(script_test.kill_django, DEVSERVER_PORT)
+        proc = script_test.run_django(DEVSERVER_PORT)
         self.assertIsNotNone(proc)
 
     def test_django_devserver_port_used(self):
-        used = tests.check_devserver_port_used(sst.DEVSERVER_PORT)
+        used = tests.check_devserver_port_used(DEVSERVER_PORT)
         self.assertFalse(used)
-        self.addCleanup(script_test.kill_django, sst.DEVSERVER_PORT)
-        script_test.run_django(sst.DEVSERVER_PORT)
-        used = tests.check_devserver_port_used(sst.DEVSERVER_PORT)
+        self.addCleanup(script_test.kill_django, DEVSERVER_PORT)
+        script_test.run_django(DEVSERVER_PORT)
+        used = tests.check_devserver_port_used(DEVSERVER_PORT)
         self.assertTrue(used)
         e = self.assertRaises(RuntimeError,
-                              script_test.run_django, sst.DEVSERVER_PORT)
+                              script_test.run_django, DEVSERVER_PORT)
         self.assertEqual('Error: port %s is in use.\n'
                          'Can not launch devserver for internal tests.'
                          % (sst.DEVSERVER_PORT,),

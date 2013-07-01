@@ -23,7 +23,13 @@ import sys
 import tempfile
 
 import testtools
-from sst import cases
+
+from sst import (
+    cases,
+    loader
+)
+
+discover = loader.discoverRegularTests
 
 
 class SSTBrowserLessTestCase(cases.SSTTestCase):
