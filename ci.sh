@@ -30,9 +30,6 @@ while [ $# -gt 0 ]; do  # until you run out of parameters
         --flake8)
             FLAKE8=1
             ;;
-        --unit)
-            UNIT=1
-            ;;
         --acceptance)
             BROWSER="$2"
             if [[ "$BROWSER" == "Firefox" || "$BROWSER" == "Chrome" || "$BROWSER" == "PhantomJS" ]]; then
@@ -92,21 +89,14 @@ if [ -n "$FLAKE8" ]; then
     flake8 src/ docs/ sst-* *.py
 fi
 
-if [ -n "$UNIT" ]; then
-    echo "----------------------------------"
-    echo "running unit tests..."
-    # this generates 'nosetests.xml' in top dir
-    nosetests --verbosity=2 --with-xunit -m ^test_.* -e ENV -e testproject -e selftests -s
-fi
-
 if [ -n "$BROWSER" ]; then
     if [ "$BROWSER" == "Firefox" ]; then
         echo "----------------------------------"
         firefox -v
     fi
     echo "----------------------------------"
-    echo "running acceptance tests..."
-    ./sst-test -x -s -q -r xml -b $BROWSER --extended-tracebacks
+    echo "running unit and acceptance tests..."
+    ./sst-test -x -s -r xml -b $BROWSER --extended-tracebacks
 fi
 echo "----------------------------------"
 
