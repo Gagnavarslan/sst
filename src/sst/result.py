@@ -26,24 +26,22 @@ from testtools import testresult
 class TextTestResult(testresult.TextTestResult):
     """A TestResult which outputs activity to a text stream."""
 
-    def __init__(self, stream, failfast=False, verbosity=1, timer=None):
+    def __init__(self, stream, failfast=False, verbosity=1):
         super(TextTestResult, self).__init__(stream, failfast)
-        if timer is None:
-            timer = timeit.default_timer
-        self.timer = timer
         self.verbose = verbosity > 1
 
     def startTest(self, test):
         if self.verbose:
             self.stream.write(str(test))
             self.stream.write(' ... ')
-        self.start_time = self.timer()
+        self.start_time = self._now()
         super(TextTestResult, self).startTest(test)
 
     def stopTest(self, test):
         if self.verbose:
-            elapsed_time = self.timer() - self.start_time
-            self.stream.write(' (%.3f secs)\n' % elapsed_time)
+            elapsed_time = self._now() - self.start_time
+            self.stream.write(' (%.3f secs)\n'
+                              % self._delta_to_float(elapsed_time))
             self.stream.flush()
         super(TextTestResult, self).stopTest(test)
 
