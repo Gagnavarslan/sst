@@ -68,11 +68,15 @@ class TestConsoleOutput(testtools.TestCase):
         tests.set_cwd_to_tmp(self)
 
     def assertOutput(self, expected, kind):
-        # We don't care about timing here so we always return 0 which
-        # simplifies matching the expected result
         test = get_case(kind)
         out = StringIO()
-        res = result.TextTestResult(out, timer=lambda: 0.0)
+        res = result.TextTestResult(out)
+
+        # We don't care about timing here so we always return 0 which
+        # simplifies matching the expected result
+        def zero(atime):
+            return 0.0
+        res._delta_to_float = zero
         test.run(res)
         self.assertEquals(expected, res.stream.getvalue())
 
@@ -105,11 +109,15 @@ class TestVerboseConsoleOutput(testtools.TestCase):
         tests.set_cwd_to_tmp(self)
 
     def assertOutput(self, expected, kind):
-        # We don't care about timing here so we always return 0 which
-        # simplifies matching the expected result
         test = get_case(kind)
         out = StringIO()
-        res = result.TextTestResult(out, verbosity=2, timer=lambda: 0.0)
+        res = result.TextTestResult(out, verbosity=2)
+
+        # We don't care about timing here so we always return 0 which
+        # simplifies matching the expected result
+        def zero(atime):
+            return 0.0
+        res._delta_to_float = zero
         test.run(res)
         self.assertEquals(expected, res.stream.getvalue())
 
