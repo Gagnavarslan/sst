@@ -12,4 +12,3 @@ def skip_as_jenkins():
         user = 'notjenkins'
     if user.lower() == 'jenkins':
         sst.actions.skip()
-
