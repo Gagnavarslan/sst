@@ -5,7 +5,10 @@ from django.shortcuts import render_to_response
 
 
 def index(request):
-    return render_to_response('index.html', {'title': 'The Page Title'})
+    response = render_to_response('index.html', {'title': 'The Page Title'})
+    response.set_cookie('foo', 'bar')
+    response.set_cookie('baz', 'qux')
+    return response
 
 
 def begin(request):
