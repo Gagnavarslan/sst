@@ -28,6 +28,7 @@ version **0.2.4** (Not yet released)
 * the script directory is not added to sys.path implicitly anymore.
 * ``sst-test`` can run all tests, ``nose`` is not used nor a dependency
   anymore.
+* properly support the testtools test timing protocol (#1197298).
 
 
 version **0.2.3** (2013 Apr 17)
