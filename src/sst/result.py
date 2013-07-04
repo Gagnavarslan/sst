@@ -17,8 +17,6 @@
 #   limitations under the License.
 #
 
-import timeit
-
 
 from testtools import testresult
 
