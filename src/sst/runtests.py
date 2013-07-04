@@ -110,9 +110,7 @@ def runtests(test_regexps, results_directory, out,
         suite = alltests
     else:
         suite = testtools.ConcurrentTestSuite(
-            alltests,
-            concurrency.fork_for_tests(concurrency_num),
-        )
+            alltests, concurrency.fork_for_tests(concurrency_num))
 
     res.startTestRun()
     try:
