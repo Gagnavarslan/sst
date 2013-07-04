@@ -106,25 +106,25 @@ class TestConsoleOutput(testtools.TestCase):
         test.run(res)
         self.assertEquals(expected, res.stream.getvalue())
 
-    def test_pass_output(self):
+    def test_pass(self):
         self.assertOutput('.', 'pass')
 
-    def test_fail_output(self):
+    def test_fail(self):
         self.assertOutput('F', 'fail')
 
-    def test_error_output(self):
+    def test_error(self):
         self.assertOutput('E', 'error')
 
-    def test_skip_output(self):
+    def test_skip(self):
         self.assertOutput('s', 'skip')
 
-    def test_skip_reason_output(self):
+    def test_skip_reason(self):
         self.assertOutput('s', 'skip_reason')
 
-    def test_expected_failure_output(self):
+    def test_expected_failure(self):
         self.assertOutput('x', 'expected_failure')
 
-    def test_unexpected_success_output(self):
+    def test_unexpected_success(self):
         self.assertOutput('u', 'unexpected_success')
 
 
@@ -143,43 +143,43 @@ class TestVerboseConsoleOutput(testtools.TestCase):
         test.run(res)
         self.assertEquals(expected, res.stream.getvalue())
 
-    def test_pass_output(self):
+    def test_pass(self):
         self.assertOutput('''\
 test_pass (sst.tests.test_result.Test) ... OK (0.000 secs)
 ''',
                           'pass')
 
-    def test_fail_output(self):
+    def test_fail(self):
         self.assertOutput('''\
 test_fail (sst.tests.test_result.Test) ... FAIL (0.000 secs)
 ''',
                           'fail')
 
-    def test_error_output(self):
+    def test_error(self):
         self.assertOutput('''\
 test_error (sst.tests.test_result.Test) ... ERROR (0.000 secs)
 ''',
                           'error')
 
-    def test_skip_output(self):
+    def test_skip(self):
         self.assertOutput('''\
 test_skip (sst.tests.test_result.Test) ... SKIP (0.000 secs)
 ''',
                           'skip')
 
-    def test_skip_reason_output(self):
+    def test_skip_reason(self):
         self.assertOutput('''\
 test_skip_reason (sst.tests.test_result.Test) ... SKIP Because (0.000 secs)
 ''',
                           'skip_reason')
 
-    def test_expected_failure_output(self):
+    def test_expected_failure(self):
         self.assertOutput('''\
 test_expected_failure (sst.tests.test_result.Test) ... XFAIL (0.000 secs)
 ''',
                           'expected_failure')
 
-    def test_unexpected_success_output(self):
+    def test_unexpected_success(self):
         self.assertOutput('''\
 test_unexpected_success (sst.tests.test_result.Test) ... NOTOK (0.000 secs)
 ''',
@@ -213,7 +213,7 @@ class TestXmlOutput(testtools.TestCase):
         res.stopTestRun()
         self.assertEquals(expected, res._stream.getvalue())
 
-    def test_pass_output(self):
+    def test_pass(self):
         expected = '''\
 <testsuite errors="0" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000"/>
@@ -221,7 +221,7 @@ class TestXmlOutput(testtools.TestCase):
 '''
         self.assertOutput(expected, 'pass')
 
-    def test_fail_output(self):
+    def test_fail(self):
         more = dict(exc_type='testtools.testresult.real._StringException')
         expected = '''\
 <testsuite errors="0" failures="1" name="" tests="1" time="0.000">
@@ -237,7 +237,7 @@ AssertionError
 '''
         self.assertOutput(expected, 'fail', more)
 
-    def test_error_output(self):
+    def test_error(self):
         more = dict(exc_type='testtools.testresult.real._StringException')
         expected = '''\
 <testsuite errors="1" failures="0" name="" tests="1" time="0.000">
@@ -253,7 +253,7 @@ SyntaxError: None
 '''
         self.assertOutput(expected, 'error', more)
 
-    def test_skip_output(self):
+    def test_skip(self):
         expected = '''\
 <testsuite errors="0" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
@@ -263,7 +263,7 @@ SyntaxError: None
 '''
         self.assertOutput(expected, 'skip')
 
-    def test_skip_reason_output(self):
+    def test_skip_reason(self):
         expected = '''\
 <testsuite errors="0" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
@@ -273,7 +273,7 @@ SyntaxError: None
 '''
         self.assertOutput(expected, 'skip_reason')
 
-    def test_expected_failure_output(self):
+    def test_expected_failure(self):
         expected = '''\
 <testsuite errors="0" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000"/>
@@ -281,7 +281,7 @@ SyntaxError: None
 '''
         self.assertOutput(expected, 'expected_failure')
 
-    def test_unexpected_success_output(self):
+    def test_unexpected_success(self):
         expected = '''\
 <testsuite errors="0" failures="1" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
@@ -293,11 +293,7 @@ SyntaxError: None
 
 
 class TestSubunitOutput(testtools.TestCase):
-    """Test subunit output and input streams.
-
-    Concurrent tests use subunit to communicate between controlling and
-    children processes.
-    """
+    """Test subunit output stream."""
 
     def run_with_subunit(self, test):
         """Run a suite returning the subunit stream."""
@@ -305,14 +301,6 @@ class TestSubunitOutput(testtools.TestCase):
         res = subunit.TestProtocolClient(stream)
         test.run(res)
         return res, stream
-
-    def run_from_subunit(self, stream):
-        """Runs a suite from a subunit stream, returning the text stream."""
-        receiver = subunit.ProtocolTestCase(stream)
-        out = StringIO()
-        text_result = result.TextTestResult(out, verbosity=0)
-        receiver.run(text_result)
-        return receiver, out
 
     def assertSubunitOutput(self, template, kind, kwargs=None):
         """Assert the expected output from a subunit run for a given test.
@@ -372,7 +360,6 @@ SyntaxError: None
 ''',
                                  'error')
 
-
     def test_skip(self):
         self.assertSubunitOutput('''\
 test: {classname}.{name}
@@ -424,3 +411,41 @@ A\r
 ]
 ''',
                                  'unexpected_success')
+
+
+class TestSubunitInputStream(testtools.TestCase):
+    """Test subunit input stream."""
+
+    def assertOutput(self, expected, kind):
+        test = get_case(kind)
+        # Run with subunit output
+        stream = StringIO()
+        res = subunit.TestProtocolClient(stream)
+        test.run(res)
+        # Run with subunit input
+        receiver = subunit.ProtocolTestCase(StringIO(stream.getvalue()))
+        out = StringIO()
+        text_result = result.TextTestResult(out, verbosity=0)
+        receiver.run(text_result)
+        self.assertEquals(expected, out.getvalue())
+
+    def test_pass_output(self):
+        self.assertOutput('.', 'pass')
+
+    def test_fail_output(self):
+        self.assertOutput('F', 'fail')
+
+    def test_error_output(self):
+        self.assertOutput('E', 'error')
+
+    def test_skip_output(self):
+        self.assertOutput('s', 'skip')
+
+    def test_skip_reason_output(self):
+        self.assertOutput('s', 'skip_reason')
+
+    def test_expected_failure_output(self):
+        self.assertOutput('x', 'expected_failure')
+
+    def test_unexpected_success_output(self):
+        self.assertOutput('u', 'unexpected_success')
