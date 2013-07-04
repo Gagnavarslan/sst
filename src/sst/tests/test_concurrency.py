@@ -23,11 +23,7 @@ import unittest
 
 from junitxml import JUnitXmlResult
 
-from testtools import (
-    ConcurrentTestSuite,
-    MultiTestResult,
-    TestCase,
-)
+import testtools
 
 from sst import (
     browsers,
@@ -44,7 +40,7 @@ class ConcurrencyTestCase(tests.ImportingLocalFilesTest):
     def run_tests_concurrently(self, suite):
         txt_result = result.TextTestResult(StringIO(), verbosity=0)
         # Run tests across 2 processes
-        concurrent_suite = ConcurrentTestSuite(
+        concurrent_suite = testtools.ConcurrentTestSuite(
             suite,
             concurrency.fork_for_tests(2)
         )
@@ -173,7 +169,7 @@ def _make_allpass_test_suite(num_tests):
         d['test_method%i' % i] = test_method
 
     # Generate a Class with the created methods
-    SampleTestCase = type('SampleTestCase', (TestCase,), d)
+    SampleTestCase = type('SampleTestCase', (testtools.TestCase,), d)
 
     # Make a sequence of test_cases from the test methods
     test_cases = [
@@ -183,7 +179,7 @@ def _make_allpass_test_suite(num_tests):
     return unittest.TestSuite(test_cases)
 
 
-class ConcurrencyForkedTestCase(TestCase):
+class ConcurrencyForkedTestCase(testtools.TestCase):
 
     def setUp(self):
         super(ConcurrencyForkedTestCase, self).setUp()
@@ -197,10 +193,10 @@ class ConcurrencyForkedTestCase(TestCase):
         xml_out = StringIO()
         txt_result = result.TextTestResult(console_out, verbosity=0)
         xml_result = JUnitXmlResult(xml_out)
-        res = MultiTestResult(txt_result, xml_result)
+        res = testtools.MultiTestResult(txt_result, xml_result)
 
         original_suite = _make_allpass_test_suite(num_tests)
-        suite = ConcurrentTestSuite(
+        suite = testtools.ConcurrentTestSuite(
             original_suite,
             concurrency.fork_for_tests(concurrency_num)
         )
@@ -297,7 +293,7 @@ class TestFail2(unittest.TestCase):
         self.assertIn('FAILED (failures=2)', output)
 
 
-class PartitionTestCase(tests.ImportingLocalFilesTest):
+class PartitionTestCase(testtools.TestCase):
 
     def setUp(self):
         super(PartitionTestCase, self).setUp()
