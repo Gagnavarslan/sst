@@ -301,44 +301,30 @@ class PartitionTestCase(tests.ImportingLocalFilesTest):
 
     def setUp(self):
         super(PartitionTestCase, self).setUp()
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/test_partitions.py
-import unittest
-class SampleTestCase(unittest.TestCase):
-    def test_pass_1(self):
-        self.assertTrue(True)
-    def test_pass_2(self):
-        self.assertTrue(True)
-    def test_pass_3(self):
-        self.assertTrue(True)
-    def test_pass_4(self):
-        self.assertTrue(True)
-    def test_pass_5(self):
-        self.assertTrue(True)
-    def test_pass_6(self):
-        self.assertTrue(True)
-    def test_pass_7(self):
-        self.assertTrue(True)
-    def test_pass_8(self):
-        self.assertTrue(True)
-''')
+        self.suite = unittest.TestSuite()
+        self.suite.addTests([tests.get_case('pass') for i in range(8)])
 
     def test_partition_even_groups(self):
-        suite = loader.TestLoader().discover('t')
-        parted_tests = concurrency.partition_tests(suite, 4)
-        self.assertEqual(len(parted_tests), 4)
-        self.assertEqual(len(parted_tests[0]), 2)
-        self.assertEqual(len(parted_tests[1]), 2)
+        parted_tests = concurrency.partition_tests(self.suite, 4)
+        self.assertEqual(4, len(parted_tests))
+        self.assertEqual(2, len(parted_tests[0]))
+        self.assertEqual(2, len(parted_tests[1]))
+        self.assertEqual(2, len(parted_tests[2]))
+        self.assertEqual(2, len(parted_tests[3]))
 
     def test_partition_one_in_each(self):
-        suite = loader.TestLoader().discover('t')
-        parted_tests = concurrency.partition_tests(suite, 8)
-        self.assertEqual(len(parted_tests), 8)
-        self.assertEqual(len(parted_tests[0]), 1)
+        parted_tests = concurrency.partition_tests(self.suite, 8)
+        self.assertEqual(8, len(parted_tests))
+        self.assertEqual(1, len(parted_tests[0]))
 
     def test_partition_all_in_one(self):
-        suite = loader.TestLoader().discover('t')
-        parted_tests = concurrency.partition_tests(suite, 1)
-        self.assertEqual(len(parted_tests), 1)
-        self.assertEqual(len(parted_tests[0]), 8)
+        parted_tests = concurrency.partition_tests(self.suite, 1)
+        self.assertEqual(1, len(parted_tests))
+        self.assertEqual(8, len(parted_tests[0]))
+
+    def test_partition_uneven(self):
+        parted_tests = concurrency.partition_tests(self.suite, 3)
+        self.assertEqual(3, len(parted_tests))
+        self.assertEqual(3, len(parted_tests[0]))
+        self.assertEqual(3, len(parted_tests[1]))
+        self.assertEqual(2, len(parted_tests[2]))
