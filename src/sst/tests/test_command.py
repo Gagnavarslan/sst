@@ -82,7 +82,7 @@ class TestCleanups(testtools.TestCase):
         clean = command.Cleaner(out)
 
         def boom():
-            1/0
+            1 / 0
         clean.add('boom\n', boom)
         clean.cleanup_now()
         lines = out.getvalue().splitlines()
