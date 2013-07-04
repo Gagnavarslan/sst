@@ -93,10 +93,6 @@ def format_expected(template, test, kwargs=None):
 
 class TestConsoleOutput(testtools.TestCase):
 
-    def setUp(self):
-        super(TestConsoleOutput, self).setUp()
-        tests.set_cwd_to_tmp(self)
-
     def assertOutput(self, expected, kind):
         test = get_case(kind)
         out = StringIO()
@@ -133,10 +129,6 @@ class TestConsoleOutput(testtools.TestCase):
 
 
 class TestVerboseConsoleOutput(testtools.TestCase):
-
-    def setUp(self):
-        super(TestVerboseConsoleOutput, self).setUp()
-        tests.set_cwd_to_tmp(self)
 
     def assertOutput(self, expected, kind):
         test = get_case(kind)
@@ -195,10 +187,6 @@ test_unexpected_success (sst.tests.test_result.Test) ... NOTOK (0.000 secs)
 
 
 class TestXmlOutput(testtools.TestCase):
-
-    def setUp(self):
-        super(TestXmlOutput, self).setUp()
-        tests.set_cwd_to_tmp(self)
 
     def assertOutput(self, template, kind, kwargs=None):
         """Assert the expected output from a run for a given test.
