@@ -91,7 +91,7 @@ def format_expected(template, test, kwargs=None):
     return template.format(**kwargs)
 
 
-class TestConsoleOutput(testtools.TestCase):
+class TestResultOutput(testtools.TestCase):
 
     def assertOutput(self, expected, kind):
         test = get_case(kind)
@@ -128,7 +128,7 @@ class TestConsoleOutput(testtools.TestCase):
         self.assertOutput('u', 'unexpected_success')
 
 
-class TestVerboseConsoleOutput(testtools.TestCase):
+class TestVerboseResultOutput(testtools.TestCase):
 
     def assertOutput(self, expected, kind):
         test = get_case(kind)
@@ -413,39 +413,22 @@ A\r
                                  'unexpected_success')
 
 
-class TestSubunitInputStream(testtools.TestCase):
-    """Test subunit input stream."""
+class TestSubunitInputStream(TestResultOutput):
+    """Test subunit input stream.
+
+    More precisely, ensure our test result can properly handle a subunit input
+    stream.
+    """
 
     def assertOutput(self, expected, kind):
         test = get_case(kind)
-        # Run with subunit output
+        # Get subunit output (what subprocess produce)
         stream = StringIO()
         res = subunit.TestProtocolClient(stream)
         test.run(res)
-        # Run with subunit input
+        # Inject it again (what controlling process consumes)
         receiver = subunit.ProtocolTestCase(StringIO(stream.getvalue()))
         out = StringIO()
         text_result = result.TextTestResult(out, verbosity=0)
         receiver.run(text_result)
         self.assertEquals(expected, out.getvalue())
-
-    def test_pass_output(self):
-        self.assertOutput('.', 'pass')
-
-    def test_fail_output(self):
-        self.assertOutput('F', 'fail')
-
-    def test_error_output(self):
-        self.assertOutput('E', 'error')
-
-    def test_skip_output(self):
-        self.assertOutput('s', 'skip')
-
-    def test_skip_reason_output(self):
-        self.assertOutput('s', 'skip_reason')
-
-    def test_expected_failure_output(self):
-        self.assertOutput('x', 'expected_failure')
-
-    def test_unexpected_success_output(self):
-        self.assertOutput('u', 'unexpected_success')
