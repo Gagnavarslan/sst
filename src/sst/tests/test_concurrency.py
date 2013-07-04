@@ -23,8 +23,6 @@ import unittest
 
 from junitxml import JUnitXmlResult
 
-import subunit
-
 from testtools import (
     ConcurrentTestSuite,
     MultiTestResult,
@@ -39,70 +37,6 @@ from sst import (
     runtests,
     tests,
 )
-
-
-class SubunitStreamTestCase(tests.ImportingLocalFilesTest):
-
-    def run_with_subunit(self, suite):
-        """Run a suite returning the subunit stream."""
-        stream = StringIO()
-        res = subunit.TestProtocolClient(stream)
-        suite.run(res)
-        return res, stream
-
-    def run_from_subunit(self, stream):
-        """Runs a suite from a subunit stream, returning the text stream."""
-        receiver = subunit.ProtocolTestCase(stream)
-        out = StringIO()
-        text_result = result.TextTestResult(out, verbosity=0)
-        receiver.run(text_result)
-        return receiver, out
-
-    def test_passing(self):
-
-        class Pass(unittest.TestCase):
-            def test_pass(self):
-                self.assertTrue(True)
-
-            def test_pass_2(self):
-                self.assertTrue(True)
-
-        suite = unittest.TestSuite()
-        suite.addTest(Pass('test_pass'))
-
-        res, out = self.run_with_subunit(suite)
-        self.assertEquals('''\
-test: sst.tests.test_concurrency.Pass.test_pass
-successful: sst.tests.test_concurrency.Pass.test_pass
-''',
-                          out.getvalue())
-        self.assertTrue(res.wasSuccessful())
-        self.assertEqual(1, res.testsRun)
-        self.assertEqual([], res.errors)
-        self.assertEqual([], res.failures)
-        self.assertEqual({}, res.skip_reasons)
-
-    def test_skip(self):
-
-        class TestSkip(unittest.TestCase):
-            def test_skip(self):
-                self.skipTest('Because')
-                self.assertTrue(False)
-
-        suite = unittest.TestSuite()
-        suite.addTest(TestSkip('test_skip'))
-        res, out = self.run_with_subunit(suite)
-        self.assertEquals('''\
-test: sst.tests.test_concurrency.TestSkip.test_skip
-skip: sst.tests.test_concurrency.TestSkip.test_skip [
-Because
-]
-''',
-                          out.getvalue())
-        self.assertTrue(res.wasSuccessful())
-        self.assertEqual(1, res.testsRun)
-        recv, out = self.run_from_subunit(StringIO(out.getvalue()))
-        self.assertEqual('s', out.getvalue())
 
 
 class ConcurrencyTestCase(tests.ImportingLocalFilesTest):
