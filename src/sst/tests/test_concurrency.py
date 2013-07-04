@@ -19,13 +19,13 @@
 
 
 from cStringIO import StringIO
-import sys
+import datetime
 import unittest
 
 from junitxml import JUnitXmlResult
 
-from subunit import TestProtocolClient
-from subunit.test_results import AutoTimingTestResultDecorator
+import subunit
+from subunit import test_results
 
 from testtools import (
     ConcurrentTestSuite,
@@ -58,7 +58,7 @@ class BothPass(unittest.TestCase):
 ''')
         suite = loader.TestLoader().discover('t', pattern='test_pass.py')
         subunit_stream = StringIO()
-        subunit_result = TestProtocolClient(subunit_stream)
+        subunit_result = subunit.TestProtocolClient(subunit_stream)
         suite.run(subunit_result)
         stream_content = subunit_stream.getvalue()
 
@@ -76,33 +76,31 @@ class BothPass(unittest.TestCase):
         self.assertEqual(subunit_result.failures, [])
         self.assertEqual(subunit_result.skipped, [])
 
-    def test_timingdecorated_subunit_stream(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/test_pass.py
-import unittest
-class BothPass(unittest.TestCase):
-    def test_pass_1(self):
-        self.assertTrue(True)
-    def test_pass_2(self):
-        self.assertTrue(True)
-''')
-        suite = loader.TestLoader().discover('t', pattern='test_pass.py')
-        subunit_stream = StringIO()
-        subunit_result = AutoTimingTestResultDecorator(
-            TestProtocolClient(subunit_stream)
-        )
-        suite.run(subunit_result)
-        stream_content = subunit_stream.getvalue()
+    def test_skip(self):
 
-        # Check decorated stream directly
-        lines = stream_content.splitlines()
-        self.assertIn('test: t.test_pass.BothPass.test_pass_1', lines)
-        self.assertIn('successful: t.test_pass.BothPass.test_pass_1', lines)
-        self.assertIn('test: t.test_pass.BothPass.test_pass_2', lines)
-        self.assertIn('successful: t.test_pass.BothPass.test_pass_2', lines)
-        timer_count = len([line for line in lines if line.startswith('time:')])
-        self.assertEqual(timer_count, 6)
+        class TestSkip(unittest.TestCase):
+            def test_skip(self):
+                self.skipTest('Because')
+                self.assertTrue(False)
+
+        suite = unittest.TestSuite()
+        suite.addTest(TestSkip('test_skip'))
+        subunit_stream = StringIO()
+        subunit_result = subunit.TestProtocolClient(subunit_stream)
+        suite.run(subunit_result)
+        self.assertEquals('''\
+test: sst.tests.test_concurrency.TestSkip.test_skip
+skip: sst.tests.test_concurrency.TestSkip.test_skip [
+Because
+]
+''',
+                          subunit_stream.getvalue())
+        input_stream = StringIO(subunit_stream.getvalue())
+        receiver = subunit.ProtocolTestCase(input_stream)
+        out = StringIO()
+        text_result = result.TextTestResult(out, verbosity=0)
+        receiver.run(text_result)
+        self.assertEqual('s', out.getvalue())
 
 
 class ConcurrencyTestCase(tests.ImportingLocalFilesTest):
@@ -180,31 +178,25 @@ class OneFail(unittest.TestCase):
         self.assertEqual(len(result.skipped), 0)
 
     def test_forked_with_skip(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/test_skip.py
-import unittest
-class OneSkip(unittest.TestCase):
-    @unittest.skip('skipping')
-    def test_skip(self):
-        self.assertTrue(True)
-    def test_pass(self):
-        self.assertTrue(True)
-''')
-        suite = loader.TestLoader().discover('t', pattern='test_skip.py')
+        class Skip(unittest.TestCase):
+            def test_skip(self):
+                self.skipTest('Because')
+        suite = unittest.TestSuite()
+        suite.addTest(Skip('test_skip'))
         result = self.run_tests_concurrently(suite)
 
         self.assertTrue(result.wasSuccessful())
         self.assertEqual(result.testsRun, suite.countTestCases())
         self.assertEqual(len(result.errors), 0)
         self.assertEqual(len(result.failures), 0)
-        ### XXX test skips are not working because of:
-        # https://bugs.launchpad.net/testtools/+bug/1194128
-        # cmg - 06/24/2013
-        # once fixed, change assertion to:
-        #self.assertEqual(len(result.skipped), 1)
-        self.expectFailure('bug 1189593: skips broken in sst result.',
-                           self.assertEqual, len(result.skipped), 1)
+        reasons = result.skip_reasons
+        self.assertEqual(1, len(reasons.keys()))
+        reason, tests = reasons.items()[0]
+        # subunit adds a spurious \n
+        self.assertEqual('Because\n', reason)
+        self.assertEqual(1, len(tests))
+        self.assertEqual('sst.tests.test_concurrency.Skip.test_skip',
+                         tests[0].id())
 
     def test_forked_with_dead_subprocess(self):
         tests.write_tree_from_desc('''dir: t

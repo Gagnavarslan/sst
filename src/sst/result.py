@@ -71,15 +71,18 @@ class TextTestResult(testresult.TextTestResult):
         # to use a (self, test, reason, details) signature but this is never
         # called this way -- vila 2013-05-10
         reason = details.get('reason', '').as_text()
-        if not reason:
-            reason = ''
-        else:
-            reason = ' ' + reason
         if self.verbose:
-            self.stream.write('SKIP%s' % reason)
+            if not reason:
+                reason_displayed = ''
+            else:
+                reason_displayed = ' ' + reason
+            self.stream.write('SKIP%s' % reason_displayed)
         else:
             self.stream.write('s')
         super(TextTestResult, self).addSkip(test, reason, details)
+        # testtools has its own handling of skipped tests in self.skip_reasons
+        # If we wanted to *also* handle 'skipped' like unittest, we could add a
+        # self.skipped.append((test, reason)) call.
 
     def addSuccess(self, test, details=None):
         if self.verbose:
