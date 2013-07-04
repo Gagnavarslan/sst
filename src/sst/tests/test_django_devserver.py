@@ -35,6 +35,10 @@ class TestDjangoDevServer(testtools.TestCase):
 
     def setUp(self):
         super(TestDjangoDevServer, self).setUp()
+        # We should not rely on the current directory being the root of the sst
+        # project, the best way to achieve that is to change to a newly created
+        # one.
+        tests.set_cwd_to_tmp(self)
 
     def test_django_start(self):
         self.addCleanup(script_test.kill_django, DEVSERVER_PORT)

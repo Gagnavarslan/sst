@@ -26,7 +26,6 @@ urlpatterns = patterns('',
                        (r'tables', 'simple.views.tables'),
                        (r'page_to_save', 'simple.views.page_to_save'),
                        (r'kill_django', 'simple.views.kill_django'),
-                       (r'^admin/', include(admin.site.urls)),
                        (r'', 'simple.views.index'),)
 
 urlpatterns += staticfiles_urlpatterns()
