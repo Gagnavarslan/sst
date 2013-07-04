@@ -30,71 +30,10 @@ from sst import (
 )
 
 
-def get_case(kind):
-    # Define the class in a function so test loading don't try to load it as a
-    # regular test class.
-    class Test(testtools.TestCase):
-
-        def test_pass(self):
-            pass
-
-        def test_fail(self):
-            raise self.failureException
-
-        def test_error(self):
-            raise SyntaxError
-
-        def test_skip(self):
-            self.skipTest('')
-
-        def test_skip_reason(self):
-            self.skipTest('Because')
-
-        def test_expected_failure(self):
-            # We expect the test to fail and it does
-            self.expectFailure("1 should be 0", self.assertEqual, 1, 0)
-
-        def test_unexpected_success(self):
-            # We expect the test to fail but it doesn't
-            self.expectFailure("1 is not 1", self.assertEqual, 1, 1)
-
-    test_method = 'test_%s' % (kind,)
-    return Test(test_method)
-
-
-def format_expected(template, test, kwargs=None):
-    """Expand common references in template.
-
-    Tests that check runs output can be simplified if they use templates
-    instead of litteral expected strings. There are plenty of examples below.
-
-    :param template: A string where common strings have been replaced by a
-        keyword so 1) tests are easier to read, 2) we don't run into pep8
-        warnings for long lines.
-
-    :param test: The test case under scrutiny.
-
-    :param kwargs: A dict with more keywords for the template. This allows
-        some tests to add more keywords when they are test specific.
-    """
-    if kwargs is None:
-        kwargs = dict()
-    # Getting the file name right is tricky, depending on whether the module
-    # was just recompiled or not __file__ can be either .py or .pyc but when it
-    # appears in an exception, the .py is always used.
-    filename = __file__.replace('.pyc', '.py').replace('.pyo', '.py')
-    # To allow easier reading for template, we format some known values
-    kwargs.update(dict(classname='%s.%s' % (test.__class__.__module__,
-                                            test.__class__.__name__),
-                       name=test._testMethodName,
-                       filename=filename))
-    return template.format(**kwargs)
-
-
 class TestResultOutput(testtools.TestCase):
 
     def assertOutput(self, expected, kind):
-        test = get_case(kind)
+        test = tests.get_case(kind)
         out = StringIO()
         res = result.TextTestResult(out)
 
@@ -130,8 +69,9 @@ class TestResultOutput(testtools.TestCase):
 
 class TestVerboseResultOutput(testtools.TestCase):
 
-    def assertOutput(self, expected, kind):
-        test = get_case(kind)
+    def assertOutput(self, template, kind):
+        test = tests.get_case(kind)
+        expected = tests.expected_for_test(template, test)
         out = StringIO()
         res = result.TextTestResult(out, verbosity=2)
 
@@ -145,43 +85,43 @@ class TestVerboseResultOutput(testtools.TestCase):
 
     def test_pass(self):
         self.assertOutput('''\
-test_pass (sst.tests.test_result.Test) ... OK (0.000 secs)
+{name} ({classname}) ... OK (0.000 secs)
 ''',
                           'pass')
 
     def test_fail(self):
         self.assertOutput('''\
-test_fail (sst.tests.test_result.Test) ... FAIL (0.000 secs)
+{name} ({classname}) ... FAIL (0.000 secs)
 ''',
                           'fail')
 
     def test_error(self):
         self.assertOutput('''\
-test_error (sst.tests.test_result.Test) ... ERROR (0.000 secs)
+{name} ({classname}) ... ERROR (0.000 secs)
 ''',
                           'error')
 
     def test_skip(self):
         self.assertOutput('''\
-test_skip (sst.tests.test_result.Test) ... SKIP (0.000 secs)
+{name} ({classname}) ... SKIP (0.000 secs)
 ''',
                           'skip')
 
     def test_skip_reason(self):
         self.assertOutput('''\
-test_skip_reason (sst.tests.test_result.Test) ... SKIP Because (0.000 secs)
+{name} ({classname}) ... SKIP Because (0.000 secs)
 ''',
                           'skip_reason')
 
     def test_expected_failure(self):
         self.assertOutput('''\
-test_expected_failure (sst.tests.test_result.Test) ... XFAIL (0.000 secs)
+{name} ({classname}) ... XFAIL (0.000 secs)
 ''',
                           'expected_failure')
 
     def test_unexpected_success(self):
         self.assertOutput('''\
-test_unexpected_success (sst.tests.test_result.Test) ... NOTOK (0.000 secs)
+{name} ({classname}) ... NOTOK (0.000 secs)
 ''',
                           'unexpected_success')
 
@@ -205,8 +145,8 @@ class TestXmlOutput(testtools.TestCase):
         # simplifies matching the expected result
         res._now = lambda: 0.0
         res._duration = lambda f: 0.0
-        test = get_case(kind)
-        expected = format_expected(template, test, kwargs)
+        test = tests.get_case(kind)
+        expected = tests.expected_for_test(template, test, kwargs)
         test.run(res)
         # due to the nature of JUnit XML output, nothing will be written to
         # the stream until stopTestRun() is called.
@@ -227,7 +167,7 @@ class TestXmlOutput(testtools.TestCase):
 <testsuite errors="0" failures="1" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
 <failure type="{exc_type}">_StringException: Traceback (most recent call last):
-  File "{filename}", line 42, in {name}
+  File "{filename}", line 165, in {name}
     raise self.failureException
 AssertionError
 
@@ -243,7 +183,7 @@ AssertionError
 <testsuite errors="1" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
 <error type="{exc_type}">_StringException: Traceback (most recent call last):
-  File "{filename}", line 45, in {name}
+  File "{filename}", line 168, in {name}
     raise SyntaxError
 SyntaxError: None
 
@@ -315,15 +255,15 @@ class TestSubunitOutput(testtools.TestCase):
         """
         if kwargs is None:
             kwargs = dict()
-        test = get_case(kind)
-        expected = format_expected(template, test, kwargs)
+        test = tests.get_case(kind)
+        expected = tests.expected_for_test(template, test, kwargs)
         res, stream = self.run_with_subunit(test)
         self.assertEqual(expected, stream.getvalue())
 
     def test_pass(self):
         self.assertSubunitOutput('''\
-test: sst.tests.test_result.Test.test_pass
-successful: sst.tests.test_result.Test.test_pass [ multipart
+test: {classname}.{name}
+successful: {classname}.{name} [ multipart
 ]
 ''',
                                  'pass')
@@ -334,9 +274,9 @@ test: {classname}.{name}
 failure: {classname}.{name} [ multipart
 Content-Type: text/x-traceback;charset=utf8,language=python
 traceback
-C8\r
+C6\r
 Traceback (most recent call last):
-  File "{filename}", line 42, in {name}
+  File "{filename}", line 165, in {name}
     raise self.failureException
 AssertionError
 0\r
@@ -350,9 +290,9 @@ test: {classname}.{name}
 error: {classname}.{name} [ multipart
 Content-Type: text/x-traceback;charset=utf8,language=python
 traceback
-C2\r
+C0\r
 Traceback (most recent call last):
-  File "{filename}", line 45, in {name}
+  File "{filename}", line 168, in {name}
     raise SyntaxError
 SyntaxError: None
 0\r
@@ -421,7 +361,7 @@ class TestSubunitInputStream(TestResultOutput):
     """
 
     def assertOutput(self, expected, kind):
-        test = get_case(kind)
+        test = tests.get_case(kind)
         # Get subunit output (what subprocess produce)
         stream = StringIO()
         res = subunit.TestProtocolClient(stream)
