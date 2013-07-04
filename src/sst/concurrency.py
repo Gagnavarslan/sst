@@ -36,12 +36,26 @@ import os
 import sys
 import traceback
 import unittest
-from itertools import cycle
+import itertools
 
-from subunit import ProtocolTestCase, TestProtocolClient
-from subunit.test_results import AutoTimingTestResultDecorator
+import subunit
+from subunit import test_results
+import testtools
 
-from testtools import iterate_tests
+
+class TestInOtherProcess(subunit.ProtocolTestCase):
+    # Should be in subunit, I think. RBC.
+    def __init__(self, stream, pid):
+        super(TestInOtherProcess, self).__init__(stream)
+        self.pid = pid
+
+    def run(self, result):
+        try:
+            super(TestInOtherProcess, self).run(result)
+        finally:
+            pid, status = os.waitpid(self.pid, 0)
+        # GZ 2011-10-18: If status is nonzero, should report to the result
+        #                that something went wrong.
 
 
 def fork_for_tests(concurrency_num=1):
@@ -57,7 +71,7 @@ def fork_for_tests(concurrency_num=1):
         :return: An iterable of TestCase-like objects which can each have
         run(result) called on them to feed tests to result.
         """
-        result = []
+        tests = []
         test_blocks = partition_tests(suite, concurrency_num)
         # Clear the tests from the original suite so it doesn't keep them alive
         suite._tests[:] = []
@@ -76,10 +90,10 @@ def fork_for_tests(concurrency_num=1):
                     # read from stdin (otherwise its a roulette to see what
                     # child actually gets keystrokes for pdb etc).
                     sys.stdin.close()
-                    subunit_result = AutoTimingTestResultDecorator(
-                        TestProtocolClient(stream)
+                    result = test_results.AutoTimingTestResultDecorator(
+                        subunit.TestProtocolClient(stream)
                     )
-                    process_suite.run(subunit_result)
+                    process_suite.run(result)
                 except:
                     # Try and report traceback on stream, but exit with error
                     # even if stream couldn't be created or something else
@@ -94,9 +108,9 @@ def fork_for_tests(concurrency_num=1):
             else:
                 os.close(c2pwrite)
                 stream = os.fdopen(c2pread, 'rb', 1)
-                test = ProtocolTestCase(stream)
-                result.append(test)
-        return result
+                test = TestInOtherProcess(stream, pid)
+                tests.append(test)
+        return tests
     return do_fork
 
 
@@ -108,7 +122,7 @@ def partition_tests(suite, count):
     # just one partition.  So the slowest partition shouldn't be much slower
     # than the fastest.
     partitions = [list() for i in range(count)]
-    tests = iterate_tests(suite)
-    for partition, test in zip(cycle(partitions), tests):
+    tests = testtools.iterate_tests(suite)
+    for partition, test in zip(itertools.cycle(partitions), tests):
         partition.append(test)
     return partitions
