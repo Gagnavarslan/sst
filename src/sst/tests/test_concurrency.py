@@ -19,13 +19,11 @@
 
 
 from cStringIO import StringIO
-import datetime
 import unittest
 
 from junitxml import JUnitXmlResult
 
 import subunit
-from subunit import test_results
 
 from testtools import (
     ConcurrentTestSuite,
@@ -45,36 +43,44 @@ from sst import (
 
 class SubunitStreamTestCase(tests.ImportingLocalFilesTest):
 
-    def test_subunit_stream(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/test_pass.py
-import unittest
-class BothPass(unittest.TestCase):
-    def test_pass_1(self):
-        self.assertTrue(True)
-    def test_pass_2(self):
-        self.assertTrue(True)
-''')
-        suite = loader.TestLoader().discover('t', pattern='test_pass.py')
-        subunit_stream = StringIO()
-        subunit_result = subunit.TestProtocolClient(subunit_stream)
-        suite.run(subunit_result)
-        stream_content = subunit_stream.getvalue()
+    def run_with_subunit(self, suite):
+        """Run a suite returning the subunit stream."""
+        stream = StringIO()
+        res = subunit.TestProtocolClient(stream)
+        suite.run(res)
+        return res, stream
 
-        # Check stream directly
-        lines = stream_content.splitlines()
-        self.assertIn('test: t.test_pass.BothPass.test_pass_1', lines)
-        self.assertIn('successful: t.test_pass.BothPass.test_pass_1', lines)
-        self.assertIn('test: t.test_pass.BothPass.test_pass_2', lines)
-        self.assertIn('successful: t.test_pass.BothPass.test_pass_2', lines)
+    def run_from_subunit(self, stream):
+        """Runs a suite from a subunit stream, returning the text stream."""
+        receiver = subunit.ProtocolTestCase(stream)
+        out = StringIO()
+        text_result = result.TextTestResult(out, verbosity=0)
+        receiver.run(text_result)
+        return receiver, out
 
-        # Check populated result
-        self.assertTrue(subunit_result.wasSuccessful())
-        self.assertEqual(subunit_result.testsRun, suite.countTestCases())
-        self.assertEqual(subunit_result.errors, [])
-        self.assertEqual(subunit_result.failures, [])
-        self.assertEqual(subunit_result.skipped, [])
+    def test_passing(self):
+
+        class Pass(unittest.TestCase):
+            def test_pass(self):
+                self.assertTrue(True)
+
+            def test_pass_2(self):
+                self.assertTrue(True)
+
+        suite = unittest.TestSuite()
+        suite.addTest(Pass('test_pass'))
+
+        res, out = self.run_with_subunit(suite)
+        self.assertEquals('''\
+test: sst.tests.test_concurrency.Pass.test_pass
+successful: sst.tests.test_concurrency.Pass.test_pass
+''',
+                          out.getvalue())
+        self.assertTrue(res.wasSuccessful())
+        self.assertEqual(1, res.testsRun)
+        self.assertEqual([], res.errors)
+        self.assertEqual([], res.failures)
+        self.assertEqual({}, res.skip_reasons)
 
     def test_skip(self):
 
@@ -85,21 +91,17 @@ class BothPass(unittest.TestCase):
 
         suite = unittest.TestSuite()
         suite.addTest(TestSkip('test_skip'))
-        subunit_stream = StringIO()
-        subunit_result = subunit.TestProtocolClient(subunit_stream)
-        suite.run(subunit_result)
+        res, out = self.run_with_subunit(suite)
         self.assertEquals('''\
 test: sst.tests.test_concurrency.TestSkip.test_skip
 skip: sst.tests.test_concurrency.TestSkip.test_skip [
 Because
 ]
 ''',
-                          subunit_stream.getvalue())
-        input_stream = StringIO(subunit_stream.getvalue())
-        receiver = subunit.ProtocolTestCase(input_stream)
-        out = StringIO()
-        text_result = result.TextTestResult(out, verbosity=0)
-        receiver.run(text_result)
+                          out.getvalue())
+        self.assertTrue(res.wasSuccessful())
+        self.assertEqual(1, res.testsRun)
+        recv, out = self.run_from_subunit(StringIO(out.getvalue()))
         self.assertEqual('s', out.getvalue())
 
 
