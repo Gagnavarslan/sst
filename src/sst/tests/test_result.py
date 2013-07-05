@@ -353,7 +353,7 @@ A\r
                                  'unexpected_success')
 
 
-class TestSubunitInputStream(TestResultOutput):
+class TestSubunitInputStreamTextResultOutput(TestResultOutput):
     """Test subunit input stream.
 
     More precisely, ensure our test result can properly handle a subunit input

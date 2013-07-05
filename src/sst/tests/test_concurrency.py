@@ -163,13 +163,13 @@ class ConcurrencyForkedTestCase(testtools.TestCase):
 
         # Check the result
         self.assertTrue(res.wasSuccessful())
-        self.assertEqual(res.errors, [])
-        self.assertEqual(res.testsRun, num_tests)
+        self.assertEqual([], res.errors, [])
+        self.assertEqual(num_tests, res.testsRun)
 
         # Check the xml output
         xml_lines = xml_out.getvalue().splitlines()
         # xml file has a line for each case + header + footer
-        self.assertEqual(len(xml_lines), num_tests + 2)
+        self.assertEqual(num_tests + 2, len(xml_lines))
 
 
 class ConcurrencyRunTestCase(tests.ImportingLocalFilesTest):
