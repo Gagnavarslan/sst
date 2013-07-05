@@ -29,6 +29,8 @@ version **0.2.4** (Not yet released)
 * ``sst-test`` can run all tests, ``nose`` is not used nor a dependency
   anymore.
 * added ``--concurrency=N`` command line argument for concurrent testing
+* fix temp profile leaks when failing to connect to the firefox extension
+
 
 
 version **0.2.3** (2013 Apr 17)
