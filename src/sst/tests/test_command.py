@@ -36,6 +36,7 @@ class TestArgParsing(testtools.TestCase):
 
     def test_default_values(self):
         opts, args = self.parse_args([])
+        self.assertEqual(1, opts.concurrency)
         self.assertIs(None, opts.excludes)
         self.assertEqual([], args)
 
@@ -60,6 +61,16 @@ class TestArgParsing(testtools.TestCase):
             ['--exclude', 'foo', '-e', 'bar', '-ebaz'])
         self.assertEquals(['foo', 'bar', 'baz'], opts.excludes)
         self.assertEqual([], args)
+
+    def test_concurrency(self):
+        opts, args = self.parse_args(['--concurrency', '4'])
+        self.assertEqual(4, opts.concurrency)
+        opts, args = self.parse_args(['--concurrency=3'])
+        self.assertEqual(3, opts.concurrency)
+        opts, args = self.parse_args(['-c', '7'])
+        self.assertEqual(7, opts.concurrency)
+        opts, args = self.parse_args(['-c5'])
+        self.assertEqual(5, opts.concurrency)
 
 
 class TestCleanups(testtools.TestCase):

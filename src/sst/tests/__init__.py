@@ -96,7 +96,7 @@ def check_devserver_port_used(port):
     # immediately reuse a local socket in TIME_WAIT state
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
-        sock.bind(('127.0.0.1', int(port)))
+        sock.bind(('127.0.0.1', port))
         used = False
     except socket.error:
         used = True

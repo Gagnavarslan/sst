@@ -113,8 +113,8 @@ def get_run_options():
     parser.add_option('-x', dest='xserver_headless',
                       default=False, action='store_true',
                       help='run browser in headless xserver (Xvfb)')
-    parser.add_option('--concurrency', dest='concurrency',
-                      default=1,
+    parser.add_option('-c', '--concurrency', dest='concurrency',
+                      default=1, type='int',
                       help='concurrency (number of procs)')
     return parser
 

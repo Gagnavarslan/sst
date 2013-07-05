@@ -23,7 +23,6 @@ import os
 import pdb
 import testtools
 import testtools.content
-import sys
 
 from selenium.common import exceptions
 from sst import (

@@ -28,7 +28,8 @@ version **0.2.4** (Not yet released)
 * the script directory is not added to sys.path implicitly anymore.
 * ``sst-test`` can run all tests, ``nose`` is not used nor a dependency
   anymore.
-* added ``--concurrency=N`` command line argument for concurrent testing
+* added ``--concurrency=N`` command line argument for concurrent testing (a
+  shorter ``-cN`` is also provided for convenience)
 * fix temp profile leaks when failing to connect to the firefox extension
 * fix Xvfb lock files leak
 

@@ -20,7 +20,7 @@
 
 __version__ = '0.2.4dev'
 
-DEVSERVER_PORT = '8120'  # django devserver for internal acceptance tests
+DEVSERVER_PORT = 8120  # django devserver for internal acceptance tests
 
 
 def discover(test_loader, package, dir_path, names):
