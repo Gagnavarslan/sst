@@ -30,7 +30,7 @@ version **0.2.4** (Not yet released)
   anymore.
 * added ``--concurrency=N`` command line argument for concurrent testing
 * fix temp profile leaks when failing to connect to the firefox extension
-
+* fix Xvfb lock files leak
 
 
 version **0.2.3** (2013 Apr 17)

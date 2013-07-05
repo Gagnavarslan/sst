@@ -30,7 +30,6 @@ import subprocess
 import time
 
 
-# FIXME: This leaks /tmp/.Xnnnn-lock files -- vila 2013-07-05
 class Xvfb(object):
 
     def __init__(self, width=1024, height=768, colordepth=24):
@@ -58,7 +57,7 @@ class Xvfb(object):
     def stop(self):
         self._redirect_display(self.old_display_num)
         if self.proc is not None:
-            self.proc.kill()
+            self.proc.terminate()
             self.proc.wait()
             self.proc = None
 
