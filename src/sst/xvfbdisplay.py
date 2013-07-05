@@ -30,6 +30,7 @@ import subprocess
 import time
 
 
+# FIXME: This leaks /tmp/.Xnnnn-lock files -- vila 2013-07-05
 class Xvfb(object):
 
     def __init__(self, width=1024, height=768, colordepth=24):
