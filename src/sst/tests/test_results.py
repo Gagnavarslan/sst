@@ -371,6 +371,12 @@ class TestSubunitInputStreamTextResultOutput(TestResultOutput):
         receiver = subunit.ProtocolTestCase(StringIO(stream.getvalue()))
         out = StringIO()
         text_result = results.TextTestResult(out, verbosity=0)
+
+        # We don't care about timing here so we always return 0 which
+        # simplifies matching the expected result
+        def zero(atime):
+            return 0.0
+        text_result._delta_to_float = zero
         receiver.run(text_result)
         self.assertEquals(expected, out.getvalue())
 
@@ -397,6 +403,10 @@ class TestSubunitInputStreamXmlOutput(TestXmlOutput):
         receiver = subunit.ProtocolTestCase(StringIO(stream.getvalue()))
         out = StringIO()
         res = junitxml.JUnitXmlResult(out)
+        # We don't care about timing here so we always return 0 which
+        # simplifies matching the expected result
+        res._now = lambda: 0.0
+        res._duration = lambda f: 0.0
         expected = tests.expected_for_test(template, test, kwargs)
         res.startTestRun()
         receiver.run(res)
