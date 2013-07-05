@@ -178,9 +178,6 @@ class ConcurrencyForkedTestCase(testtools.TestCase):
 
 class ConcurrencyRunTestCase(tests.ImportingLocalFilesTest):
 
-    def setUp(self):
-        super(ConcurrencyRunTestCase, self).setUp()
-
     def test_runtests_concurrent_allpass(self):
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
