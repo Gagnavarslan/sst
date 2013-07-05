@@ -36,7 +36,7 @@ from sst import (
 )
 
 
-class ConcurrencyTestCase(testtools.TestCase):
+class TestConcurrentSuite(testtools.TestCase):
 
     def run_test_concurrently(self, test, success):
         res = results.TextTestResult(StringIO(), verbosity=0)
@@ -115,9 +115,10 @@ class ConcurrencyTestCase(testtools.TestCase):
         self.assertEqual(0, len(res.failures))
 
 
-class ConcurrencyRunTestCase(tests.ImportingLocalFilesTest):
+class TestConcurrentRunTests(tests.ImportingLocalFilesTest):
+    """Smoke integration tests at runtests level."""
 
-    def test_runtests_concurrent_allpass(self):
+    def test_pass(self):
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
 from sst import loaders
@@ -137,30 +138,22 @@ class Test2(unittest.TestCase):
 ''')
 
         out = StringIO()
-        failures = runtests.runtests(
+        runtests.runtests(
             ['^t'], 'no results directory used', out,
             concurrency_num=2,
             browser_factory=browsers.FirefoxFactory(),
         )
 
         output = out.getvalue()
-        lines = output.splitlines()
-        self.assertEqual('Tests running...', lines[0])
         self.assertIn('Ran 2 tests', output)
         self.assertIn('OK', output)
         self.assertNotIn('FAIL', output)
 
-    def test_runtests_concurrent_withfails(self):
+    def test_fail(self):
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
 from sst import loaders
 discover = loaders.discoverRegularTests
-
-file: t/test_pass.py
-import unittest
-class TestPass(unittest.TestCase):
-    def test_me(self):
-        self.assertTrue(True)
 
 file: t/test_fail1.py
 import unittest
@@ -176,15 +169,13 @@ class TestFail2(unittest.TestCase):
 ''')
 
         out = StringIO()
-        failures = runtests.runtests(
+        runtests.runtests(
             ['^t'], 'no results directory used', out,
             concurrency_num=2,
             browser_factory=browsers.FirefoxFactory(),
         )
         output = out.getvalue()
-        lines = output.splitlines()
-        self.assertEqual('Tests running...', lines[0])
-        self.assertIn('Ran 3 tests', output)
+        self.assertIn('Ran 2 tests', output)
         self.assertIn('OK', output)
         self.assertEqual(output.count('Traceback (most recent call last):'), 2)
         self.assertIn('FAILED (failures=2)', output)
