@@ -550,7 +550,8 @@ def write_textfield(id_or_elem, new_text, check=True, clear=True):
         % (_element_to_string(textfield), new_text)
     logger.debug(msg)
 
-    # clear field like this, don't use clear()
+    # clear field with send_keys(), don't use clear() (see
+    # http://code.google.com/p/selenium/issues/detail?id=214 for rationale)
     if clear:
         textfield.send_keys(keys.Keys().CONTROL, 'a')
         textfield.send_keys(keys.Keys().DELETE)
