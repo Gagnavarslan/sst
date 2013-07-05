@@ -142,10 +142,6 @@ def _make_allpass_test_suite(num_tests):
 
 class ConcurrencyForkedTestCase(testtools.TestCase):
 
-    def setUp(self):
-        super(ConcurrencyForkedTestCase, self).setUp()
-        tests.set_cwd_to_tmp(self)
-
     def test_concurrent_forked(self):
         num_tests = 8
         concurrency_num = 4
