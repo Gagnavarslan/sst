@@ -212,5 +212,3 @@ def expected_for_test(template, test, kwargs=None):
                        name=test._testMethodName,
                        filename=filename))
     return template.format(**kwargs)
-
-
