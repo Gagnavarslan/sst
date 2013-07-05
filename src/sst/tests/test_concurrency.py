@@ -23,8 +23,6 @@ import os
 import signal
 import unittest
 
-from junitxml import JUnitXmlResult
-
 import testtools
 
 from sst import (
