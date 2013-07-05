@@ -19,6 +19,8 @@
 
 
 from cStringIO import StringIO
+import os
+import signal
 import unittest
 
 from junitxml import JUnitXmlResult
@@ -28,130 +30,89 @@ import testtools
 from sst import (
     browsers,
     concurrency,
-    loader,
     result,
     runtests,
     tests,
 )
 
 
-class ConcurrencyTestCase(tests.ImportingLocalFilesTest):
+class ConcurrencyTestCase(testtools.TestCase):
 
-    def run_tests_concurrently(self, suite):
-        txt_result = result.TextTestResult(StringIO(), verbosity=0)
+    def run_test_concurrently(self, test, success):
+        res = result.TextTestResult(StringIO(), verbosity=0)
+        suite = unittest.TestSuite([test])
         # Run tests across 2 processes
         concurrent_suite = testtools.ConcurrentTestSuite(
             suite,
             concurrency.fork_for_tests(2)
         )
-        txt_result.startTestRun()
-        concurrent_suite.run(txt_result)
-        txt_result.stopTestRun()
-        return txt_result
+        res.startTestRun()
+        concurrent_suite.run(res)
+        res.stopTestRun()
+        self.assertEqual(success, res.wasSuccessful())
+        self.assertEqual(1, res.testsRun)
+        return res
 
-    def test_forked_all_pass(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/test_pass.py
-import unittest
-class BothPass(unittest.TestCase):
-    def test_pass_1(self):
-        self.assertTrue(True)
-    def test_pass_2(self):
-        self.assertTrue(True)
-''')
-        suite = loader.TestLoader().discover('t', pattern='test_pass.py')
-        result = self.run_tests_concurrently(suite)
-
-        self.assertTrue(result.wasSuccessful())
-        self.assertEqual(result.testsRun, suite.countTestCases())
-        self.assertEqual(result.errors, [])
-        self.assertEqual(result.failures, [])
-        self.assertEqual(result.skipped, [])
-
-    def test_forked_with_error(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/test_error.py
-import unittest
-class OneError(unittest.TestCase):
-    def test_error(self):
-        raise Exception('ouch')
     def test_pass(self):
-        self.assertTrue(True)
-''')
-        suite = loader.TestLoader().discover('t', pattern='test_error.py')
-        result = self.run_tests_concurrently(suite)
+        res = self.run_test_concurrently(tests.get_case('pass'), True)
+        self.assertEqual(0, len(res.errors))
+        self.assertEqual(0, len(res.failures))
 
-        self.assertFalse(result.wasSuccessful())
-        self.assertEqual(result.testsRun, suite.countTestCases())
-        self.assertEqual(len(result.errors), 1)
-        self.assertEqual(len(result.failures), 0)
-        self.assertEqual(len(result.skipped), 0)
-
-    def test_forked_with_fail(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/test_fail.py
-import unittest
-class OneFail(unittest.TestCase):
     def test_fail(self):
-        self.assertTrue(False)
-    def test_pass(self):
-        self.assertTrue(True)
-''')
-        suite = loader.TestLoader().discover('t', pattern='test_fail.py')
-        result = self.run_tests_concurrently(suite)
+        res = self.run_test_concurrently(tests.get_case('fail'), False)
+        self.assertEqual(0, len(res.errors))
+        self.assertEqual(1, len(res.failures))
 
-        self.assertFalse(result.wasSuccessful())
-        self.assertEqual(result.testsRun, suite.countTestCases())
-        self.assertEqual(len(result.errors), 0)
-        self.assertEqual(len(result.failures), 1)
-        self.assertEqual(len(result.skipped), 0)
+    def test_error(self):
+        res = self.run_test_concurrently(tests.get_case('error'), False)
+        self.assertEqual(1, len(res.errors))
+        self.assertEqual(0, len(res.failures))
 
-    def test_forked_with_skip(self):
-        class Skip(unittest.TestCase):
-            def test_skip(self):
-                self.skipTest('Because')
-        suite = unittest.TestSuite()
-        suite.addTest(Skip('test_skip'))
-        result = self.run_tests_concurrently(suite)
-
-        self.assertTrue(result.wasSuccessful())
-        self.assertEqual(result.testsRun, suite.countTestCases())
-        self.assertEqual(len(result.errors), 0)
-        self.assertEqual(len(result.failures), 0)
-        reasons = result.skip_reasons
+    def test_skip(self):
+        res = self.run_test_concurrently(tests.get_case('skip'), True)
+        self.assertEqual(0, len(res.errors))
+        self.assertEqual(0, len(res.failures))
+        reasons = res.skip_reasons
         self.assertEqual(1, len(reasons.keys()))
-        reason, tests = reasons.items()[0]
-        # subunit adds a spurious \n
-        self.assertEqual('Because\n', reason)
-        self.assertEqual(1, len(tests))
-        self.assertEqual('sst.tests.test_concurrency.Skip.test_skip',
-                         tests[0].id())
+        reason, skipped = reasons.items()[0]
+        self.assertEqual('', reason)
+        self.assertEqual(1, len(skipped))
+        self.assertEqual('sst.tests.Test.test_skip', skipped[0].id())
 
-    def test_forked_with_dead_subprocess(self):
-        tests.write_tree_from_desc('''dir: t
-file: t/__init__.py
-file: t/test_kill.py
-import os
-import signal
-import unittest
-class OneKilled(unittest.TestCase):
+    def test_skip_reason(self):
+        res = self.run_test_concurrently(tests.get_case('skip_reason'), True)
+        self.assertEqual(0, len(res.errors))
+        self.assertEqual(0, len(res.failures))
+        reasons = res.skip_reasons
+        self.assertEqual(1, len(reasons.keys()))
+        reason, skipped = reasons.items()[0]
+        self.assertEqual('Because', reason)
+        self.assertEqual(1, len(skipped))
+        self.assertEqual('sst.tests.Test.test_skip_reason', skipped[0].id())
+
+    def test_expected_failure(self):
+        res = self.run_test_concurrently(tests.get_case('expected_failure'),
+                                         True)
+        self.assertEqual(0, len(res.errors))
+        self.assertEqual(0, len(res.failures))
+        self.assertEqual(1, len(res.expectedFailures))
+
+    def test_unexpected_success(self):
+        res = self.run_test_concurrently(tests.get_case('unexpected_success'),
+                                         False)
+        self.assertEqual(0, len(res.errors))
+        self.assertEqual(0, len(res.failures))
+        self.assertEqual(1, len(res.unexpectedSuccesses))
+
     def test_killed(self):
-        pid = os.getpid()
-        os.kill(pid, signal.SIGKILL)
-    def test_pass(self):
-        self.assertTrue(True)
-''')
-        suite = loader.TestLoader().discover('t', pattern='test_kill.py')
-        result = self.run_tests_concurrently(suite)
+        class Killed(unittest.TestCase):
+            def test_killed(self):
+                pid = os.getpid()
+                os.kill(pid, signal.SIGKILL)
 
-        self.assertFalse(result.wasSuccessful())
-        self.assertEqual(result.testsRun, suite.countTestCases())
-        self.assertEqual(len(result.errors), 1)
-        self.assertEqual(len(result.failures), 0)
-        self.assertEqual(len(result.skipped), 0)
+        res = self.run_test_concurrently(Killed('test_killed'), False)
+        self.assertEqual(1, len(res.errors))
+        self.assertEqual(0, len(res.failures))
 
 
 def _make_allpass_test_suite(num_tests):
