@@ -115,63 +115,6 @@ class ConcurrencyTestCase(testtools.TestCase):
         self.assertEqual(0, len(res.failures))
 
 
-def _make_allpass_test_suite(num_tests):
-    """Generate a TestSuite with a number of identical TestCases.
-
-    This is used for generating test data."""
-
-    # Every method generated will have this body
-    def test_method(self):
-        self.assertTrue(True)
-
-    # Create a dict of test methods, sequentially named
-    d = {}
-    for i in range(num_tests):
-        d['test_method%i' % i] = test_method
-
-    # Generate a Class with the created methods
-    SampleTestCase = type('SampleTestCase', (testtools.TestCase,), d)
-
-    # Make a sequence of test_cases from the test methods
-    test_cases = [
-        SampleTestCase('test_method%i' % i)
-        for i in range(num_tests)
-    ]
-    return unittest.TestSuite(test_cases)
-
-
-class ConcurrencyForkedTestCase(testtools.TestCase):
-
-    def test_concurrent_forked(self):
-        num_tests = 8
-        concurrency_num = 4
-
-        console_out = StringIO()
-        xml_out = StringIO()
-        txt_result = results.TextTestResult(console_out, verbosity=0)
-        xml_result = JUnitXmlResult(xml_out)
-        res = testtools.MultiTestResult(txt_result, xml_result)
-
-        original_suite = _make_allpass_test_suite(num_tests)
-        suite = testtools.ConcurrentTestSuite(
-            original_suite,
-            concurrency.fork_for_tests(concurrency_num)
-        )
-        res.startTestRun()
-        suite.run(res)
-        res.stopTestRun()
-
-        # Check the result
-        self.assertTrue(res.wasSuccessful())
-        self.assertEqual([], res.errors, [])
-        self.assertEqual(num_tests, res.testsRun)
-
-        # Check the xml output
-        xml_lines = xml_out.getvalue().splitlines()
-        # xml file has a line for each case + header + footer
-        self.assertEqual(num_tests + 2, len(xml_lines))
-
-
 class ConcurrencyRunTestCase(tests.ImportingLocalFilesTest):
 
     def test_runtests_concurrent_allpass(self):

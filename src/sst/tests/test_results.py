@@ -147,6 +147,7 @@ class TestXmlOutput(testtools.TestCase):
         res._duration = lambda f: 0.0
         test = tests.get_case(kind)
         expected = tests.expected_for_test(template, test, kwargs)
+        res.startTestRun()
         test.run(res)
         # due to the nature of JUnit XML output, nothing will be written to
         # the stream until stopTestRun() is called.
@@ -371,4 +372,35 @@ class TestSubunitInputStreamTextResultOutput(TestResultOutput):
         out = StringIO()
         text_result = results.TextTestResult(out, verbosity=0)
         receiver.run(text_result)
+        self.assertEquals(expected, out.getvalue())
+
+
+class TestSubunitInputStreamXmlOutput(TestXmlOutput):
+
+    def assertOutput(self, template, kind, kwargs=None):
+        """Assert the expected output from a run for a given test.
+
+        :param template: A string where common strings have been replaced by a
+            keyword so we don't run into pep8 warnings for long lines.
+
+        :param kind: A string used to select the kind of test.
+
+        :param kwargs: A dict with more keywords for the template. This allows
+            some tests to add more keywords when they are test specific.
+        """
+        test = tests.get_case(kind)
+        # Get subunit output (what subprocess produce)
+        stream = StringIO()
+        res = subunit.TestProtocolClient(stream)
+        test.run(res)
+        # Inject it again (what controlling process consumes)
+        receiver = subunit.ProtocolTestCase(StringIO(stream.getvalue()))
+        out = StringIO()
+        res = junitxml.JUnitXmlResult(out)
+        expected = tests.expected_for_test(template, test, kwargs)
+        res.startTestRun()
+        receiver.run(res)
+        # due to the nature of JUnit XML output, nothing will be written to
+        # the stream until stopTestRun() is called.
+        res.stopTestRun()
         self.assertEquals(expected, out.getvalue())
