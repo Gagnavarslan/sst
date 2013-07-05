@@ -37,6 +37,7 @@ SST consists of:
  * console test runner
  * concurrent/parallel tests
  * data parameterization/injection
+ * selectable output reports
  * selectable browsers
  * headless (xvfb) mode
  * screenshots on errors
@@ -110,11 +111,15 @@ These actions are defined in the following API:
     Command line options for sst-run
 ------------------------------------
 
-Usage: sst-run [regex] [options]
+Usage: sst-run [options] [regexps]
 
-- Calling sst-run with regex as arguments will run
-the tests whose testname(s) match the regex.
+* Calling sst-run with test regular expression(s) as argument(s) will run
+  the tests whose test name(s) match the regular expression(s).
 
+* You may optionally create data file(s) for data-driven testing.  Create a
+  '^' delimited txt data file with the same name as the test script, plus
+  the '.csv' extension.  This will run a test script using each row in the
+  data file (1st row of data file is variable name mapping)
 
 Options:
   -h, --help                show this help message and exit
@@ -132,11 +137,11 @@ Options:
   --disable-flag-skips      run all tests, disable skipping tests due to flags
   --extended-tracebacks     add extra information (page source) to failure reports
   --collect-only            collect/print cases without running tests
-  -e EXCLUDES,
-  --exclude=EXCLUDES        all tests matching this regex will not be run
+  -e EXCLUDE,
+  --exclude=EXCLUDE         all tests matching the EXCLUDE regular expresion
+                            will not be run
   -x                        run browser in headless xserver (Xvfb)
-  --concurrency=CONCURRENCY concurrency (number of procs)
-
+  --concurrency=CONCURRENCY concurrency (number of processes)
 
 
 --------------------
@@ -343,6 +348,7 @@ information::
     # A per test cache. A dictionary that is cleared at the start of each test.
     config.cache
 
+
 ------------------------
     Disabling Javascript
 ------------------------
@@ -390,6 +396,7 @@ putting the following at the start of the test::
     * selenium
     * testtools
     * django (optional - needed for internal self-tests only)
+
 
 ------------------------
     Running the examples

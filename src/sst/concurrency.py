@@ -23,10 +23,11 @@
 The `testtools` project provides a ConcurrentTestSuite class, but does
 not provide a `make_tests` implementation needed to use it.
 
-This allows you to parallelize a test run across a configurable number
-of worker processes. While this can speed up CPU-bound test runs, it is
-mainly useful for IO-bound tests that spend most of their time waiting for
-data to arrive from someplace else and can benefit from cocncurrency.
+This allows you to parallelize a test run across a configurable number of
+worker processes. On multi-core CPUs, this will speed up CPU-bound test
+runs. In any case it is useful for IO-bound tests that spend most of their time
+waiting for data to arrive from disk or network and as such benefit from
+concurrency.
 
 Unix only.
 """

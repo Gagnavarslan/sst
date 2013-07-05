@@ -34,10 +34,15 @@ from sst import (
 )
 
 
-usage = """Usage: %prog [regex] [options]
+usage = """Usage: %prog [options] [regexps]
 
-- Calling %prog with regex as arguments will run
-the tests whose testname(s) match the regex.
+* Calling sst-run with test regular expression(s) as argument(s) will run
+  the tests whose test name(s) match the regular expression(s).
+
+* You may optionally create data file(s) for data-driven testing.  Create a
+  '^' delimited txt data file with the same name as the test script, plus
+  the '.csv' extension.  This will run a test script using each row in the
+  data file (1st row of data file is variable name mapping)
 """
 
 
