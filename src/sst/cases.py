@@ -23,8 +23,9 @@ import os
 import pdb
 import testtools
 import testtools.content
+import sys
 
-
+from selenium.common import exceptions
 from sst import (
     actions,
     browsers,
@@ -71,6 +72,7 @@ class SSTTestCase(testtools.TestCase):
             # end of the test.
             self.xvfb = xvfbdisplay.use_xvfb_server(self)
         config.results_directory = self.results_directory
+        self.browser = None
         self.start_browser()
         self.addCleanup(self.stop_browser)
         if self.screenshots_on:
@@ -89,10 +91,20 @@ class SSTTestCase(testtools.TestCase):
         # behavior so runners and results don't get mad.
         return None
 
-    def start_browser(self):
-        logger.debug('Starting browser')
+    def _start_browser(self):
         self.browser_factory.setup_for_test(self)
         self.browser = self.browser_factory.browser()
+
+    def start_browser(self):
+        max_attempts = 5
+        for nb_attempts in range(1, max_attempts):
+            try:
+                logger.debug('Starting browser (attempt: %d)' % (nb_attempts,))
+                self._start_browser()
+                break
+            except exceptions.WebDriverException:
+                if nb_attempts >= max_attempts:
+                    raise
         logger.debug('Browser started: %s' % (self.browser.name))
 
     def stop_browser(self):
