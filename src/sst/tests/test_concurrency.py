@@ -174,7 +174,6 @@ class TestFail2(unittest.TestCase):
         )
         output = out.getvalue()
         self.assertIn('Ran 2 tests', output)
-        self.assertIn('OK', output)
         self.assertEqual(output.count('Traceback (most recent call last):'), 2)
         self.assertIn('FAILED (failures=2)', output)
 
