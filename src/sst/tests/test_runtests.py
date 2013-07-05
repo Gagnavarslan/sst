@@ -130,8 +130,8 @@ class SSTRunExitCodeTestCase(tests.ImportingLocalFilesTest):
         super(SSTRunExitCodeTestCase, self).setUp()
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
-from sst import loader
-discover = loader.discoverRegularTests
+from sst import loaders
+discover = loaders.discoverRegularTests
 
 file: t/test_all_pass.py
 import unittest

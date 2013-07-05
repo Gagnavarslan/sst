@@ -25,7 +25,7 @@ import subunit
 import testtools
 
 from sst import (
-    result,
+    results,
     tests,
 )
 
@@ -35,7 +35,7 @@ class TestResultOutput(testtools.TestCase):
     def assertOutput(self, expected, kind):
         test = tests.get_case(kind)
         out = StringIO()
-        res = result.TextTestResult(out)
+        res = results.TextTestResult(out)
 
         # We don't care about timing here so we always return 0 which
         # simplifies matching the expected result
@@ -73,7 +73,7 @@ class TestVerboseResultOutput(testtools.TestCase):
         test = tests.get_case(kind)
         expected = tests.expected_for_test(template, test)
         out = StringIO()
-        res = result.TextTestResult(out, verbosity=2)
+        res = results.TextTestResult(out, verbosity=2)
 
         # We don't care about timing here so we always return 0 which
         # simplifies matching the expected result
@@ -369,6 +369,6 @@ class TestSubunitInputStreamTextResultOutput(TestResultOutput):
         # Inject it again (what controlling process consumes)
         receiver = subunit.ProtocolTestCase(StringIO(stream.getvalue()))
         out = StringIO()
-        text_result = result.TextTestResult(out, verbosity=0)
+        text_result = results.TextTestResult(out, verbosity=0)
         receiver.run(text_result)
         self.assertEquals(expected, out.getvalue())

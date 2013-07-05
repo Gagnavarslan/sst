@@ -26,10 +26,10 @@ import testtools
 
 from sst import (
     cases,
-    loader
+    loaders,
 )
 
-discover = loader.discoverRegularTests
+discover = loaders.discoverRegularTests
 
 
 class SSTBrowserLessTestCase(cases.SSTTestCase):

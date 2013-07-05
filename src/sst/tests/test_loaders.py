@@ -41,7 +41,7 @@ below therefore use 't' as the main directory because:
 import testtools
 
 from sst import (
-    loader,
+    loaders,
     tests,
 )
 
@@ -49,17 +49,17 @@ from sst import (
 class TestNameMatcher(testtools.TestCase):
 
     def test_defaults(self):
-        nm = loader.NameMatcher()
+        nm = loaders.NameMatcher()
         self.assertFalse(nm.matches(''))
         self.assertFalse(nm.matches('foo'))
 
     def test_simple_include(self):
-        nm = loader.NameMatcher(includes=['foo'])
+        nm = loaders.NameMatcher(includes=['foo'])
         self.assertTrue(nm.matches('foo'))
         self.assertTrue(nm.matches('XXXfooXXX'))
 
     def test_multiple_includes(self):
-        nm = loader.NameMatcher(includes=['foo', '^bar'])
+        nm = loaders.NameMatcher(includes=['foo', '^bar'])
         self.assertTrue(nm.matches('foo'))
         self.assertTrue(nm.matches('bar'))
         self.assertTrue(nm.matches('barfoo'))
@@ -67,13 +67,13 @@ class TestNameMatcher(testtools.TestCase):
         self.assertFalse(nm.matches('bazbar'))
 
     def test_simple_excludes(self):
-        nm = loader.NameMatcher(includes=['.*'], excludes=['foo'])
+        nm = loaders.NameMatcher(includes=['.*'], excludes=['foo'])
         self.assertTrue(nm.matches('bar'))
         self.assertFalse(nm.matches('foo'))
         self.assertFalse(nm.matches('foobar'))
 
     def test_multiple_excludes(self):
-        nm = loader.NameMatcher(includes=['.*'], excludes=['foo$', '^bar'])
+        nm = loaders.NameMatcher(includes=['.*'], excludes=['foo$', '^bar'])
         self.assertTrue(nm.matches('baz'))
         self.assertTrue(nm.matches('footix'))
         self.assertFalse(nm.matches('foo'))
@@ -83,7 +83,7 @@ class TestNameMatcher(testtools.TestCase):
 class TestTestLoader(tests.ImportingLocalFilesTest):
 
     def make_test_loader(self):
-        return loader.TestLoader()
+        return loaders.TestLoader()
 
     def test_ignored_file(self):
         with open('empty.py', 'w') as f:
@@ -193,13 +193,13 @@ class Test(unittest.TestCase):
 dir: t/other
 file: t/other/__init__.py
 import unittest
-from sst import loader
+from sst import loaders
 
 def discover(test_loader, package, directory_path, names):
     suite = test_loader.loadTestsFromModule(package)
     # Change the test.*\.py rule
-    fmatcher = loader.NameMatcher(includes=['.*'])
-    with loader.NameMatchers(test_loader, fmatcher) as tl:
+    fmatcher = loaders.NameMatcher(includes=['.*'])
+    with loaders.NameMatchers(test_loader, fmatcher) as tl:
         suite.addTests(tl.discoverTestsFromNames(directory_path, names))
     return suite
 
@@ -260,7 +260,7 @@ class Test(unittest.TestCase):
 class TestTestLoaderPattern(tests.ImportingLocalFilesTest):
 
     def make_test_loader(self):
-        return loader.TestLoader()
+        return loaders.TestLoader()
 
     def test_default_pattern(self):
         tests.write_tree_from_desc('''dir: t
@@ -314,7 +314,7 @@ class Test(unittest.TestCase):
     def test_me(self):
       self.assertTrue(True)
 ''')
-        self.loader = loader.TestLoader()
+        self.loader = loaders.TestLoader()
 
     def test_simple_file_in_a_dir(self):
         suite = self.loader.discover('t', '*.py', self.test_base_dir)
@@ -329,7 +329,7 @@ class Test(unittest.TestCase):
 class TestSSTestLoaderDiscoverTestsFromTree(tests.ImportingLocalFilesTest):
 
     def discover(self, start_dir):
-        test_loader = loader.SSTestLoader()
+        test_loader = loaders.SSTestLoader()
         return test_loader.discoverTestsFromTree(start_dir)
 
     def test_simple_script(self):
@@ -372,9 +372,9 @@ file: t/_private.py
 file: t/__init__.py
 dir: t/regular
 file: t/regular/__init__.py
-from sst import loader
+from sst import loaders
 
-discover = loader.discoverRegularTests
+discover = loaders.discoverRegularTests
 
 file: t/regular/test_foo.py
 import unittest
@@ -408,9 +408,9 @@ class Test_{name}(cases.SSTTestCase):
 
         tests.write_tree_from_desc('''dir: tests
 file: tests/__init__.py
-from sst import loader
+from sst import loaders
 
-discover = loader.discoverRegularTests
+discover = loaders.discoverRegularTests
 ''')
         tests.write_tree_from_desc(regular('tests', 'test_real', '.py'))
         tests.write_tree_from_desc(regular('tests', 'test_real1', '.py'))

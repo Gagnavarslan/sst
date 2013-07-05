@@ -30,7 +30,7 @@ import testtools
 from sst import (
     browsers,
     concurrency,
-    result,
+    results,
     runtests,
     tests,
 )
@@ -39,7 +39,7 @@ from sst import (
 class ConcurrencyTestCase(testtools.TestCase):
 
     def run_test_concurrently(self, test, success):
-        res = result.TextTestResult(StringIO(), verbosity=0)
+        res = results.TextTestResult(StringIO(), verbosity=0)
         suite = unittest.TestSuite([test])
         # Run tests across 2 processes
         concurrent_suite = testtools.ConcurrentTestSuite(
@@ -148,7 +148,7 @@ class ConcurrencyForkedTestCase(testtools.TestCase):
 
         console_out = StringIO()
         xml_out = StringIO()
-        txt_result = result.TextTestResult(console_out, verbosity=0)
+        txt_result = results.TextTestResult(console_out, verbosity=0)
         xml_result = JUnitXmlResult(xml_out)
         res = testtools.MultiTestResult(txt_result, xml_result)
 
@@ -177,8 +177,8 @@ class ConcurrencyRunTestCase(tests.ImportingLocalFilesTest):
     def test_runtests_concurrent_allpass(self):
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
-from sst import loader
-discover = loader.discoverRegularTests
+from sst import loaders
+discover = loaders.discoverRegularTests
 
 file: t/test_conc1.py
 import unittest
@@ -210,8 +210,8 @@ class Test2(unittest.TestCase):
     def test_runtests_concurrent_withfails(self):
         tests.write_tree_from_desc('''dir: t
 file: t/__init__.py
-from sst import loader
-discover = loader.discoverRegularTests
+from sst import loaders
+discover = loaders.discoverRegularTests
 
 file: t/test_pass.py
 import unittest

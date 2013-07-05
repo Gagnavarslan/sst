@@ -30,8 +30,8 @@ from sst import (
     concurrency,
     config,
     filters,
-    loader,
-    result,
+    loaders,
+    results,
 )
 
 # Maintaining compatibility until we deprecate the followings
@@ -76,11 +76,11 @@ def runtests(test_regexps, results_directory, out,
     if shared_directory is not None:
         sys.path.append(shared_directory)
 
-    test_loader = loader.SSTestLoader(results_directory,
-                                      browser_factory, screenshots_on,
-                                      debug, extended)
-    alltests = test_loader.suiteClass()
-    alltests.addTests(test_loader.discoverTestsFromTree(test_dir))
+    loader = loaders.SSTestLoader(results_directory,
+                                  browser_factory, screenshots_on,
+                                  debug, extended)
+    alltests = loader.suiteClass()
+    alltests.addTests(loader.discoverTestsFromTree(test_dir))
     alltests = filters.include_regexps(test_regexps, alltests)
     alltests = filters.exclude_regexps(excludes, alltests)
 
@@ -94,17 +94,15 @@ def runtests(test_regexps, results_directory, out,
             out.write(t.id() + '\n')
         return 0
 
-    text_result = result.TextTestResult(out, failfast=failfast, verbosity=2)
+    txt_res = results.TextTestResult(out, failfast=failfast, verbosity=2)
     if report_format == 'xml':
         results_file = os.path.join(results_directory, 'results.xml')
         xml_stream = file(results_file, 'wb')
-        res = testtools.testresult.MultiTestResult(
-            text_result,
-            junitxml.JUnitXmlResult(xml_stream),
-        )
-        res.failfast = failfast
+        result = testtools.testresult.MultiTestResult(
+            txt_res, junitxml.JUnitXmlResult(xml_stream))
+        result.failfast = failfast
     else:
-        res = text_result
+        result = txt_res
 
     if concurrency_num == 1:
         suite = alltests
@@ -112,14 +110,14 @@ def runtests(test_regexps, results_directory, out,
         suite = testtools.ConcurrentTestSuite(
             alltests, concurrency.fork_for_tests(concurrency_num))
 
-    res.startTestRun()
+    result.startTestRun()
     try:
-        suite.run(res)
+        suite.run(result)
     except KeyboardInterrupt:
         out.write('Test run interrupted\n')
-    res.stopTestRun()
+    result.stopTestRun()
 
-    return len(res.failures) + len(res.errors)
+    return len(result.failures) + len(result.errors)
 
 
 def find_shared_directory(test_dir, shared_directory):
