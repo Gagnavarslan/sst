@@ -32,6 +32,7 @@ version **0.2.4** (Not yet released)
   shorter ``-cN`` is also provided for convenience)
 * fix temp profile leaks when failing to connect to the firefox extension
 * fix Xvfb lock files leak
+* properly support the testtools test timing protocol (#1197298).
 
 
 version **0.2.3** (2013 Apr 17)
