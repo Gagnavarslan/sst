@@ -35,6 +35,7 @@ SST consists of:
  * user actions and assertions (API) in Python
  * test case loader (generates/compiles scripts to unittest cases)
  * console test runner
+ * concurrent/parallel tests
  * data parameterization/injection
  * selectable output reports
  * selectable browsers
@@ -110,36 +111,37 @@ These actions are defined in the following API:
     Command line options for sst-run
 ------------------------------------
 
-Usage: `sst-run <options> [testname]`
+Usage: sst-run [options] [regexps]
 
-* Calling sst-run with test regular expression(s) as arguments will run
-  only the tests matching one of these regular expressions.
+* Calling sst-run with test regular expression(s) as argument(s) will run
+  the tests whose test name(s) match the regular expression(s).
 
-* You may optionally create a data file for data-driven
-  testing.  Create a '^' delimited txt data file with the same
-  name as the test, plus the '.csv' extension.  This will
-  run a test using each row in the data file (1st row of data
-  file is variable name mapping)
+* You may optionally create data file(s) for data-driven testing.  Create a
+  '^' delimited txt data file with the same name as the test script, plus
+  the '.csv' extension.  This will run a test script using each row in the
+  data file (1st row of data file is variable name mapping)
 
-Options::
-
+Options:
   -h, --help                show this help message and exit
   -d DIR_NAME               directory of test case files
   -r REPORT_FORMAT          report type: xml
   -b BROWSER_TYPE           select webdriver (Firefox, Chrome, PhantomJS, etc)
   -j                        disable javascript in browser
-  -m SHARED_MODULES         directory for shared modules
+  -m SHARED_DIRECTORY       directory for shared modules
   -q                        output less debugging info during test run
   -V                        print version info and exit
   -s                        save screenshots on failures
-  -x                        run browser in headless xserver (Xvfb)
   --failfast                stop test execution after first failure
   --debug                   drop into debugger on test fail or error
   --with-flags=WITH_FLAGS   comma separated list of flags to run tests with
   --disable-flag-skips      run all tests, disable skipping tests due to flags
   --extended-tracebacks     add extra information (page source) to failure reports
   --collect-only            collect/print cases without running tests
-  --excludes=REGEXP         do not run the tests matching the regular expression
+  -e EXCLUDE,
+  --exclude=EXCLUDE         all tests matching the EXCLUDE regular expresion
+                            will not be run
+  -x                        run browser in headless xserver (Xvfb)
+  --concurrency=CONCURRENCY concurrency (number of processes)
 
 
 --------------------
@@ -264,6 +266,7 @@ needed to run only the tests you care about at a given time, running the
 whole test suite should still be used when you want to ensure no regressions
 have been introduced.
 
+
 -------------------------------------
     Using sst in unittest test suites
 -------------------------------------
@@ -345,6 +348,7 @@ information::
     # A per test cache. A dictionary that is cleared at the start of each test.
     config.cache
 
+
 ------------------------
     Disabling Javascript
 ------------------------
@@ -392,6 +396,7 @@ putting the following at the start of the test::
     * selenium
     * testtools
     * django (optional - needed for internal self-tests only)
+
 
 ------------------------
     Running the examples

@@ -20,15 +20,10 @@
 
 import testtools
 
+from selenium.webdriver.common import utils
 
-import sst
 from sst import tests
 from sst.scripts import test as script_test
-
-
-# sst.DEVSERVER_PORT is already in used when sst-test is running,
-# so defining another port here for unit testing.
-DEVSERVER_PORT = '8130'
 
 
 class TestDjangoDevServer(testtools.TestCase):
@@ -40,21 +35,30 @@ class TestDjangoDevServer(testtools.TestCase):
         # one.
         tests.set_cwd_to_tmp(self)
 
+    def get_free_port(self):
+        # We should really have a way to tell django to use a free port
+        # provided by the OS but until then, we'll use the selenium trick. It's
+        # racy but hopefully the OS doesn't reuse a port it just provided too
+        # fast... -- vila 2013-07=05
+        return utils.free_port()
+
     def test_django_start(self):
-        self.addCleanup(script_test.kill_django, DEVSERVER_PORT)
-        proc = script_test.run_django(DEVSERVER_PORT)
+        port = self.get_free_port()
+        self.addCleanup(script_test.kill_django, port)
+        proc = script_test.run_django(port)
         self.assertIsNotNone(proc)
 
     def test_django_devserver_port_used(self):
-        used = tests.check_devserver_port_used(DEVSERVER_PORT)
+        port = self.get_free_port()
+        used = tests.check_devserver_port_used(port)
         self.assertFalse(used)
-        self.addCleanup(script_test.kill_django, DEVSERVER_PORT)
-        script_test.run_django(DEVSERVER_PORT)
-        used = tests.check_devserver_port_used(DEVSERVER_PORT)
+        self.addCleanup(script_test.kill_django, port)
+        script_test.run_django(port)
+        used = tests.check_devserver_port_used(port)
         self.assertTrue(used)
         e = self.assertRaises(RuntimeError,
-                              script_test.run_django, DEVSERVER_PORT)
+                              script_test.run_django, port)
         self.assertEqual('Error: port %s is in use.\n'
                          'Can not launch devserver for internal tests.'
-                         % (sst.DEVSERVER_PORT,),
+                         % (port,),
                          e.args[0])

@@ -1,4 +1,4 @@
-from sst import loader
+from sst import loaders
 
 
-discover = loader.discoverRegularTests
+discover = loaders.discoverRegularTests

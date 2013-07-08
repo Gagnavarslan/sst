@@ -72,6 +72,7 @@ def main():
             browser_factory=factory(cmd_opts.javascript_disabled),
             shared_directory=shared_directory,
             screenshots_on=cmd_opts.screenshots_on,
+            concurrency_num=cmd_opts.concurrency,
             failfast=cmd_opts.failfast,
             debug=cmd_opts.debug,
             extended=cmd_opts.extended_tracebacks,
@@ -86,7 +87,7 @@ def run_django(port):
     if tests.check_devserver_port_used(port):
         raise RuntimeError('Error: port %s is in use.\n'
                            'Can not launch devserver for internal tests.'
-                           % (sst.DEVSERVER_PORT,))
+                           % (port,))
     manage_file = os.path.abspath(
         os.path.join(package_dir, '../testproject/manage.py'))
     url = 'http://localhost:%s/' % port
@@ -98,7 +99,7 @@ def run_django(port):
             'you must run self-tests from the dev branch or package source.'
             % (manage_file,))
 
-    proc = subprocess.Popen([manage_file, 'runserver', port],
+    proc = subprocess.Popen([manage_file, 'runserver', str(port)],
                             stderr=open(os.devnull, 'w'),
                             stdout=open(os.devnull, 'w')
                             )

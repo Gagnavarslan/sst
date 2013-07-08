@@ -1,3 +1,4 @@
 junitxml
+python-subunit
 selenium
 testtools

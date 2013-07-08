@@ -34,11 +34,15 @@ from sst import (
 )
 
 
-usage = """Usage: %prog [testname] [options]
+usage = """Usage: %prog [options] [regexps]
 
-- Calling %prog with testname(s) as arguments will just run
-those tests. The testnames should not include '.py' at
-the end of the filename.
+* Calling sst-run with test regular expression(s) as argument(s) will run
+  the tests whose test name(s) match the regular expression(s).
+
+* You may optionally create data file(s) for data-driven testing.  Create a
+  '^' delimited txt data file with the same name as the test script, plus
+  the '.csv' extension.  This will run a test script using each row in the
+  data file (1st row of data file is variable name mapping)
 """
 
 
@@ -58,7 +62,7 @@ def get_common_options():
                       help='directory of test case files')
     parser.add_option('-r', dest='report_format',
                       default='console',
-                      help='valid report types: xml)')
+                      help='report type: xml')
     parser.add_option('-b', dest='browser_type',
                       default='Firefox',
                       help=('select webdriver (Firefox, Chrome, '
@@ -94,14 +98,13 @@ def get_common_options():
     parser.add_option('--extended-tracebacks', dest='extended_tracebacks',
                       action='store_true', default=False,
                       help='add extra information (page source) to failure'
-                      'reports')
+                      ' reports')
     parser.add_option('--collect-only', dest='collect_only',
                       action='store_true', default=False,
                       help='collect/print cases without running tests')
-    parser.add_option(
-        '-e', '--exclude', dest='excludes',
-        action='append',
-        help='all tests matching this regular expression will not be run')
+    parser.add_option('-e', '--exclude', dest='excludes',
+                      action='append',
+                      help='all tests matching this regex will not be run')
     return parser
 
 
@@ -110,6 +113,9 @@ def get_run_options():
     parser.add_option('-x', dest='xserver_headless',
                       default=False, action='store_true',
                       help='run browser in headless xserver (Xvfb)')
+    parser.add_option('-c', '--concurrency', dest='concurrency',
+                      default=1, type='int',
+                      help='concurrency (number of procs)')
     return parser
 
 

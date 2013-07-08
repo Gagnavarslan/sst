@@ -26,10 +26,10 @@ import testtools
 
 from sst import (
     cases,
-    loader
+    loaders,
 )
 
-discover = loader.discoverRegularTests
+discover = loaders.discoverRegularTests
 
 
 class SSTBrowserLessTestCase(cases.SSTTestCase):
@@ -96,7 +96,7 @@ def check_devserver_port_used(port):
     # immediately reuse a local socket in TIME_WAIT state
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
-        sock.bind(('127.0.0.1', int(port)))
+        sock.bind(('127.0.0.1', port))
         used = False
     except socket.error:
         used = True
@@ -151,3 +151,64 @@ def write_tree_from_desc(description):
             cur_file.write(line + '\n')
     if cur_file:
         cur_file.close()
+
+
+def get_case(kind):
+    # Define the class in a function so test loading don't try to load it as a
+    # regular test class.
+    class Test(testtools.TestCase):
+
+        def test_pass(self):
+            pass
+
+        def test_fail(self):
+            raise self.failureException
+
+        def test_error(self):
+            raise SyntaxError
+
+        def test_skip(self):
+            self.skipTest('')
+
+        def test_skip_reason(self):
+            self.skipTest('Because')
+
+        def test_expected_failure(self):
+            # We expect the test to fail and it does
+            self.expectFailure("1 should be 0", self.assertEqual, 1, 0)
+
+        def test_unexpected_success(self):
+            # We expect the test to fail but it doesn't
+            self.expectFailure("1 is not 1", self.assertEqual, 1, 1)
+
+    test_method = 'test_%s' % (kind,)
+    return Test(test_method)
+
+
+def expected_for_test(template, test, kwargs=None):
+    """Expand common references in template.
+
+    Tests that check runs output can be simplified if they use templates
+    instead of litteral expected strings. There are plenty of examples below.
+
+    :param template: A string where common strings have been replaced by a
+        keyword so 1) tests are easier to read, 2) we don't run into pep8
+        warnings for long lines.
+
+    :param test: The test case under scrutiny.
+
+    :param kwargs: A dict with more keywords for the template. This allows
+        some tests to add more keywords when they are test specific.
+    """
+    if kwargs is None:
+        kwargs = dict()
+    # Getting the file name right is tricky, depending on whether the module
+    # was just recompiled or not __file__ can be either .py or .pyc but when it
+    # appears in an exception, the .py is always used.
+    filename = __file__.replace('.pyc', '.py').replace('.pyo', '.py')
+    # To allow easier reading for template, we format some known values
+    kwargs.update(dict(classname='%s.%s' % (test.__class__.__module__,
+                                            test.__class__.__name__),
+                       name=test._testMethodName,
+                       filename=filename))
+    return template.format(**kwargs)

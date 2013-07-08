@@ -57,7 +57,7 @@ class Xvfb(object):
     def stop(self):
         self._redirect_display(self.old_display_num)
         if self.proc is not None:
-            self.proc.kill()
+            self.proc.terminate()
             self.proc.wait()
             self.proc = None
 

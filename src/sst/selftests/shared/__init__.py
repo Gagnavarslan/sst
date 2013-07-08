@@ -1,3 +1,3 @@
-from sst import loader
+from sst import loaders
 
-discover = loader.discoverNoTests
+discover = loaders.discoverNoTests

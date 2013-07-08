@@ -77,7 +77,7 @@ class TestRetryOnException(testtools.TestCase):
 
         @actions.retry_on_exception(TestException, retries=max_retries)
         def protected_raiser():
-            return self.raise_exception(times=max_retries+1)
+            return self.raise_exception(times=max_retries + 1)
 
         self.assertRaises(TestException, protected_raiser)
 
