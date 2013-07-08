@@ -18,9 +18,6 @@
 #
 
 
-import os
-import shutil
-
 import testtools
 
 from sst import (
