@@ -206,6 +206,12 @@ def expected_for_test(template, test, kwargs=None):
     # was just recompiled or not __file__ can be either .py or .pyc but when it
     # appears in an exception, the .py is always used.
     filename = __file__.replace('.pyc', '.py').replace('.pyo', '.py')
+    traceback_fixed_length = kwargs.get('traceback_fixed_length', None)
+    if traceback_fixed_length is not None:
+        # We need to calculate the traceback detail length which includes the
+        # file name.
+        full_length = traceback_fixed_length + len(filename)
+        kwargs['subunit_traceback_length'] = '%X' % (full_length,)
     # To allow easier reading for template, we format some known values
     kwargs.update(dict(classname='%s.%s' % (test.__class__.__module__,
                                             test.__class__.__name__),
