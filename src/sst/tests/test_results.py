@@ -71,7 +71,7 @@ class TestVerboseResultOutput(testtools.TestCase):
 
     def assertOutput(self, template, kind):
         test = tests.get_case(kind)
-        expected = tests.expected_for_test(template, test)
+        expected = tests.expand_template_for_test(template, test)
         out = StringIO()
         res = results.TextTestResult(out, verbosity=2)
 
@@ -146,7 +146,7 @@ class TestXmlOutput(testtools.TestCase):
         res._now = lambda: 0.0
         res._duration = lambda f: 0.0
         test = tests.get_case(kind)
-        expected = tests.expected_for_test(template, test, kwargs)
+        expected = tests.expand_template_for_test(template, test, kwargs)
         res.startTestRun()
         test.run(res)
         # due to the nature of JUnit XML output, nothing will be written to
@@ -257,7 +257,7 @@ class TestSubunitOutput(testtools.TestCase):
         if kwargs is None:
             kwargs = dict()
         test = tests.get_case(kind)
-        expected = tests.expected_for_test(template, test, kwargs)
+        expected = tests.expand_template_for_test(template, test, kwargs)
         res, stream = self.run_with_subunit(test)
         self.assertEqual(expected, stream.getvalue())
 
@@ -409,7 +409,7 @@ class TestSubunitInputStreamXmlOutput(TestXmlOutput):
         # simplifies matching the expected result
         res._now = lambda: 0.0
         res._duration = lambda f: 0.0
-        expected = tests.expected_for_test(template, test, kwargs)
+        expected = tests.expand_template_for_test(template, test, kwargs)
         res.startTestRun()
         receiver.run(res)
         # due to the nature of JUnit XML output, nothing will be written to

@@ -185,7 +185,7 @@ def get_case(kind):
     return Test(test_method)
 
 
-def expected_for_test(template, test, kwargs=None):
+def expand_template_for_test(template, test, kwargs=None):
     """Expand common references in template.
 
     Tests that check runs output can be simplified if they use templates
