@@ -71,7 +71,7 @@ class TestVerboseResultOutput(testtools.TestCase):
 
     def assertOutput(self, template, kind):
         test = tests.get_case(kind)
-        expected = tests.expected_for_test(template, test)
+        expected = tests.expand_template_for_test(template, test)
         out = StringIO()
         res = results.TextTestResult(out, verbosity=2)
 
@@ -146,12 +146,12 @@ class TestXmlOutput(testtools.TestCase):
         res._now = lambda: 0.0
         res._duration = lambda f: 0.0
         test = tests.get_case(kind)
-        expected = tests.expected_for_test(template, test, kwargs)
         res.startTestRun()
         test.run(res)
         # due to the nature of JUnit XML output, nothing will be written to
         # the stream until stopTestRun() is called.
         res.stopTestRun()
+        expected = tests.expand_template_for_test(template, test, kwargs)
         self.assertEquals(expected, res._stream.getvalue())
 
     def test_pass(self):
@@ -168,7 +168,7 @@ class TestXmlOutput(testtools.TestCase):
 <testsuite errors="0" failures="1" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
 <failure type="{exc_type}">_StringException: Traceback (most recent call last):
-  File "{filename}", line 165, in {name}
+  File "{filename}", line {traceback_line}, in {name}
     raise self.failureException
 AssertionError
 
@@ -184,7 +184,7 @@ AssertionError
 <testsuite errors="1" failures="0" name="" tests="1" time="0.000">
 <testcase classname="{classname}" name="{name}" time="0.000">
 <error type="{exc_type}">_StringException: Traceback (most recent call last):
-  File "{filename}", line 168, in {name}
+  File "{filename}", line {traceback_line}, in {name}
     raise SyntaxError
 SyntaxError: None
 
@@ -257,8 +257,8 @@ class TestSubunitOutput(testtools.TestCase):
         if kwargs is None:
             kwargs = dict()
         test = tests.get_case(kind)
-        expected = tests.expected_for_test(template, test, kwargs)
         res, stream = self.run_with_subunit(test)
+        expected = tests.expand_template_for_test(template, test, kwargs)
         self.assertEqual(expected, stream.getvalue())
 
     def test_pass(self):
@@ -277,7 +277,7 @@ Content-Type: text/x-traceback;charset=utf8,language=python
 traceback
 {subunit_traceback_length}\r
 Traceback (most recent call last):
-  File "{filename}", line 165, in {name}
+  File "{filename}", line {traceback_line}, in {name}
     raise self.failureException
 AssertionError
 0\r
@@ -294,7 +294,7 @@ Content-Type: text/x-traceback;charset=utf8,language=python
 traceback
 {subunit_traceback_length}\r
 Traceback (most recent call last):
-  File "{filename}", line 168, in {name}
+  File "{filename}", line {traceback_line}, in {name}
     raise SyntaxError
 SyntaxError: None
 0\r
@@ -409,7 +409,7 @@ class TestSubunitInputStreamXmlOutput(TestXmlOutput):
         # simplifies matching the expected result
         res._now = lambda: 0.0
         res._duration = lambda f: 0.0
-        expected = tests.expected_for_test(template, test, kwargs)
+        expected = tests.expand_template_for_test(template, test, kwargs)
         res.startTestRun()
         receiver.run(res)
         # due to the nature of JUnit XML output, nothing will be written to
