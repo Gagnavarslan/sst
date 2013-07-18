@@ -16,6 +16,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import inspect
 import os
 import shutil
 import socket
@@ -156,15 +157,22 @@ def write_tree_from_desc(description):
 def get_case(kind):
     # Define the class in a function so test loading don't try to load it as a
     # regular test class.
+
     class Test(testtools.TestCase):
+
+        # For error and failure to avoid spurious failures when the file is
+        # edited.
+        traceback_line = None
 
         def test_pass(self):
             pass
 
         def test_fail(self):
+            self.traceback_line = inspect.currentframe().f_lineno + 1
             raise self.failureException
 
         def test_error(self):
+            self.traceback_line = inspect.currentframe().f_lineno + 1
             raise SyntaxError
 
         def test_skip(self):
@@ -212,6 +220,8 @@ def expand_template_for_test(template, test, kwargs=None):
         # file name.
         full_length = traceback_fixed_length + len(filename)
         kwargs['subunit_traceback_length'] = '%X' % (full_length,)
+    traceback_line = getattr(test, 'traceback_line', None)
+    kwargs['traceback_line'] = traceback_line
     # To allow easier reading for template, we format some known values
     kwargs.update(dict(classname='%s.%s' % (test.__class__.__module__,
                                             test.__class__.__name__),
