@@ -275,7 +275,7 @@ test: {classname}.{name}
 failure: {classname}.{name} [ multipart
 Content-Type: text/x-traceback;charset=utf8,language=python
 traceback
-C6\r
+{subunit_traceback_length}\r
 Traceback (most recent call last):
   File "{filename}", line 165, in {name}
     raise self.failureException
@@ -283,7 +283,8 @@ AssertionError
 0\r
 ]
 ''',
-                                 'fail')
+                                 'fail',
+                                 dict(traceback_fixed_length=116))
 
     def test_error(self):
         self.assertSubunitOutput('''\
@@ -291,7 +292,7 @@ test: {classname}.{name}
 error: {classname}.{name} [ multipart
 Content-Type: text/x-traceback;charset=utf8,language=python
 traceback
-C0\r
+{subunit_traceback_length}\r
 Traceback (most recent call last):
   File "{filename}", line 168, in {name}
     raise SyntaxError
@@ -299,7 +300,8 @@ SyntaxError: None
 0\r
 ]
 ''',
-                                 'error')
+                                 'error',
+                                 dict(traceback_fixed_length=110))
 
     def test_skip(self):
         self.assertSubunitOutput('''\
