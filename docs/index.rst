@@ -121,27 +121,28 @@ Usage: sst-run [options] [regexps]
   the '.csv' extension.  This will run a test script using each row in the
   data file (1st row of data file is variable name mapping)
 
-Options:
-  -h, --help                show this help message and exit
-  -d DIR_NAME               directory of test case files
-  -r REPORT_FORMAT          report type: xml
-  -b BROWSER_TYPE           select webdriver (Firefox, Chrome, PhantomJS, etc)
-  -j                        disable javascript in browser
-  -m SHARED_DIRECTORY       directory for shared modules
-  -q                        output less debugging info during test run
-  -V                        print version info and exit
-  -s                        save screenshots on failures
-  --failfast                stop test execution after first failure
-  --debug                   drop into debugger on test fail or error
-  --with-flags=WITH_FLAGS   comma separated list of flags to run tests with
-  --disable-flag-skips      run all tests, disable skipping tests due to flags
-  --extended-tracebacks     add extra information (page source) to failure reports
-  --collect-only            collect/print cases without running tests
-  -e EXCLUDE,
-  --exclude=EXCLUDE         all tests matching the EXCLUDE regular expresion
-                            will not be run
-  -x                        run browser in headless xserver (Xvfb)
-  --concurrency=CONCURRENCY concurrency (number of processes)
+Options::
+
+    -h, --help                show this help message and exit
+    -d DIR_NAME               directory of test case files
+    -r REPORT_FORMAT          report type: xml
+    -b BROWSER_TYPE           select webdriver (Firefox, Chrome, PhantomJS, etc)
+    -j                        disable javascript in browser
+    -m SHARED_DIRECTORY       directory for shared modules
+    -q                        output less debugging info during test run
+    -V                        print version info and exit
+    -s                        save screenshots on failures
+    --failfast                stop test execution after first failure
+    --debug                   drop into debugger on test fail or error
+    --with-flags=WITH_FLAGS   comma separated list of flags to run tests with
+    --disable-flag-skips      run all tests, disable skipping tests due to flags
+    --extended-tracebacks     add extra information (page source) to failure reports
+    --collect-only            collect/print cases without running tests
+    -e EXCLUDE                all tests matching the EXCLUDE regular expresion will not be run
+    --exclude=EXCLUDE         all tests matching the EXCLUDE regular expresion will not be run
+    -x                        run browser in headless xserver (Xvfb)
+    -c CONCURRENCY            concurrency (number of procs)
+    --concurrency=CONCURRENCY concurrency (number of procs)
 
 
 --------------------

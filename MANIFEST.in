@@ -2,6 +2,6 @@ include README
 include requirements.txt
 recursive-include examples *.py
 recursive-include docs *.rst *.py *.png *.css favicon.ico README
-recursive-include src/testproject *.py *.html *.js *.css testproj.db.original
+recursive-include src/testproject *.py *.html *.js *.css
 recursive-include src/sst/selftests *.py *.csv
 recursive-include src/sst/tests *.py
