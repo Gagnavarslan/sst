@@ -9,8 +9,8 @@
 Official Releases:
 ------------------
 
-version **0.2.4** (Not yet released)
-************************************
+version **0.2.4** (2013 July 30)
+********************************
 
 * added ``get_text`` action
 * made it clearer that ``assert_text`` and ``assert_text_contains`` will check
