@@ -30,16 +30,22 @@ on top of that and is then simpler.
 The tip of trunk is then merged into the packaging branch allowing the
 creation of the package.
 
-  $ bzr merge-upstream ../../trunk --version 0.2.4dev~bzr382
+  $ bzr merge-upstream ../../trunk --version 0.2.4~bzr382
   $ debchange -i # s/UNRELEASED/raring/
   $ debcommit
   $ bzr bd -S # Alternatively, 'debuild -S' can also be used
 
+* merge upstream from branch for a release
+
+  $ bzr merge-upstream --version 0.2.4 ../../trunk -rtag:sst-0.2.4
+  $ debchange -i # s/UNRELEASED/saucy/
+  $ debcommit
+  $ bzr bd -S
 
 * upload the new version to a ppa
 
   # Replace 'vila/selenium' with your targeted ppa below
-  dput ppa:vila/selenium ../sst_0.2.4dev~bzr382-1ubuntu4_source.changes
+  dput ppa:vila/selenium ../sst_0.2.4~bzr382-1ubuntu4_source.changes
   bzr mark-uploaded
 
 
@@ -47,7 +53,7 @@ Packaging selenium itself
 -------------------------
 
 While selenium has been packaged up to 2.25, following upstream releases
-were not. The following steps describe how 2.23 has been packaged in a ppa.
+were not. The following steps describe how 2.32 has been packaged in a ppa.
 
 * merge upstream releases into the packaging branch
 
