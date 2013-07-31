@@ -1,7 +1,10 @@
-SST Release Instructions
+============================
+    SST Release Instructions
+============================
 
-Instructions for releasing SST to PyPI from Launchpad Trunk
------------------------------------------------------------
+---------------------------------------------------------------
+    Instructions for releasing SST to PyPI from Launchpad Trunk
+---------------------------------------------------------------
 
 * get a branch of SST trunk:
 
@@ -38,8 +41,6 @@ Instructions for releasing SST to PyPI from Launchpad Trunk
 * generate HTML documentation:
 
     * install sphinx (`$ sudo apt-get install python-sphinx`)
-
-    * run `make_actions_rst.py` under /docs, which will create `actions.rst`
 
     * go up to the main SST directory and run:
 
