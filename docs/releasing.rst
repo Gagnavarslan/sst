@@ -1,7 +1,10 @@
-SST Release Instructions
+============================
+    SST Release Instructions
+============================
 
-Instructions for releasing SST to PyPI from Launchpad Trunk
------------------------------------------------------------
+---------------------------------------------------------------
+    Instructions for releasing SST to PyPI from Launchpad Trunk
+---------------------------------------------------------------
 
 * get a branch of SST trunk:
 
@@ -29,17 +32,15 @@ Instructions for releasing SST to PyPI from Launchpad Trunk
 
     $ bzr push lp:selenium-simple-test
 
-* generate actions doc:
-
-    under /docs, run:
-
-    $ python make_actions_rst.py
-
 * generate HTML documentation:
 
     * install sphinx (`$ sudo apt-get install python-sphinx`)
 
-    * run `make_actions_rst.py` under /docs, which will create `actions.rst`
+    * generate `actions.rst` doc:
+
+        under /docs, run:
+
+        $ python make_actions_rst.py
 
     * go up to the main SST directory and run:
 
