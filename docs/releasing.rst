@@ -91,6 +91,14 @@
 
 * verify new version is showing on PyPI website: http://pypi.python.org/pypi/sst
 
+* mark all bugs as 'FixReleased' with launchpadlib:
+
+  From an up-to-date lp:launchpadlib branch.
+
+  $ launchpadlib/contrib/close-my-bugs.py selenium-simple-test 0.2.4
+
+  replacing '0.2.4' with the appropriate milestone.
+
 * release done!
 
 
