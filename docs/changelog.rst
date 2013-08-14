@@ -11,6 +11,7 @@ Official Releases:
 
 version **0.2.5** (under development)
 *************************************
+* removed 'disable javascript' feature from Firefox
 
 
 version **0.2.4** (2013 July 30)

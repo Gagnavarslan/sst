@@ -25,7 +25,6 @@ import sys
 import shutil
 import traceback
 
-
 import sst
 from sst import (
     actions,
@@ -67,9 +66,6 @@ def get_common_options():
                       default='Firefox',
                       help=('select webdriver (Firefox, Chrome, '
                             'PhantomJS, etc)'))
-    parser.add_option('-j', dest='javascript_disabled',
-                      default=False, action='store_true',
-                      help='disable javascript in browser')
     parser.add_option('-m', dest='shared_directory',
                       default=None,
                       help='directory for shared modules')

@@ -4,7 +4,6 @@ from sst import config
 assert locals() == config._current_context
 assert config.browser_type
 assert config.__args__ == {}
-assert not config.javascript_disabled
 assert __name__ == 'context'
 assert __file__.endswith('context.py')
 

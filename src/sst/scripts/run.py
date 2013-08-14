@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#   Copyright (c) 2011-2012 Canonical Ltd.
+#   Copyright (c) 2011,20122013 Canonical Ltd.
 #
 #   This file is part of: SST (selenium-simple-test)
 #   https://launchpad.net/selenium-simple-test
@@ -54,7 +54,6 @@ def main():
             test_dir=cmd_opts.dir_name,
             collect_only=cmd_opts.collect_only,
             report_format=cmd_opts.report_format,
-            browser_factory=factory(cmd_opts.javascript_disabled),
             shared_directory=cmd_opts.shared_directory,
             screenshots_on=cmd_opts.screenshots_on,
             concurrency_num=cmd_opts.concurrency,

@@ -29,10 +29,7 @@ StoredContext = namedtuple(
 )
 
 
-def populate_context(
-        context, path, browser_type,
-        javascript_disabled, arguments=None
-):
+def populate_context(context, path, browser_type, arguments=None):
     """Create the execution context for a test"""
 
     name = os.path.splitext(os.path.split(path)[1])[0]
@@ -42,7 +39,6 @@ def populate_context(
 
     config._current_context = context
     config.browser_type = browser_type
-    config.javascript_disabled = javascript_disabled
     config.__args__ = arguments or {}
     config.cache.clear()
 
@@ -93,10 +89,7 @@ def _execute_test(name, kwargs):
     )
 
     context = {}
-    populate_context(
-        context, location, config.browser_type,
-        config.javascript_disabled, kwargs
-    )
+    populate_context(context, location, config.browser_type, kwargs)
 
     with open(location) as h:
         exec h.read() in context

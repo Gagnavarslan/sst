@@ -72,5 +72,4 @@ class TestSSTTestCase(testtools.TestCase):
         self.assertEqual(config.browser_type, 'firefox')
         self.assertEqual(config.cache, {})
         self.assertEqual(config.flags, [])
-        self.assertFalse(config.javascript_disabled)
         self.assertIs(None, config.results_directory)

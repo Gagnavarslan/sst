@@ -53,7 +53,6 @@ Options:
   -r REPORT_FORMAT      results report format (html, xml, console)
   -b BROWSER_TYPE       select webdriver (Firefox, Chrome, InternetExplorer,
                         etc)
-  -j                    disable javascript in browser
   -m SHARED_MODULES     directory for shared modules
   -q                    output less debugging info during test run
   -s                    save screenshots on failures
