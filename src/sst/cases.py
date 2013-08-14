@@ -177,7 +177,7 @@ class SSTScriptTestCase(SSTTestCase):
     def setUp(self):
         self._compile_script()
         # The script may override some settings. The default value for
-        # ASSUME_TRUSTED_CERT_ISSUER are False, so if the user mentions them
+        # ASSUME_TRUSTED_CERT_ISSUER is False, so if the user mentions it
         # in his script, it's to turn them on. Also, getting our hands on
         # the values used in the script is too hackish.
         if 'ASSUME_TRUSTED_CERT_ISSUER' in self.code.co_names:
