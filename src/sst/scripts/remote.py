@@ -21,7 +21,6 @@
 import os
 import sys
 
-
 import testtools
 
 testtools.try_import('selenium')
@@ -44,7 +43,6 @@ def main():
             "browserName": cmd_opts.browser_type.lower(),
             "platform": cmd_opts.browser_platform.upper(),
             "version": cmd_opts.browser_version,
-            "javascriptEnabled": not cmd_opts.javascript_disabled,
             "name": cmd_opts.session_name},
         cmd_opts.webdriver_remote_url)
     runtests.runtests(

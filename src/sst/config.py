@@ -23,9 +23,6 @@ The `sst.config` module has the following information::
 
     from sst import config
 
-    # is javascript disabled?
-    config.javascript_disabled
-
     # which browser is being used?
     config.browser_type
 
@@ -44,7 +41,6 @@ The `sst.config` module has the following information::
 
 browser_type = 'firefox'
 _current_context = None
-javascript_disabled = False
 shared_directory = None
 results_directory = None
 flags = []

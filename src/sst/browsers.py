@@ -43,9 +43,8 @@ class BrowserFactory(object):
 
     webdriver_class = None
 
-    def __init__(self, javascript_disabled=False):
+    def __init__(self):
         super(BrowserFactory, self).__init__()
-        self.javascript_disabled = javascript_disabled
 
     def setup_for_test(self, test):
         """Setup the browser for the given test.
@@ -203,8 +202,6 @@ class FirefoxFactory(BrowserFactory):
             profile.set_preference(
                 'capability.policy.default.Window.frameElement.get',
                 'allAccess')
-        if test.javascript_disabled or self.javascript_disabled:
-            profile.set_preference('javascript.enabled', False)
         self.profile = profile
 
     def browser(self):

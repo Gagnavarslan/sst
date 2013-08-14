@@ -46,7 +46,6 @@ class SSTTestCase(testtools.TestCase):
 
     browser_factory = browsers.FirefoxFactory()
 
-    javascript_disabled = False
     assume_trusted_cert_issuer = False
 
     wait_timeout = 10
@@ -178,11 +177,9 @@ class SSTScriptTestCase(SSTTestCase):
     def setUp(self):
         self._compile_script()
         # The script may override some settings. The default value for
-        # JAVASCRIPT_DISABLED and ASSUME_TRUSTED_CERT_ISSUER are False, so if
-        # the user mentions them in his script, it's to turn them on. Also,
-        # getting our hands on the values used in the script is too hackish ;)
-        if 'JAVASCRIPT_DISABLED' in self.code.co_names:
-            self.javascript_disabled = True
+        # ASSUME_TRUSTED_CERT_ISSUER is False, so if the user mentions it
+        # in his script, it's to turn them on. Also, getting our hands on
+        # the values used in the script is too hackish.
         if 'ASSUME_TRUSTED_CERT_ISSUER' in self.code.co_names:
             self.assume_trusted_cert_issuer = True
         super(SSTScriptTestCase, self).setUp()
@@ -193,7 +190,7 @@ class SSTScriptTestCase(SSTTestCase):
         previous_context = context.store_context()
         self.addCleanup(context.restore_context, previous_context)
         context.populate_context(self.context, self.script_path,
-                                 self.browser.name, self.javascript_disabled)
+                                 self.browser.name)
 
     def _compile_script(self):
         self.script_path = os.path.join(self.script_dir, self.script_name)

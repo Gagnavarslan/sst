@@ -69,7 +69,7 @@ def main():
             test_dir=test_dir,
             collect_only=cmd_opts.collect_only,
             report_format=cmd_opts.report_format,
-            browser_factory=factory(cmd_opts.javascript_disabled),
+            browser_factory=factory(),
             shared_directory=shared_directory,
             screenshots_on=cmd_opts.screenshots_on,
             concurrency_num=cmd_opts.concurrency,

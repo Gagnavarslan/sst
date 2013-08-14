@@ -127,7 +127,6 @@ Options::
     -d DIR_NAME               directory of test case files
     -r REPORT_FORMAT          report type: xml
     -b BROWSER_TYPE           select webdriver (Firefox, Chrome, PhantomJS, etc)
-    -j                        disable javascript in browser
     -m SHARED_DIRECTORY       directory for shared modules
     -q                        output less debugging info during test run
     -V                        print version info and exit
@@ -331,9 +330,6 @@ information::
 
     from sst import config
 
-    # is javascript disabled?
-    config.javascript_disabled
-
     # which browser is being used?
     config.browser_type
 
@@ -348,16 +344,6 @@ information::
 
     # A per test cache. A dictionary that is cleared at the start of each test.
     config.cache
-
-
-------------------------
-    Disabling Javascript
-------------------------
-
-If you need to disable Javascript for an individual test, you can do it by
-putting the following at the start of the test::
-
-    JAVASCRIPT_DISABLED = True
 
 
 --------------------------------
