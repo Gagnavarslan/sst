@@ -1,5 +1,3 @@
-from __future__ import print_function
-from __future__ import print_function
 #
 #   Copyright (c) 2011-2013 Canonical Ltd.
 #
@@ -19,12 +17,15 @@ from __future__ import print_function
 #   limitations under the License.
 #
 
+from __future__ import print_function
+
 import ast
 import logging
 import os
 import pdb
 import testtools
 import testtools.content
+import traceback
 
 from selenium.common import exceptions
 from sst import (
@@ -34,7 +35,6 @@ from sst import (
     context,
     xvfbdisplay,
 )
-import traceback
 
 
 logger = logging.getLogger('SST')
