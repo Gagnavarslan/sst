@@ -99,13 +99,13 @@ class SSTTestCase(testtools.TestCase):
         max_attempts = 5
         for nb_attempts in range(1, max_attempts):
             try:
-                logger.debug('Starting browser (attempt: %d)' % (nb_attempts,))
+                logger.debug('Starting browser (attempt: %d)' % nb_attempts)
                 self._start_browser()
                 break
             except exceptions.WebDriverException:
                 if nb_attempts >= max_attempts:
                     raise
-        logger.debug('Browser started: %s' % (self.browser.name))
+        logger.debug('Browser started: %s' % self.browser.name)
 
     def stop_browser(self):
         logger.debug('Stopping browser')
