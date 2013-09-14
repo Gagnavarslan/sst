@@ -104,7 +104,7 @@ def run_django(port):
                             stdout=open(os.devnull, 'w')
                             )
     attempts = 30
-    for count in xrange(attempts):
+    for count in range(attempts):
         try:
             resp = urllib.urlopen(url)
             if resp.code == 200:

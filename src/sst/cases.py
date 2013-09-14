@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import print_function
 #
 #   Copyright (c) 2011-2013 Canonical Ltd.
 #
@@ -201,7 +203,7 @@ class SSTScriptTestCase(SSTTestCase):
     def run_test_script(self, result=None):
         # Run the test catching exceptions sstnam style
         try:
-            exec self.code in self.context
+            exec(self.code, self.context)
         except actions.EndTest:
             pass
 
@@ -214,7 +216,7 @@ def get_data(csv_path):
     with data values.
     """
     rows = []
-    print '  Reading data from %r...' % os.path.split(csv_path)[-1],
+    print('  Reading data from %r...' % os.path.split(csv_path)[-1], end=' ')
     row_num = 0
     with open(csv_path) as f:
         headers = f.readline().rstrip().split('^')
@@ -236,5 +238,5 @@ def get_data(csv_path):
                         value = True
                 row[header] = value
             rows.append(row)
-    print 'found %s rows' % len(rows)
+    print('found %s rows' % len(rows))
     return rows

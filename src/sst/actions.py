@@ -100,7 +100,7 @@ BASE_URL = None
 logger = logging.getLogger('SST')
 
 
-class EndTest(StandardError):
+class EndTest(Exception):
     pass
 
 
@@ -271,7 +271,7 @@ def _make_results_dir():
                       "results_directory should be set")
     try:
         os.makedirs(config.results_directory)
-    except OSError, e:
+    except OSError as e:
         if e.errno != errno.EEXIST:
             raise
 
