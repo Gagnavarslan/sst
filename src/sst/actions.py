@@ -39,7 +39,6 @@ id, tag, text, class or other attributes. See the `get_element` documentation.
 
 """
 
-
 import codecs
 import errno
 import logging

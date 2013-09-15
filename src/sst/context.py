@@ -17,7 +17,6 @@
 #   limitations under the License.
 #
 
-
 import os
 
 from sst import actions, config
