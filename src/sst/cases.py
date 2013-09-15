@@ -216,7 +216,7 @@ def get_data(csv_path):
     with data values.
     """
     rows = []
-    print('  Reading data from %r...' % os.path.split(csv_path)[-1], end=' ')
+    logger.debug('Reading data from %r' % os.path.split(csv_path)[-1])
     row_num = 0
     with open(csv_path) as f:
         headers = f.readline().rstrip().split('^')
@@ -238,5 +238,5 @@ def get_data(csv_path):
                         value = True
                 row[header] = value
             rows.append(row)
-    print('found %s rows' % len(rows))
+    logger.debug('found %s rows' % len(rows))
     return rows
