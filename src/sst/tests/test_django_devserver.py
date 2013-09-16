@@ -58,7 +58,7 @@ class TestDjangoDevServer(testtools.TestCase):
         self.assertTrue(used)
         e = self.assertRaises(RuntimeError,
                               script_test.run_django, port)
-        self.assertEqual('Error: port %s is in use.\n'
-                         'Can not launch devserver for internal tests.'
+        self.assertEqual('Port %s is in use.\n'
+                         'Can not launch Django server for internal tests.'
                          % (port,),
                          e.args[0])

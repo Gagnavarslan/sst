@@ -22,7 +22,6 @@
 #   inspired by PyVirtualDisplay: http://pypi.python.org/pypi/PyVirtualDisplay
 #
 
-
 import os
 import fnmatch
 import random

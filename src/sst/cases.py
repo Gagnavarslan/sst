@@ -17,12 +17,15 @@
 #   limitations under the License.
 #
 
+from __future__ import print_function
+
 import ast
 import logging
 import os
 import pdb
 import testtools
 import testtools.content
+import traceback
 
 from selenium.common import exceptions
 from sst import (
@@ -32,7 +35,6 @@ from sst import (
     context,
     xvfbdisplay,
 )
-import traceback
 
 
 logger = logging.getLogger('SST')
@@ -97,13 +99,13 @@ class SSTTestCase(testtools.TestCase):
         max_attempts = 5
         for nb_attempts in range(1, max_attempts):
             try:
-                logger.debug('Starting browser (attempt: %d)' % (nb_attempts,))
+                logger.debug('Starting browser (attempt: %d)' % nb_attempts)
                 self._start_browser()
                 break
             except exceptions.WebDriverException:
                 if nb_attempts >= max_attempts:
                     raise
-        logger.debug('Browser started: %s' % (self.browser.name))
+        logger.debug('Browser started: %s' % self.browser.name)
 
     def stop_browser(self):
         logger.debug('Stopping browser')
@@ -201,7 +203,7 @@ class SSTScriptTestCase(SSTTestCase):
     def run_test_script(self, result=None):
         # Run the test catching exceptions sstnam style
         try:
-            exec self.code in self.context
+            exec(self.code, self.context)
         except actions.EndTest:
             pass
 
@@ -214,7 +216,7 @@ def get_data(csv_path):
     with data values.
     """
     rows = []
-    print '  Reading data from %r...' % os.path.split(csv_path)[-1],
+    logger.debug('Reading data from %r' % os.path.split(csv_path)[-1])
     row_num = 0
     with open(csv_path) as f:
         headers = f.readline().rstrip().split('^')
@@ -236,5 +238,5 @@ def get_data(csv_path):
                         value = True
                 row[header] = value
             rows.append(row)
-    print 'found %s rows' % len(rows)
+    logger.debug('found %s rows' % len(rows))
     return rows

@@ -17,6 +17,8 @@
 #   limitations under the License.
 #
 
+from __future__ import print_function
+
 import errno
 import logging
 import optparse
@@ -48,7 +50,7 @@ usage = """Usage: %prog [options] [regexps]
 def reset_directory(path):
     try:
         shutil.rmtree(path)
-    except OSError, e:
+    except OSError as e:
         if e.errno != errno.ENOENT:
             raise
     os.makedirs(path)
@@ -150,12 +152,12 @@ def get_opts(get_options, args=None):
     (cmd_opts, args) = parser.parse_args(args)
 
     if cmd_opts.print_version:
-        print 'SST version: %s' % sst.__version__
+        print('SST version: %s' % sst.__version__)
         sys.exit()
 
     if cmd_opts.browser_type not in browsers.browser_factories:
-        print ("Error: %s should be one of %s"
-               % (cmd_opts.browser_type, browsers.browser_factories.keys()))
+        print('Error: %s should be one of %s' %
+              cmd_opts.browser_type, browsers.browser_factories.keys())
         sys.exit(1)
 
     logging.basicConfig(format='    %(levelname)s:%(name)s:%(message)s')

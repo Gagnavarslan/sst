@@ -17,7 +17,6 @@
 #   limitations under the License.
 #
 
-
 import os
 
 from sst import actions, config
@@ -92,6 +91,6 @@ def _execute_test(name, kwargs):
     populate_context(context, location, config.browser_type, kwargs)
 
     with open(location) as h:
-        exec h.read() in context
+        exec(h.read(), context)
 
     return context.get('RESULT')

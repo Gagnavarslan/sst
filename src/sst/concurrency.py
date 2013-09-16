@@ -17,7 +17,6 @@
 #   limitations under the License.
 #
 
-
 """Python testtools extension for running unittest suites concurrently.
 
 The `testtools` project provides a ConcurrentTestSuite class, but does
@@ -31,7 +30,6 @@ concurrency.
 
 Unix only.
 """
-
 
 import os
 import sys

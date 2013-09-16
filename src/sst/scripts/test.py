@@ -85,8 +85,8 @@ def main():
 def run_django(port):
     """Start django server for running local self-tests."""
     if tests.check_devserver_port_used(port):
-        raise RuntimeError('Error: port %s is in use.\n'
-                           'Can not launch devserver for internal tests.'
+        raise RuntimeError('Port %s is in use.\n'
+                           'Can not launch Django server for internal tests.'
                            % (port,))
     manage_file = os.path.abspath(
         os.path.join(package_dir, '../testproject/manage.py'))
@@ -94,9 +94,9 @@ def run_django(port):
 
     if not os.path.isfile(manage_file):
         raise RuntimeError(
-            'Error: can not find the django testproject.\n'
+            'Can not find the django testproject.\n'
             '%r does not exist\n'
-            'you must run self-tests from the dev branch or package source.'
+            'you must run tests from the dev branch or package source.'
             % (manage_file,))
 
     proc = subprocess.Popen([manage_file, 'runserver', str(port)],
@@ -104,7 +104,7 @@ def run_django(port):
                             stdout=open(os.devnull, 'w')
                             )
     attempts = 30
-    for count in xrange(attempts):
+    for count in range(attempts):
         try:
             resp = urllib.urlopen(url)
             if resp.code == 200:
@@ -112,7 +112,8 @@ def run_django(port):
         except IOError:
             time.sleep(0.2)
             if count >= attempts - 1:  # timeout
-                raise
+                raise RuntimeError('Django server for acceptance '
+                                   'tests is not running.')
     return proc
 
 

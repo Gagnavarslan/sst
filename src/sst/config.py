@@ -17,7 +17,6 @@
 #   limitations under the License.
 #
 
-
 """
 The `sst.config` module has the following information::
 
