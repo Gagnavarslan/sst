@@ -97,7 +97,7 @@ class SSTTestCase(testtools.TestCase):
 
     def start_browser(self):
         max_attempts = 5
-        for nb_attempts in range(1, max_attempts):
+        for nb_attempts in range(1, max_attempts + 1):
             try:
                 logger.debug('Starting browser (attempt: %d)' % nb_attempts)
                 self._start_browser()
