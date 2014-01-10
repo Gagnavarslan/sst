@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e
+
+
 # Continuous Integration script for SST
 #
 #  Options:
@@ -86,7 +89,7 @@ python -c "import selenium; print 'Selenium %s' % selenium.__version__"
 if [ -n "$FLAKE8" ]; then
     echo "----------------------------------"
     echo "running flake8 (pyflakes/pep8) checks..."
-    flake8 src/ docs/ sst-* *.py
+    flake8 src/ docs/ sst-* *.py || false
 fi
 
 if [ -n "$BROWSER" ]; then
