@@ -1,9 +1,12 @@
 #!/usr/bin/env python
+import os
+import sys
 
-from django.core.management import execute_manager
+if __name__ == "__main__":
+    # Add the parent directory to the python path
+    parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.insert(0, parent_dir)
 
-import settings  # assumed to be in the same directory.
-
-
-if __name__ == '__main__':
-    execute_manager(settings)
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "testproject.settings")
+    from django.core.management import execute_from_command_line
+    execute_from_command_line(sys.argv)
