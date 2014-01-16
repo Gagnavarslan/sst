@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e
+
+
 # Continuous Integration script for SST
 #
 #  Options:
@@ -64,7 +67,7 @@ if [ -n "$BOOTSTRAP" ]; then
     echo "installing modules from dependencies branch..."
     DEPS="sst-deps/pythonpackages/"
     cd $DEPS; ls *.tar.gz
-    pip install *.tar.gz --no-deps
+    python "$(which pip)" install *.tar.gz --no-deps
     cd ../..
 else
     source ENV/bin/activate
@@ -86,7 +89,7 @@ python -c "import selenium; print 'Selenium %s' % selenium.__version__"
 if [ -n "$FLAKE8" ]; then
     echo "----------------------------------"
     echo "running flake8 (pyflakes/pep8) checks..."
-    flake8 src/ docs/ sst-* *.py
+    python "$(which flake8)" src/ docs/ sst-* *.py || false
 fi
 
 if [ -n "$BROWSER" ]; then
