@@ -517,7 +517,7 @@ def simulate_keys(id_or_elem, key_to_press):
 
 _textfields = (
     'text', 'password', 'textarea', 'email',
-    'url', 'search', 'number', 'file')
+    'url', 'search', 'number', 'file', 'tel')
 
 
 def assert_textfield(id_or_elem):
