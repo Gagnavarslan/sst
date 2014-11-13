@@ -69,13 +69,13 @@ class RemoteBrowserFactory(BrowserFactory):
 
     webdriver_class = webdriver.Remote
 
-    def __init__(self, capabilities, remote_url):
+    def __init__(self, remote_url, capabilities):
         super(RemoteBrowserFactory, self).__init__()
-        self.capabilities = capabilities
         self.remote_url = remote_url
+        self.capabilities = capabilities
 
     def browser(self):
-        return self.webdriver_class(self.capabilities, self.remote_url)
+        return self.webdriver_class(self.remote_url, self.capabilities)
 
 
 # MISSINGTEST: Exercise this class -- vila 2013-04-11

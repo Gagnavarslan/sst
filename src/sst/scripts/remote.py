@@ -39,16 +39,18 @@ def main():
     command.reset_directory(results_directory)
 
     browser_factory = browsers.RemoteBrowserFactory(
+        cmd_opts.webdriver_remote_url,
         {
             "browserName": cmd_opts.browser_type.lower(),
             "platform": cmd_opts.browser_platform.upper(),
             "version": cmd_opts.browser_version,
-            "name": cmd_opts.session_name},
-        cmd_opts.webdriver_remote_url)
+            "name": cmd_opts.session_name
+        },
+    )
     runtests.runtests(
         args, results_directory, sys.stdout,
         test_dir=cmd_opts.dir_name,
-        count_only=cmd_opts.count_only,
+        collect_only=cmd_opts.collect_only,
         report_format=cmd_opts.report_format,
         browser_factory=browser_factory,
         shared_directory=cmd_opts.shared_directory,
