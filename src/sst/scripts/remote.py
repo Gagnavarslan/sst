@@ -59,7 +59,8 @@ def main():
         debug=cmd_opts.debug,
         extended=cmd_opts.extended_tracebacks,
         # FIXME: not tested -- vila 2013-05-23
-        excludes=cmd_opts.excludes
+        excludes=cmd_opts.excludes,
+        xml_results_filename=cmd_opts.xml_results_filename
     )
 
 

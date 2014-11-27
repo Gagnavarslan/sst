@@ -103,6 +103,9 @@ def get_common_options():
     parser.add_option('-e', '--exclude', dest='excludes',
                       action='append',
                       help='all tests matching this regex will not be run')
+    parser.add_option('--xml-output-file', dest='xml_results_filename',
+                      default='results.xml',
+                      help=('Output filename for xml test report, by default "results.xml"'))
     return parser
 
 
