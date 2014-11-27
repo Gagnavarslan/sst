@@ -65,7 +65,8 @@ def runtests(test_regexps, results_directory, out,
              debug=False,
              extended=False,
              includes=None,
-             excludes=None):
+             excludes=None,
+             xml_results_filename='results.xml'):
     if not os.path.isdir(test_dir):
         raise RuntimeError('Specified directory %r does not exist'
                            % (test_dir,))
@@ -96,7 +97,7 @@ def runtests(test_regexps, results_directory, out,
 
     txt_res = results.TextTestResult(out, failfast=failfast, verbosity=2)
     if report_format == 'xml':
-        results_file = os.path.join(results_directory, 'results.xml')
+        results_file = os.path.join(results_directory, xml_results_filename)
         xml_stream = file(results_file, 'wb')
         result = testtools.testresult.MultiTestResult(
             txt_res, junitxml.JUnitXmlResult(xml_stream))
