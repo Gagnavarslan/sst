@@ -47,7 +47,8 @@ def main():
 
     with cleaner:
         results_directory = os.path.abspath('results')
-        command.reset_directory(results_directory)
+        command.reset_directory(results_directory,
+                                cmd_opts.skip_clean_results)
         factory = browsers.browser_factories.get(cmd_opts.browser_type)
         failures = runtests.runtests(
             args, results_directory, out,
