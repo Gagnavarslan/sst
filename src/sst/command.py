@@ -47,13 +47,17 @@ usage = """Usage: %prog [options] [regexps]
 """
 
 
-def reset_directory(path):
-    try:
-        shutil.rmtree(path)
-    except OSError as e:
-        if e.errno != errno.ENOENT:
-            raise
-    os.makedirs(path)
+def reset_directory(path, skip_clean_results="no"):
+    if not (skip_clean_results == "yes"):
+        try:
+            shutil.rmtree(path)
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+        os.makedirs(path)
+    else:
+        if not os.path.isdir(path):
+            os.makedirs(path)
 
 
 def get_common_options():
@@ -106,6 +110,9 @@ def get_common_options():
     parser.add_option('--xml-output-file', dest='xml_results_filename',
                       default='results.xml',
                       help=('Output filename for xml test report, by default "results.xml"'))
+    parser.add_option('--skip-clean-results', dest='skip_clean_results',
+                      default='no',
+                      help=('Skip results folder cleaning, default=no. Values "no", "yes"'))
     return parser
 
 

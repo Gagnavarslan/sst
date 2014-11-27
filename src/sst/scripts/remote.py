@@ -36,7 +36,8 @@ def main():
     cmd_opts, args = command.get_opts_remote()
 
     results_directory = os.path.abspath('results')
-    command.reset_directory(results_directory)
+    command.reset_directory(results_directory,
+                            cmd_opts.skip_clean_results)
 
     browser_factory = browsers.RemoteBrowserFactory(
         cmd_opts.webdriver_remote_url,
