@@ -825,7 +825,7 @@ def _wait_for(condition, refresh_page, timeout, poll, *args, **kwargs):
 # function once and avoid the spurious failure. This is a work-around until
 # selenium is properly fixed and should not be abused (or there is a
 # significant risk to hide bugs in the user scripts).
-@retry_on_exception(StaleElementReferenceException, retries=1)
+@retry_on_exception(StaleElementReferenceException, retries=10)
 def wait_for(condition, *args, **kwargs):
     """Wait for an action to succeed.
 
