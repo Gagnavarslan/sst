@@ -57,7 +57,10 @@ def reset_directory(path, skip_clean_results="no"):
         os.makedirs(path)
     else:
         if not os.path.isdir(path):
-            os.makedirs(path)
+            try:
+                os.makedirs(path)
+            except OSError:
+                print('Result folder %s was created in another flow.' % path)
 
 
 def get_common_options():
