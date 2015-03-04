@@ -94,6 +94,9 @@ class IeFactory(BrowserFactory):
 class PhantomJSFactory(BrowserFactory):
 
     webdriver_class = webdriver.PhantomJS
+    
+    def browser(self):
+        return self.webdriver_class(service_args=['--ignore-ssl-errors=true'])
 
 
 # MISSINGTEST: Exercise this class -- vila 2013-04-11
