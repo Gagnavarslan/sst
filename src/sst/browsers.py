@@ -162,16 +162,17 @@ class FirefoxBinary(firefox_binary.FirefoxBinary):
                          % (self.process.pid, self.profile.port, count))
             if self.process.poll() is not None:
                 # Browser has exited
-                raise selenium_exceptions.WebDriverException(
-                    "The browser appears to have exited "
-                    "before we could connect. The output was: %s" %
-                    self._get_firefox_output())
+                raise selenium_exceptions.WebDriverException("The browser appears to have exited "
+                      "before we could connect. If you specified a log_file in "
+                      "the FirefoxBinary constructor, check it for details.")
             time.sleep(sleep_for)
         if not connectable:
             self.kill()
             raise selenium_exceptions.WebDriverException(
-                'Cannot connect to the selenium extension, Firefox output: %s'
-                % (self._get_firefox_output(),))
+                      "Can't load the profile. Profile "
+                      "dir: %s. If you specified a log_file in the "
+                      "FirefoxBinary constructor, check it for details." %
+                      self.profile.profile_dir)
         return connectable
 
 
