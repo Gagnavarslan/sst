@@ -178,11 +178,15 @@ def get_opts(get_options, args=None):
 
     logging.basicConfig(format='    %(levelname)s:%(name)s:%(message)s')
     logger = logging.getLogger('SST')
+
+    numeric_level = getattr(logging, cmd_opts.log_level.upper(), logging.DEBUG)
     if cmd_opts.quiet:
         logger.setLevel(logging.WARNING)
+    elif isinstance(numeric_level, int):
+        logger.setLevel(numeric_level)
     else:
-        logger.setLevel(
-            getattr(logging, cmd_opts.log_level.upper(), logging.DEBUG))
+        logger.setLevel(logging.DEBUG)
+
     # FIXME: We shouldn't be modifying anything in the 'actions' module, this
     # violates isolation and will make it hard to test. -- vila 2013-04-10
     if cmd_opts.disable_flags:
