@@ -116,6 +116,9 @@ def get_common_options():
     parser.add_option('--skip-clean-results', dest='skip_clean_results',
                       default='no',
                       help=('Skip results folder cleaning, default=no. Values "no", "yes"'))
+    parser.add_option('--log', '--log-level', dest='log_level',
+                      default='DEBUG',
+                      help=('Set log level for SST logger'))
     return parser
 
 
@@ -178,7 +181,8 @@ def get_opts(get_options, args=None):
     if cmd_opts.quiet:
         logger.setLevel(logging.WARNING)
     else:
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(
+            getattr(logging, cmd_opts.log_level.upper(), logging.DEBUG))
     # FIXME: We shouldn't be modifying anything in the 'actions' module, this
     # violates isolation and will make it hard to test. -- vila 2013-04-10
     if cmd_opts.disable_flags:
