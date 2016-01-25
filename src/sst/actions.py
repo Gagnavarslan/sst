@@ -538,7 +538,7 @@ def on_mac():
     return sys.platform == 'darwin'
 
 
-def send_keys_select_all():
+def send_keys_select_all(textfield):
     modifier = keys.Keys().COMMAND if on_mac() else keys.Keys().CONTROL
     textfield.send_keys(modifier, 'a')
 
@@ -562,7 +562,7 @@ def write_textfield(id_or_elem, new_text, check=True, clear=True):
     # clear field with send_keys(), don't use clear() (see
     # http://code.google.com/p/selenium/issues/detail?id=214 for rationale)
     if clear:
-        send_keys_select_all()
+        send_keys_select_all(textfield)
         textfield.send_keys(keys.Keys().DELETE)
 
     if isinstance(new_text, unicode):
