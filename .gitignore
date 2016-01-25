@@ -16,3 +16,4 @@ sst.wpu
 src/testproject/testproj.db
 .tox
 .idea
+*.pyc
