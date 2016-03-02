@@ -145,6 +145,12 @@ class TestOneFail(unittest.TestCase):
     def test_one_fail(self):
         self.assertTrue(False)
 
+file: t/test_one_error.py
+import unittest
+class TestOneError(unittest.TestCase):
+    def test_one_error(self):
+        raise Exception()
+
 file: t/test_multi_fail.py
 import unittest
 class TestMultiFail(unittest.TestCase):
@@ -154,11 +160,13 @@ class TestMultiFail(unittest.TestCase):
         self.assertTrue(False)
 ''')
 
-    def run_tests(self, args):
+    def run_tests(self, args, **kwargs):
         out = StringIO()
-        failures = runtests.runtests(args, 'no results directory used', out,
-                                     browser_factory=browsers.FirefoxFactory())
-        return bool(failures)
+        failures = runtests.runtests(
+            args, '/tmp', out,
+            browser_factory=browsers.FirefoxFactory(),
+            **kwargs)
+        return failures
 
     def test_pass(self):
         self.assertEqual(0, self.run_tests(['test_all_pass$']))
@@ -166,5 +174,16 @@ class TestMultiFail(unittest.TestCase):
     def test_fail(self):
         self.assertEqual(1, self.run_tests(['test_one_fail$']))
 
+    def test_fail_for_xml(self):
+        self.assertEqual(1,
+            self.run_tests(['test_one_fail$'], report_format='xml'))
+
+    def test_error(self):
+        self.assertEqual(1, self.run_tests(['test_one_error$']))
+
     def test_multi_fail(self):
-        self.assertEqual(1, self.run_tests(['test_fail_.*']))
+        self.assertEqual(2, self.run_tests(['test_fail_.*']))
+
+    def test_multi_fail_for_xml(self):
+        self.assertEqual(2,
+            self.run_tests(['test_fail_.*'], report_format='xml'))
