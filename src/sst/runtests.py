@@ -118,7 +118,14 @@ def runtests(test_regexps, results_directory, out,
         out.write('Test run interrupted\n')
     result.stopTestRun()
 
-    return len(result.failures) + len(result.errors)
+    if isinstance(result, testtools.testresult.MultiTestResult):
+        failures = result._results[0].failures
+        errors = result._results[0].errors
+    else:
+        failures = result.failures
+        errors = result.errors
+
+    return len(failures) + len(errors)
 
 
 def find_shared_directory(test_dir, shared_directory):
