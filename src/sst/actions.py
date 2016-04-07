@@ -799,7 +799,8 @@ def _get_name(obj):
 
 
 def _wait_for(condition, refresh_page, timeout, poll, *args, **kwargs):
-    logger.debug('Waiting for %r' % _get_name(condition))
+    logger.debug(
+        'Waiting for %s(%r, %r) ' % (_get_name(condition), args, kwargs))
     # Disable logging levels equal to or lower than INFO.
     logging.disable(logging.INFO)
     result = None
