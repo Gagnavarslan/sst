@@ -961,7 +961,7 @@ def set_dropdown_value(id_or_elem, text=None, value=None):
                                           text or value))
     if text and not value:
         for element in elem.find_elements_by_tag_name('option'):
-            if element.text == text:
+            if element.text.strip() == text:
                 element.click()
                 return
         msg = 'The following option could not be found in the list: %r' % text
