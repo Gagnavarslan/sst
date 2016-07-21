@@ -535,12 +535,24 @@ def assert_textfield(id_or_elem):
 
 
 def on_mac():
+    # This only works if the OS running the tests is the same running
+    # the browser.
     return sys.platform == 'darwin'
 
 
 def send_keys_select_all(textfield):
-    modifier = keys.Keys().COMMAND if on_mac() else keys.Keys().CONTROL
+    modifier = keys.Keys.COMMAND if on_mac() else keys.Keys.CONTROL
     textfield.send_keys(modifier, 'a')
+
+
+def clear_textfield(textfield):
+    # clear field with send_keys(), don't use clear() (see
+    # http://code.google.com/p/selenium/issues/detail?id=214 for rationale)
+    send_keys_select_all(textfield)
+    textfield.send_keys(keys.Keys.DELETE)
+    if textfield.get_attribute('value') != '':
+        # for when send_keys does not work, e.g. PhantomJS
+        textfield.clear()
 
 
 def write_textfield(id_or_elem, new_text, check=True, clear=True):
@@ -559,11 +571,8 @@ def write_textfield(id_or_elem, new_text, check=True, clear=True):
         % (_element_to_string(textfield), new_text)
     logger.debug(msg)
 
-    # clear field with send_keys(), don't use clear() (see
-    # http://code.google.com/p/selenium/issues/detail?id=214 for rationale)
     if clear:
-        send_keys_select_all(textfield)
-        textfield.send_keys(keys.Keys().DELETE)
+        clear_textfield(textfield)
 
     if isinstance(new_text, unicode):
         textfield.send_keys(new_text)
