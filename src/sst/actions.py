@@ -228,11 +228,14 @@ def take_screenshot(filename='screenshot.png', add_timestamp=True):
 
     """
     logger.debug('Capturing Screenshot')
-    _make_results_dir()
-    if add_timestamp:
-        filename = _add_time_stamp(filename)
-    screenshot_file = os.path.join(config.results_directory, filename)
-    _test.browser.get_screenshot_as_file(screenshot_file)
+    try:
+        _make_results_dir()
+        if add_timestamp:
+            filename = _add_time_stamp(filename)
+        screenshot_file = os.path.join(config.results_directory, filename)
+        _test.browser.get_screenshot_as_file(screenshot_file)
+    except:
+        logger.exception('Capturing Screenshot failed')
     return screenshot_file
 
 
