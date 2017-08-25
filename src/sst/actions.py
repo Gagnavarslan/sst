@@ -133,21 +133,22 @@ def retry_on_exception(exception, retries=None):
         @wraps(func)
         def inner(*args, **kwargs):
             tries = 0
-            max_time = time.time() + _TIMEOUT
+            max_time = time.time() + _TIMEOUT - _POLL
 
             def retry():
                 return ((retries is None and time.time() < max_time) or
                         (retries is not None and tries <= retries))
 
-            while(retry()):
+            while True:
                 tries = tries + 1
                 try:
                     return func(*args, **kwargs)
                 except exception as e:
-                    logger.warning('Retrying after catching: %r' % e)
+                    if retry():
+                        logger.warning('Retrying after catching: %r' % e)
+                    else:
+                        raise
                 time.sleep(_POLL)
-            else:
-                raise e
 
         return inner
 

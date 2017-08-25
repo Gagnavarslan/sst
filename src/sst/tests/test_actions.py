@@ -20,6 +20,9 @@
 from cStringIO import StringIO
 import logging
 import random
+import string
+import sys
+import traceback
 
 import mock
 import testtools
@@ -80,6 +83,20 @@ class TestRetryOnException(testtools.TestCase):
             return self.raise_exception(times=max_retries + 1)
 
         self.assertRaises(TestException, protected_raiser)
+
+    def test_retry_on_exception_fails_with_full_traceback(self):
+        max_retries = 1
+
+        @actions.retry_on_exception(TestException, retries=max_retries)
+        def protected_raiser():
+            return self.raise_exception(times=max_retries + 1)
+
+        try:
+            protected_raiser()
+        except:
+            exc_info = sys.exc_info()
+            formatted_tb = string.join(traceback.format_tb(exc_info[2]))
+            self.assertIn('raise_exception', formatted_tb)
 
     def test_retry_on_exception_fails_with_max_timeout(self):
         timeout = 0.5
