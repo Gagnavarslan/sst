@@ -119,6 +119,9 @@ def get_common_options():
     parser.add_option('--log', '--log-level', dest='log_level',
                       default='DEBUG',
                       help=('Set log level for SST logger'))
+    parser.add_option('--log-format', dest='log_format',
+            default='    %(asctime)s %(threadName)s %(levelname)s:%(name)s:%(message)s',
+            help=('Set log format for SST logger'))
     parser.add_option('-c', '--concurrency', dest='concurrency',
                       default=1, type='int',
                       help='concurrency (number of procs)')
@@ -176,7 +179,7 @@ def get_opts(get_options, args=None):
               cmd_opts.browser_type, browsers.browser_factories.keys())
         sys.exit(1)
 
-    logging.basicConfig(format='    %(levelname)s:%(name)s:%(message)s')
+    logging.basicConfig(format=cmd_opts.log_format)
     logger = logging.getLogger('SST')
 
     numeric_level = getattr(logging, cmd_opts.log_level.upper(), logging.DEBUG)
