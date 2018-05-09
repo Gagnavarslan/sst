@@ -804,21 +804,31 @@ def get_wait_timeout():
     return _TIMEOUT
 
 
-def _get_name(obj):
+def _get_name(obj, *args, **kwargs):
     try:
-        return obj.__name__
+        name = obj.__name__
     except:
-        return repr(obj)
+        name = repr(obj)
+
+    if not args and not kwargs:
+        return name
+    else:
+        params = []
+        if args:
+            params.append(str(args)[1:-1])
+        if kwargs:
+            params.append(str(kwargs)[1:-1])
+        return '%s(%s)' % (name, ', '.join(params))
 
 
 def _wait_for(condition, refresh_page, timeout, poll, *args, **kwargs):
-    logger.debug('Waiting for %r' % _get_name(condition))
+    msg = _get_name(condition, *args, **kwargs)
+    logger.debug('Waiting for %r' % msg)
     # Disable logging levels equal to or lower than INFO.
     logging.disable(logging.INFO)
     result = None
     try:
         max_time = time.time() + timeout
-        msg = _get_name(condition)
         while True:
             #refresh the page if requested
             if refresh_page:
