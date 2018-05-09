@@ -123,6 +123,13 @@ class TestRetryOnException(testtools.TestCase):
             'success', actions.wait_for, self.raise_exception,
             exceptions.StaleElementReferenceException, 1)
 
+    def test_wait_for_returns_result_of_wrapped_call(self):
+        actions.set_wait_timeout(0.3)
+        self.assertEquals(actions.wait_for(lambda: 2), 2)
+        self.assertEquals(actions.wait_for(lambda: True), True)
+        self.assertRaises(AssertionError, actions.wait_for, lambda: None)
+        self.assertRaises(AssertionError, actions.wait_for, lambda: False)
+
 
 class TestElementToString(testtools.TestCase):
 

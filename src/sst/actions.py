@@ -821,8 +821,8 @@ def _get_name(obj, *args, **kwargs):
         return '%s(%s)' % (name, ', '.join(params))
 
 
-def _wait_for(condition, refresh_page, timeout, poll, *args, **kwargs):
-    msg = _get_name(condition, *args, **kwargs)
+def _wait_for(action, refresh_page, timeout, poll, *args, **kwargs):
+    msg = _get_name(action, *args, **kwargs)
     logger.debug('Waiting for %r' % msg)
     # Disable logging levels equal to or lower than INFO.
     logging.disable(logging.INFO)
@@ -835,11 +835,11 @@ def _wait_for(condition, refresh_page, timeout, poll, *args, **kwargs):
                 refresh()
             e = None
             try:
-                result = condition(*args, **kwargs)
+                result = action(*args, **kwargs)
             except AssertionError as e:
                 pass
             else:
-                if result is not False:
+                if result:
                     break
             if time.time() > max_time:
                 error = 'Timed out waiting for: %s' % msg
@@ -859,7 +859,7 @@ def _wait_for(condition, refresh_page, timeout, poll, *args, **kwargs):
 # selenium is properly fixed and should not be abused (or there is a
 # significant risk to hide bugs in the user scripts).
 @retry_on_exception(StaleElementReferenceException, retries=10)
-def wait_for(condition, *args, **kwargs):
+def wait_for(action, *args, **kwargs):
     """Wait for an action to succeed.
 
     It is Useful for checking the results of actions that may take some time
@@ -867,45 +867,42 @@ def wait_for(condition, *args, **kwargs):
 
     e.g::
 
-        wait_for(assert_title, 'Some page title')
+        wait_for(page_has_title, 'Some page title')
+        elem = wait_for(get_element, tag='input')
 
-    :argument condition: A function to wait for. It can either be an action or
-        a function that returns False or throws an AssertionError for failure,
-        and returns anything different from False (including not returning
-        anything) for success.
-    :argument args: The arguments to pass to the `condition` function.
-    :argument kwargs: The keyword arguments to pass to the `condition`
-        function.
-    :raise: AssertionError if `condition` does not succeed within the timeout.
+    :argument action: A function to wait for. It can either be an action or a
+        function that returns falsish value or throws an AssertionError for
+        failure, and returns truish value for success.
+    :argument args: The arguments to pass to the `action` function.
+    :argument kwargs: The keyword arguments to pass to the `action` function.
+    :raise: AssertionError if `action` does not succeed within the timeout.
         You can set the timeout for `wait_for` by calling `set_wait_timeout`
-    :return: The value returned by `condition`.
+    :return: The value returned by `action`.
 
     """
-    return _wait_for(condition, False, _TIMEOUT, _POLL, *args, **kwargs)
+    return _wait_for(action, False, _TIMEOUT, _POLL, *args, **kwargs)
 
 
-def wait_for_and_refresh(condition, *args, **kwargs):
+def wait_for_and_refresh(action, *args, **kwargs):
     """Wait for an action to succeed.
 
     It is Useful for checking the results of actions that may take some time
     to complete.
 
     The difference to `wait_for` is, that `wait_for_and_refresh()` will
-    refresh the current page with after every condition check.
+    refresh the current page with after every action run.
 
-    :argument condition: A function to wait for. It can either be an action or
-        a function that returns False or throws an AssertionError for failure,
-        and returns anything different from False (including not returning
-        anything) for success.
-    :argument args: The arguments to pass to the `condition` function.
-    :argument kwargs: The keyword arguments to pass to the `condition`
-        function.
-    :raise: AssertionError if `condition` does not succeed within the timeout.
+    :argument action: A function to wait for. It can either be an action or a
+        function that returns falsish value or throws an AssertionError for
+        failure, and returns truish value for success.
+    :argument args: The arguments to pass to the `action` function.
+    :argument kwargs: The keyword arguments to pass to the `action` function.
+    :raise: AssertionError if `action` does not succeed within the timeout.
         You can set the timeout for `wait_for` by calling `set_wait_timeout`
-    :return: The value returned by `condition`.
+    :return: The value returned by `action`.
 
     """
-    return _wait_for(condition, True, _TIMEOUT, _POLL, *args, **kwargs)
+    return _wait_for(action, True, _TIMEOUT, _POLL, *args, **kwargs)
 
 
 def fails(action, *args, **kwargs):
