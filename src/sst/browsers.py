@@ -83,6 +83,12 @@ class ChromeFactory(BrowserFactory):
 
     webdriver_class = webdriver.Chrome
 
+    def browser(self):
+        from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+        desired = DesiredCapabilities.CHROME
+        desired['loggingPrefs'] = { 'browser':'ALL' }
+        return self.webdriver_class(self.profile, capabilities=desired)
+
 
 # MISSINGTEST: Exercise this class (requires windows) -- vila 2013-04-11
 class IeFactory(BrowserFactory):
@@ -209,7 +215,10 @@ class FirefoxFactory(BrowserFactory):
         self.profile = profile
 
     def browser(self):
-        return self.webdriver_class(self.profile)
+        from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+        desired = DesiredCapabilities.FIREFOX
+        desired['loggingPrefs'] = { 'browser':'ALL' }
+        return self.webdriver_class(self.profile, capabilities=desired)
 
 
 # MISSINGTEST: Exercise this class -- vila 2013-04-11
