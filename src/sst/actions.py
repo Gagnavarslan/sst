@@ -1791,6 +1791,6 @@ def get_element_source(id_or_elem):
     elem = _get_elem(id_or_elem)
     return elem.get_attribute('innerHTML')
 
+
 def get_browser_log():
-    import ipdb; ipdb.set_trace()
     return _test.browser.get_log('browser')
