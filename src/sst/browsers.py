@@ -26,6 +26,7 @@ import time
 from selenium import webdriver
 from selenium.common import exceptions as selenium_exceptions
 from selenium.webdriver.common import utils
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.firefox import (
     firefox_binary,
     webdriver as ff_webdriver,
@@ -83,6 +84,11 @@ class ChromeFactory(BrowserFactory):
 
     webdriver_class = webdriver.Chrome
 
+    def browser(self):
+        desired = DesiredCapabilities.CHROME
+        desired['loggingPrefs'] = { 'browser':'ALL' }
+        return self.webdriver_class(self.profile, capabilities=desired)
+
 
 # MISSINGTEST: Exercise this class (requires windows) -- vila 2013-04-11
 class IeFactory(BrowserFactory):
@@ -94,7 +100,7 @@ class IeFactory(BrowserFactory):
 class PhantomJSFactory(BrowserFactory):
 
     webdriver_class = webdriver.PhantomJS
-    
+
     def browser(self):
         return self.webdriver_class(service_args=['--ignore-ssl-errors=true'])
 
@@ -209,7 +215,9 @@ class FirefoxFactory(BrowserFactory):
         self.profile = profile
 
     def browser(self):
-        return self.webdriver_class(self.profile)
+        desired = DesiredCapabilities.FIREFOX
+        desired['loggingPrefs'] = { 'browser':'ALL' }
+        return self.webdriver_class(self.profile, capabilities=desired)
 
 
 # MISSINGTEST: Exercise this class -- vila 2013-04-11
