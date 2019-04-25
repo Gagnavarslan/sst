@@ -18,7 +18,7 @@
 #
 
 
-__version__ = '0.2.9.6'
+__version__ = '0.2.9.7'
 
 DEVSERVER_PORT = 8120  # django devserver for internal acceptance tests
 
