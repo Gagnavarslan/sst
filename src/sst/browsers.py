@@ -106,7 +106,6 @@ class PhantomJSFactory(BrowserFactory):
             '--ignore-ssl-errors=true',
             '--ssl-protocol=any',
             '--web-security=false',
-            '--debug=true',
             '--ssl-ciphers=ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384'
         ]
         return self.webdriver_class(service_args=service_args)
