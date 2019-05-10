@@ -102,7 +102,13 @@ class PhantomJSFactory(BrowserFactory):
     webdriver_class = webdriver.PhantomJS
 
     def browser(self):
-        return self.webdriver_class(service_args=['--ignore-ssl-errors=true'])
+        service_args = [
+            '--ignore-ssl-errors=true',
+            '--ssl-protocol=any',
+            '--web-security=false',
+            '--ssl-ciphers=ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384'
+        ]
+        return self.webdriver_class(service_args=service_args)
 
 
 # MISSINGTEST: Exercise this class -- vila 2013-04-11
