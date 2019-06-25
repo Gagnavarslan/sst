@@ -1139,6 +1139,10 @@ def _match_text(elem, regex):
     return bool(re.search(regex, text))
 
 
+def get_active_element():
+    return _test.browser.switch_to.active_element
+
+
 def get_elements(tag=None, css_class=None, id=None, text=None,
                  text_regex=None, **kwargs):
     """Return element objects.
