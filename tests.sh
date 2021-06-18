@@ -1,6 +1,7 @@
 #!/bin/sh
 
-export PYTHONPATH=/app/src
+echo $(pwd)
+export PYTHONPATH=$(pwd)/src
 # print version and exit
 sst-run -V
 # run sst unit tests
