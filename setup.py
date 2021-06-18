@@ -63,9 +63,38 @@ AUTHOR = 'Canonical Online Services Team'
 AUTHOR_EMAIL = 'cgoldberg _at_ gmail.com'
 KEYWORDS = ('selenium webdriver test testing web automation').split(' ')
 
+USAGE = """
+sst library setup.py:
+  Relies on a VERSION.txt being present in the root of the library.
+
+  Upload
+  ------
+
+  Easiest way to run this is via make:
+
+    VERSION=1.0 make release
+
+  It will create the VERSION.txt file and then run `sdist upload`.
+
+  Local Building
+  --------------
+
+  Create a VERSION.txt file in the root.
+
+"""
+
+"""
+if not os.path.exists('VERSION.txt'):
+    print(USAGE)
+    print(sys.argv)
+    sys.exit(1)
+
+version = open('VERSION.txt', 'r').read().strip()
+"""
+
 params = dict(
     name=NAME,
-    version=__version__,
+    version='local',
     packages=PACKAGES,
     package_dir={'': 'src', },
     install_requires=REQUIREMENTS,

@@ -1,4 +1,8 @@
-from django.conf.urls import patterns
+from django.conf.urls import url
+
+import views
 
 
-urlpatterns = patterns('', (r'/', 'begin'),)
+urlpatterns = [
+    url(r'/', views.begin),
+]

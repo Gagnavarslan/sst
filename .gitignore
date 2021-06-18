@@ -4,6 +4,7 @@ docs/actions.rst
 ENV
 functest.wpu
 MANIFEST
+VERSION.txt
 nosetests.xml
 pep8.log
 results
@@ -17,3 +18,4 @@ src/testproject/testproj.db
 .tox
 .idea
 *.pyc
+.*.swp

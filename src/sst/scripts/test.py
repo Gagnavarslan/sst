@@ -101,8 +101,8 @@ def run_django(port):
             % (manage_file,))
 
     proc = subprocess.Popen([manage_file, 'runserver', str(port)],
-                            stderr=open(os.devnull, 'w'),
-                            stdout=open(os.devnull, 'w')
+                            stderr=sys.stderr,
+                            stdout=sys.stdout
                             )
     attempts = 30
     for count in range(attempts):
